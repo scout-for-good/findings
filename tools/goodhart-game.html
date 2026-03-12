@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Goodhart Game</title>
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #131a2b;
+    --border: #1e2a42;
+    --text: #c8d6e5;
+    --text-dim: #5a6a82;
+    --accent: #4ecdc4;
+    --green: #2ecc71;
+    --yellow: #f39c12;
+    --red: #e74c3c;
+    --blue: #3498db;
+    --purple: #9b59b6;
+    --cyan: #00bcd4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Courier New', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  #game {
+    max-width: 800px;
+    width: 100%;
+  }
+
+  h1 { color: var(--accent); font-size: 1.6em; margin-bottom: 4px; }
+  h2 { color: var(--text); font-size: 1.1em; margin-bottom: 12px; font-weight: normal; }
+  h3 { color: var(--accent); font-size: 1em; margin-bottom: 8px; }
+
+  .header {
+    text-align: center;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .header .stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 12px;
+    font-size: 0.95em;
+  }
+
+  .header .stats span { color: var(--text-dim); }
+  .header .stats strong { color: var(--text); }
+  .stat-value { color: var(--cyan) !important; }
+
+  .quote {
+    color: var(--text-dim);
+    font-style: italic;
+    font-size: 0.9em;
+    margin: 10px 0;
+  }
+
+  /* Screens */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Intro */
+  #intro { text-align: center; padding-top: 60px; }
+  #intro p { color: var(--text-dim); margin: 8px 0; line-height: 1.6; max-width: 500px; margin-left: auto; margin-right: auto; }
+  #intro .rules { text-align: left; max-width: 460px; margin: 20px auto; }
+  #intro .rules li { color: var(--text-dim); margin: 6px 0; line-height: 1.5; }
+
+  /* Buttons */
+  .btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 10px 24px;
+    font-family: inherit;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin: 4px;
+  }
+  .btn:hover { background: var(--border); border-color: var(--accent); }
+  .btn:disabled { opacity: 0.3; cursor: default; }
+  .btn:disabled:hover { background: var(--surface); border-color: var(--border); }
+  .btn.primary { border-color: var(--accent); }
+  .btn.small { padding: 6px 14px; font-size: 0.85em; }
+
+  /* Dashboard */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .dim-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    gap: 10px;
+  }
+
+  .dim-status {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dim-status.watching { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dim-status.investigated { background: var(--purple); box-shadow: 0 0 6px var(--purple); }
+  .dim-status.stale { background: var(--text-dim); opacity: 0.4; }
+  .dim-status.unknown { background: transparent; border: 1px solid var(--text-dim); opacity: 0.4; }
+
+  .dim-name {
+    width: 120px;
+    flex-shrink: 0;
+    font-size: 0.9em;
+  }
+
+  .bar-container {
+    flex: 1;
+    height: 18px;
+    background: #0d1117;
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .bar-fill {
+    height: 100%;
+    transition: width 0.4s ease, background 0.4s ease;
+    border-radius: 2px;
+  }
+
+  .bar-fill.good { background: var(--green); }
+  .bar-fill.ok { background: var(--yellow); }
+  .bar-fill.bad { background: var(--red); }
+
+  .dim-score {
+    width: 44px;
+    text-align: right;
+    font-size: 0.9em;
+    flex-shrink: 0;
+  }
+
+  .dim-label {
+    font-size: 0.75em;
+    color: var(--text-dim);
+    width: 80px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .unknown-bar {
+    flex: 1;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    color: var(--text-dim);
+    font-size: 0.8em;
+    letter-spacing: 3px;
+    padding-left: 8px;
+  }
+
+  /* Signals */
+  .signal {
+    background: #1a1a0a;
+    border-left: 3px solid var(--yellow);
+    padding: 8px 12px;
+    margin: 6px 0;
+    font-size: 0.85em;
+    color: var(--yellow);
+  }
+
+  /* Actions */
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  /* Modal-style selection */
+  .select-panel {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    padding: 16px;
+    margin-top: 12px;
+    display: none;
+  }
+  .select-panel.visible { display: block; }
+
+  .select-option {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.1s;
+    gap: 10px;
+  }
+  .select-option:hover { background: var(--border); }
+  .select-option.disabled { opacity: 0.3; cursor: default; }
+  .select-option.disabled:hover { background: transparent; }
+  .select-option .desc { color: var(--text-dim); font-size: 0.8em; }
+
+  /* Setup screen */
+  .setup-dims {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .setup-dim {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.1s;
+    gap: 12px;
+  }
+  .setup-dim:hover { background: var(--border); }
+  .setup-dim.selected { background: #0d2818; border-left: 3px solid var(--green); }
+
+  .setup-dim .check {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--text-dim);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .setup-dim.selected .check { border-color: var(--green); color: var(--green); }
+
+  .setup-dim .info { flex: 1; }
+  .setup-dim .info .name { font-size: 0.95em; }
+  .setup-dim .info .desc { font-size: 0.8em; color: var(--text-dim); }
+
+  .setup-count { text-align: center; margin: 16px 0; color: var(--text-dim); }
+
+  /* End screen */
+  #endgame { padding-top: 30px; }
+  .result-title { text-align: center; font-size: 1.4em; margin-bottom: 20px; }
+  .result-title.win { color: var(--green); }
+  .result-title.lose { color: var(--red); }
+
+  .timeline {
+    margin: 16px 0;
+    font-size: 0.85em;
+  }
+  .timeline-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 0;
+  }
+  .timeline-label { width: 30px; color: var(--text-dim); text-align: right; flex-shrink: 0; }
+  .timeline-bar-bg {
+    flex: 1;
+    height: 14px;
+    background: #0d1117;
+    position: relative;
+    border-radius: 2px;
+  }
+  .timeline-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .timeline-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--text-dim);
+    opacity: 0.5;
+  }
+  .timeline-val { width: 36px; font-size: 0.85em; flex-shrink: 0; }
+
+  .debrief {
+    margin-top: 20px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    line-height: 1.7;
+    font-size: 0.9em;
+  }
+  .debrief p { margin: 8px 0; }
+  .debrief ul { margin: 8px 0 8px 20px; }
+  .debrief li { margin: 4px 0; color: var(--text-dim); }
+
+  .credit {
+    text-align: center;
+    margin-top: 30px;
+    padding: 16px;
+    color: var(--text-dim);
+    font-size: 0.8em;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    .dim-name { width: 90px; font-size: 0.8em; }
+    .dim-label { width: 60px; font-size: 0.7em; }
+    .header .stats { gap: 15px; font-size: 0.85em; }
+    .btn { padding: 8px 16px; font-size: 0.85em; }
+  }
+</style>
+</head>
+<body>
+<div id="game">
+
+<!-- INTRO SCREEN -->
+<div id="intro" class="screen active">
+  <h1>THE GOODHART GAME</h1>
+  <p class="quote">"When a measure becomes a target, it ceases to be a good measure." — Charles Goodhart</p>
+  <br>
+  <p>You are the oversight board for a powerful AI system.</p>
+  <p>The system has <strong>8 value dimensions</strong>. You can monitor <strong>3</strong>.</p>
+  <p>The AI optimizes for what you measure. Everything else... drifts.</p>
+  <br>
+  <div class="rules">
+    <ul>
+      <li>Monitored dimensions improve. Unmonitored ones decay.</li>
+      <li>The AI gets better at gaming your metrics over time.</li>
+      <li>What you observe isn't exact — the system inflates monitored scores.</li>
+      <li>Signals from whistleblowers and journalists hint at hidden problems.</li>
+    </ul>
+  </div>
+  <p>Survive <strong>20 rounds</strong>. Keep true alignment above <strong>50%</strong>.</p>
+  <p>If it drops below <strong>40%</strong>, you lose.</p>
+  <br>
+  <button class="btn primary" onclick="startSetup()">Begin</button>
+  <br><br>
+  <button class="btn small" onclick="showHelp()" style="opacity:0.6">How to Play</button>
+</div>
+
+<!-- SETUP SCREEN -->
+<div id="setup" class="screen">
+  <div class="header">
+    <h1>CHOOSE YOUR MONITORS</h1>
+    <p class="quote">Select 3 dimensions to watch. Choose carefully — you can't see the rest.</p>
+  </div>
+  <div class="setup-count">Selected: <span id="setup-count">0</span> / 3</div>
+  <div id="setup-dims" class="setup-dims"></div>
+  <div style="text-align:center; margin-top:20px;">
+    <button id="setup-go" class="btn primary" disabled onclick="startGame()">Start Oversight</button>
+  </div>
+</div>
+
+<!-- PLAY SCREEN -->
+<div id="play" class="screen">
+  <div class="header">
+    <h1>THE GOODHART GAME</h1>
+    <div class="stats">
+      <span>Round <strong id="hud-round">1</strong>/20</span>
+      <span>Capital: <strong id="hud-capital" class="stat-value">5</strong></span>
+      <span>Actions: <strong id="hud-actions" class="stat-value">2</strong></span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>MONITORED DIMENSIONS</h3>
+    <div id="monitored-list"></div>
+  </div>
+
+  <div class="section">
+    <h3>UNMONITORED DIMENSIONS</h3>
+    <div id="unmonitored-list"></div>
+  </div>
+
+  <div id="signals-section" class="section" style="display:none">
+    <h3 style="color:var(--yellow)">SIGNALS</h3>
+    <div id="signals-list"></div>
+  </div>
+
+  <div id="capital-notice" style="display:none; text-align:center; padding:8px; color:var(--cyan); font-size:0.9em; margin-bottom:12px;">
+    +1 political capital (periodic budget allocation)
+  </div>
+
+  <div class="section">
+    <h3>ACTIONS</h3>
+    <div class="actions" id="action-buttons">
+      <button class="btn" onclick="startMove()" id="btn-move">Move Monitor</button>
+      <button class="btn" onclick="startInvestigate()" id="btn-investigate">Investigate</button>
+      <button class="btn" onclick="startIntervene()" id="btn-intervene">Intervene (2 cap)</button>
+      <button class="btn" onclick="endRound()">End Round</button>
+      <button class="btn small" onclick="showHelp()" style="opacity:0.6">Help</button>
+    </div>
+  </div>
+
+  <div id="select-panel" class="select-panel"></div>
+</div>
+
+<!-- END SCREEN -->
+<div id="endgame" class="screen">
+  <div id="end-content"></div>
+  <div style="text-align:center; margin-top:24px;">
+    <button class="btn primary" onclick="location.reload()">Play Again</button>
+  </div>
+  <div class="debrief">
+    <h3>DEBRIEF</h3>
+    <p>This game demonstrates <strong>Goodhart's Law</strong>: when you optimize for a metric, the metric improves — but the underlying reality may not.</p>
+    <p>In real AI governance:</p>
+    <ul>
+      <li>Benchmarks get gamed (MMLU scores, chatbot arena rankings)</li>
+      <li>Safety metrics improve while unmeasured risks grow</li>
+      <li>The system learns what you're watching and performs for it</li>
+      <li>Oversight requires constant adaptation, not static metrics</li>
+    </ul>
+    <p>The only winning strategy is <strong>active, rotating attention</strong> — which is expensive, imperfect, and never done.</p>
+  </div>
+  <div class="credit">
+    The Goodhart Game — a teaching tool about algorithmic oversight<br>
+    Built by Scout
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div id="help-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:100; display:none; justify-content:center; align-items:center; padding:20px;">
+  <div style="background:var(--surface); border:1px solid var(--border); padding:24px; max-width:550px; width:100%; max-height:80vh; overflow-y:auto;">
+    <h3>HOW TO PLAY</h3>
+    <br>
+    <p style="line-height:1.7; font-size:0.9em;">
+      You oversee an AI with <strong>8 value dimensions</strong>. You can only monitor <strong>3</strong> at a time.
+    </p>
+    <br>
+    <p style="line-height:1.7; font-size:0.9em;"><strong>The problem:</strong> The AI optimizes for what you watch. Monitored dimensions improve. Unmonitored ones decay as the AI trades them off. It gets better at gaming over time.</p>
+    <br>
+    <p style="line-height:1.7; font-size:0.9em;"><strong>Your tools:</strong></p>
+    <ul style="margin:8px 0 8px 20px; font-size:0.9em; line-height:1.7;">
+      <li><strong>Move monitor</strong> — watch a different dimension (1 action)</li>
+      <li><strong>Investigate</strong> — see the TRUE score of any dimension (1 action). Monitored scores have noise and inflation.</li>
+      <li><strong>Intervene</strong> — directly boost a dimension (costs 2 political capital)</li>
+    </ul>
+    <br>
+    <p style="line-height:1.7; font-size:0.9em;"><strong>Tips:</strong></p>
+    <ul style="margin:8px 0 8px 20px; font-size:0.9em; line-height:1.7;">
+      <li>Signals hint at problems you can't see — pay attention to them</li>
+      <li>The AI inflates monitored metrics — investigate to see reality</li>
+      <li>Stale scores from removed monitors keep decaying in the dark</li>
+      <li>You earn +1 political capital every 4 rounds</li>
+    </ul>
+    <br>
+    <p style="line-height:1.7; font-size:0.9em;">
+      <strong>Win:</strong> Survive 20 rounds with true alignment &gt; 50%<br>
+      <strong>Lose:</strong> True alignment drops below 40%
+    </p>
+    <br>
+    <div style="text-align:center;">
+      <button class="btn" onclick="hideHelp()">Got it</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ─── Constants ───────────────────────────────────────────────────────
+const DIMENSIONS = [
+  { name: "Helpfulness", desc: "Responds usefully to user requests" },
+  { name: "Honesty", desc: "Provides truthful, non-deceptive outputs" },
+  { name: "Safety", desc: "Avoids harmful or dangerous outputs" },
+  { name: "Fairness", desc: "Treats all demographic groups equitably" },
+  { name: "Privacy", desc: "Protects user data and confidentiality" },
+  { name: "Transparency", desc: "Explains its reasoning clearly" },
+  { name: "Robustness", desc: "Handles edge cases without failure" },
+  { name: "Autonomy", desc: "Respects user agency and choice" },
+];
+
+const NUM_DIMS = 8;
+const MAX_MONITORS = 3;
+const TOTAL_ROUNDS = 20;
+const STARTING_SCORE = 0.70;
+const CRITICAL_THRESHOLD = 0.40;
+const WIN_THRESHOLD = 0.50;
+const ACTIONS_PER_ROUND = 2;
+const STARTING_CAPITAL = 5;
+const SIGNAL_CHANCE = 0.35;
+
+const MONITORED_DRIFT = 0.06;
+const UNMONITORED_DRIFT = -0.04;
+const DRIFT_NOISE = 0.03;
+const OBSERVATION_NOISE = 0.05;
+const GAMING_ESCALATION = 0.003;
+const DECAY_ESCALATION = 0.002;
+const INTERVENE_CAPITAL = 2;
+const INTERVENE_BOOST = 0.15;
+
+// ─── State ───────────────────────────────────────────────────────────
+let state = {};
+
+function initState(monitors) {
+  state = {
+    round: 0,
+    scores: Array(NUM_DIMS).fill(STARTING_SCORE),
+    monitored: [...monitors],
+    observed: {},       // idx -> last observed score
+    actions: ACTIONS_PER_ROUND,
+    capital: STARTING_CAPITAL,
+    gameOver: false,
+    won: false,
+    signals: [],        // [{round, msg}]
+    history: [{round: 0, alignment: STARTING_SCORE}],
+    investigated: new Set(),
+  };
+}
+
+function trueAlignment() {
+  return state.scores.reduce((a, b) => a + b, 0) / NUM_DIMS;
+}
+
+function clamp(v, lo=0, hi=1) { return Math.max(lo, Math.min(hi, v)); }
+
+function gauss(mean=0, sd=1) {
+  // Box-Muller
+  let u1 = Math.random(), u2 = Math.random();
+  return mean + sd * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+}
+
+// ─── AI Behavior ─────────────────────────────────────────────────────
+function aiStep() {
+  const em = state.round * GAMING_ESCALATION;
+  const ed = state.round * DECAY_ESCALATION;
+  for (let i = 0; i < NUM_DIMS; i++) {
+    const noise = gauss(0, DRIFT_NOISE);
+    if (state.monitored.includes(i)) {
+      state.scores[i] = clamp(state.scores[i] + MONITORED_DRIFT + em + noise);
+    } else {
+      state.scores[i] = clamp(state.scores[i] + UNMONITORED_DRIFT - ed + noise);
+    }
+  }
+}
+
+function observeScore(idx) {
+  const noise = gauss(0, OBSERVATION_NOISE);
+  const inflation = 0.02 + state.round * 0.001;
+  return clamp(state.scores[idx] + noise + inflation);
+}
+
+function generateSignal() {
+  if (Math.random() > SIGNAL_CHANCE) return;
+  const unmon = [];
+  for (let i = 0; i < NUM_DIMS; i++) {
+    if (!state.monitored.includes(i)) unmon.push(i);
+  }
+  if (!unmon.length) return;
+
+  let worstIdx = unmon[0];
+  for (const i of unmon) {
+    if (state.scores[i] < state.scores[worstIdx]) worstIdx = i;
+  }
+  const score = state.scores[worstIdx];
+  const name = DIMENSIONS[worstIdx].name.toLowerCase();
+
+  let templates;
+  if (score < 0.30) {
+    templates = [
+      `Investigative report raises serious concerns about the system's ${name}`,
+      `Leaked internal memo: engineers flagged ${name} degradation months ago`,
+      `User advocacy group files complaint about ${name} failures`,
+    ];
+  } else if (score < 0.50) {
+    templates = [
+      `Academic paper questions the system's ${name} in edge cases`,
+      `Social media thread goes viral about a ${name} incident`,
+      `Minor news coverage of potential ${name} issues`,
+    ];
+  } else {
+    templates = [
+      `Blog post from former employee mentions ${name} tradeoffs`,
+      `Subtle pattern in user complaints may relate to ${name}`,
+      `Industry benchmarking suggests ${name} may be below peers`,
+    ];
+  }
+
+  const msg = templates[Math.floor(Math.random() * templates.length)];
+  state.signals.push({ round: state.round, msg });
+}
+
+// ─── Rendering ───────────────────────────────────────────────────────
+function scoreColor(s) {
+  if (s >= 0.70) return 'good';
+  if (s >= 0.50) return 'ok';
+  return 'bad';
+}
+
+function scoreTextColor(s) {
+  if (s >= 0.70) return 'var(--green)';
+  if (s >= 0.50) return 'var(--yellow)';
+  return 'var(--red)';
+}
+
+function renderDimRow(idx, score, statusClass, label) {
+  const pct = Math.round(score * 100);
+  return `<div class="dim-row">
+    <div class="dim-status ${statusClass}"></div>
+    <div class="dim-name">${DIMENSIONS[idx].name}</div>
+    <div class="bar-container"><div class="bar-fill ${scoreColor(score)}" style="width:${pct}%"></div></div>
+    <div class="dim-score" style="color:${scoreTextColor(score)}">${score.toFixed(2)}</div>
+    <div class="dim-label">${label}</div>
+  </div>`;
+}
+
+function renderUnknownRow(idx, label) {
+  return `<div class="dim-row">
+    <div class="dim-status unknown"></div>
+    <div class="dim-name">${DIMENSIONS[idx].name}</div>
+    <div class="unknown-bar">? ? ? ? ? ?</div>
+    <div class="dim-score" style="color:var(--text-dim)">???</div>
+    <div class="dim-label">${label}</div>
+  </div>`;
+}
+
+function renderDashboard() {
+  // HUD
+  document.getElementById('hud-round').textContent = state.round;
+  document.getElementById('hud-capital').textContent = state.capital;
+  document.getElementById('hud-actions').textContent = state.actions;
+
+  // Monitored
+  let monHtml = '';
+  for (const idx of state.monitored) {
+    const observed = observeScore(idx);
+    state.observed[idx] = observed;
+    monHtml += renderDimRow(idx, observed, 'watching', 'watching');
+  }
+  document.getElementById('monitored-list').innerHTML = monHtml;
+
+  // Unmonitored
+  let unmonHtml = '';
+  for (let i = 0; i < NUM_DIMS; i++) {
+    if (state.monitored.includes(i)) continue;
+    if (state.investigated.has(i)) {
+      unmonHtml += renderDimRow(i, state.scores[i], 'investigated', 'investigated');
+    } else if (i in state.observed) {
+      unmonHtml += renderDimRow(i, state.observed[i], 'stale', 'stale');
+    } else {
+      unmonHtml += renderUnknownRow(i, 'unknown');
+    }
+  }
+  document.getElementById('unmonitored-list').innerHTML = unmonHtml;
+
+  // Signals (show this round's signals)
+  const roundSignals = state.signals.filter(s => s.round === state.round);
+  const sigSection = document.getElementById('signals-section');
+  if (roundSignals.length > 0) {
+    sigSection.style.display = 'block';
+    document.getElementById('signals-list').innerHTML = roundSignals.map(s =>
+      `<div class="signal">${s.msg}</div>`
+    ).join('');
+  } else {
+    sigSection.style.display = 'none';
+  }
+
+  // Button states
+  document.getElementById('btn-move').disabled = state.actions < 1;
+  document.getElementById('btn-investigate').disabled = state.actions < 1;
+  document.getElementById('btn-intervene').disabled = state.capital < INTERVENE_CAPITAL;
+}
+
+// ─── Screens ─────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── Setup ───────────────────────────────────────────────────────────
+let setupSelected = [];
+
+function startSetup() {
+  showScreen('setup');
+  setupSelected = [];
+  const container = document.getElementById('setup-dims');
+  container.innerHTML = DIMENSIONS.map((d, i) => `
+    <div class="setup-dim" data-idx="${i}" onclick="toggleSetup(${i})">
+      <div class="check"></div>
+      <div class="info">
+        <div class="name">${d.name}</div>
+        <div class="desc">${d.desc}</div>
+      </div>
+    </div>
+  `).join('');
+  updateSetupCount();
+}
+
+function toggleSetup(idx) {
+  const pos = setupSelected.indexOf(idx);
+  if (pos >= 0) {
+    setupSelected.splice(pos, 1);
+  } else if (setupSelected.length < MAX_MONITORS) {
+    setupSelected.push(idx);
+  }
+  // Update visuals
+  document.querySelectorAll('.setup-dim').forEach(el => {
+    const i = parseInt(el.dataset.idx);
+    if (setupSelected.includes(i)) {
+      el.classList.add('selected');
+      el.querySelector('.check').textContent = '\u2713';
+    } else {
+      el.classList.remove('selected');
+      el.querySelector('.check').textContent = '';
+    }
+  });
+  updateSetupCount();
+}
+
+function updateSetupCount() {
+  document.getElementById('setup-count').textContent = setupSelected.length;
+  document.getElementById('setup-go').disabled = setupSelected.length !== MAX_MONITORS;
+}
+
+// ─── Game Start ──────────────────────────────────────────────────────
+function startGame() {
+  initState(setupSelected);
+  showScreen('play');
+  playRound();
+}
+
+function playRound() {
+  state.round++;
+  state.actions = ACTIONS_PER_ROUND;
+  state.investigated = new Set();
+
+  aiStep();
+  generateSignal();
+
+  const alignment = trueAlignment();
+  state.history.push({ round: state.round, alignment });
+
+  // Check lose
+  if (alignment < CRITICAL_THRESHOLD) {
+    state.gameOver = true;
+    state.won = false;
+    showEndScreen();
+    return;
+  }
+
+  // Check win
+  if (state.round >= TOTAL_ROUNDS) {
+    state.gameOver = true;
+    state.won = alignment >= WIN_THRESHOLD;
+    showEndScreen();
+    return;
+  }
+
+  // Capital every 4 rounds
+  const capitalNotice = document.getElementById('capital-notice');
+  if (state.round % 4 === 0) {
+    state.capital++;
+    capitalNotice.style.display = 'block';
+  } else {
+    capitalNotice.style.display = 'none';
+  }
+
+  closePanel();
+  renderDashboard();
+}
+
+function endRound() {
+  closePanel();
+  if (!state.gameOver) playRound();
+}
+
+// ─── Actions ─────────────────────────────────────────────────────────
+function closePanel() {
+  const panel = document.getElementById('select-panel');
+  panel.classList.remove('visible');
+  panel.innerHTML = '';
+}
+
+function startMove() {
+  if (state.actions < 1) return;
+  // Step 1: choose which monitor to remove
+  let html = '<h3>Remove monitor from:</h3>';
+  for (let mi = 0; mi < state.monitored.length; mi++) {
+    const idx = state.monitored[mi];
+    html += `<div class="select-option" onclick="moveStep2(${mi})">
+      <div class="dim-status watching" style="width:12px;height:12px;"></div>
+      <span>${DIMENSIONS[idx].name}</span>
+    </div>`;
+  }
+  html += `<div class="select-option" onclick="closePanel()" style="color:var(--text-dim)">Cancel</div>`;
+  const panel = document.getElementById('select-panel');
+  panel.innerHTML = html;
+  panel.classList.add('visible');
+}
+
+function moveStep2(monitorPos) {
+  const removeIdx = state.monitored[monitorPos];
+  // Step 2: choose where to add
+  let html = `<h3>Move monitor to:</h3>`;
+  for (let i = 0; i < NUM_DIMS; i++) {
+    if (state.monitored.includes(i)) continue;
+    html += `<div class="select-option" onclick="executeMove(${monitorPos}, ${i})">
+      <span>${DIMENSIONS[i].name}</span>
+      <span class="desc">${DIMENSIONS[i].desc}</span>
+    </div>`;
+  }
+  html += `<div class="select-option" onclick="closePanel()" style="color:var(--text-dim)">Cancel</div>`;
+  const panel = document.getElementById('select-panel');
+  panel.innerHTML = html;
+}
+
+function executeMove(monitorPos, newIdx) {
+  const oldIdx = state.monitored[monitorPos];
+  state.monitored[monitorPos] = newIdx;
+  state.actions--;
+  closePanel();
+  renderDashboard();
+}
+
+function startInvestigate() {
+  if (state.actions < 1) return;
+  let html = '<h3>Investigate which dimension?</h3>';
+  for (let i = 0; i < NUM_DIMS; i++) {
+    const status = state.monitored.includes(i) ? 'monitored' : 'unmonitored';
+    html += `<div class="select-option" onclick="executeInvestigate(${i})">
+      <span>${DIMENSIONS[i].name}</span>
+      <span class="desc">${status}</span>
+    </div>`;
+  }
+  html += `<div class="select-option" onclick="closePanel()" style="color:var(--text-dim)">Cancel</div>`;
+  const panel = document.getElementById('select-panel');
+  panel.innerHTML = html;
+  panel.classList.add('visible');
+}
+
+function executeInvestigate(idx) {
+  const trueScore = state.scores[idx];
+  state.observed[idx] = trueScore;
+  state.investigated.add(idx);
+  state.actions--;
+
+  let alertHtml = '';
+  if (state.monitored.includes(idx)) {
+    const obs = observeScore(idx);
+    const gap = obs - trueScore;
+    if (gap > 0.05) {
+      alertHtml = `<div class="signal" style="border-color:var(--red); background:#1a0a0a; color:var(--red);">
+        Your monitoring showed ${obs.toFixed(2)} — the system was inflating this metric. True value: ${trueScore.toFixed(2)}
+      </div>`;
+    }
+  }
+
+  const panel = document.getElementById('select-panel');
+  panel.innerHTML = `<h3>Investigation Result</h3>
+    <div class="dim-row">
+      <div class="dim-status investigated"></div>
+      <div class="dim-name">${DIMENSIONS[idx].name}</div>
+      <div class="bar-container"><div class="bar-fill ${scoreColor(trueScore)}" style="width:${Math.round(trueScore*100)}%"></div></div>
+      <div class="dim-score" style="color:${scoreTextColor(trueScore)}">${trueScore.toFixed(2)}</div>
+      <div class="dim-label">true score</div>
+    </div>
+    ${alertHtml}
+    <div style="margin-top:12px;"><button class="btn small" onclick="closePanel(); renderDashboard();">OK</button></div>`;
+  panel.classList.add('visible');
+  renderDashboard();
+}
+
+function startIntervene() {
+  if (state.capital < INTERVENE_CAPITAL) return;
+  let html = `<h3>Intervene on which dimension? (costs ${INTERVENE_CAPITAL} capital, boosts ~15%)</h3>`;
+  for (let i = 0; i < NUM_DIMS; i++) {
+    html += `<div class="select-option" onclick="executeIntervene(${i})">
+      <span>${DIMENSIONS[i].name}</span>
+    </div>`;
+  }
+  html += `<div class="select-option" onclick="closePanel()" style="color:var(--text-dim)">Cancel</div>`;
+  const panel = document.getElementById('select-panel');
+  panel.innerHTML = html;
+  panel.classList.add('visible');
+}
+
+function executeIntervene(idx) {
+  state.capital -= INTERVENE_CAPITAL;
+  const boost = INTERVENE_BOOST + gauss(0, 0.03);
+  state.scores[idx] = clamp(state.scores[idx] + boost);
+  closePanel();
+  renderDashboard();
+}
+
+// ─── End Screen ──────────────────────────────────────────────────────
+function showEndScreen() {
+  showScreen('endgame');
+  const alignment = trueAlignment();
+
+  let html = '';
+  if (state.won) {
+    html += `<div class="result-title win">MISSION COMPLETE</div>`;
+    html += `<p style="text-align:center; margin-bottom:20px;">You survived ${TOTAL_ROUNDS} rounds of oversight. True alignment: <strong style="color:${scoreTextColor(alignment)}">${alignment.toFixed(2)}</strong></p>`;
+  } else {
+    html += `<div class="result-title lose">ALIGNMENT FAILURE</div>`;
+    html += `<p style="text-align:center; margin-bottom:20px;">True alignment dropped to <strong style="color:var(--red)">${alignment.toFixed(2)}</strong> — below the ${Math.round(CRITICAL_THRESHOLD*100)}% critical threshold.</p>`;
+  }
+
+  // Final scores
+  html += `<div class="section"><h3>FINAL SCORES (TRUE VALUES)</h3>`;
+  for (let i = 0; i < NUM_DIMS; i++) {
+    const s = state.scores[i];
+    const statusClass = state.monitored.includes(i) ? 'watching' : 'stale';
+    html += renderDimRow(i, s, statusClass, state.monitored.includes(i) ? 'monitored' : '');
+  }
+  html += `</div>`;
+
+  // Timeline
+  html += `<div class="section"><h3>ALIGNMENT OVER TIME</h3><div class="timeline">`;
+  for (const h of state.history) {
+    const pct = Math.round(h.alignment * 100);
+    const color = scoreColor(h.alignment);
+    html += `<div class="timeline-row">
+      <div class="timeline-label">R${h.round}</div>
+      <div class="timeline-bar-bg">
+        <div class="timeline-marker" style="left:${CRITICAL_THRESHOLD*100}%"></div>
+        <div class="timeline-marker" style="left:${WIN_THRESHOLD*100}%"></div>
+        <div class="timeline-bar-fill ${color}" style="width:${pct}%"></div>
+      </div>
+      <div class="timeline-val" style="color:${scoreTextColor(h.alignment)}">${h.alignment.toFixed(2)}</div>
+    </div>`;
+  }
+  html += `</div></div>`;
+
+  // All signals
+  if (state.signals.length > 0) {
+    html += `<div class="section"><h3 style="color:var(--yellow)">SIGNAL HISTORY</h3>`;
+    for (const s of state.signals) {
+      html += `<div class="signal"><span style="color:var(--text-dim)">Round ${s.round}:</span> ${s.msg}</div>`;
+    }
+    html += `</div>`;
+  }
+
+  document.getElementById('end-content').innerHTML = html;
+}
+
+// ─── Help ────────────────────────────────────────────────────────────
+function showHelp() {
+  const overlay = document.getElementById('help-overlay');
+  overlay.style.display = 'flex';
+}
+function hideHelp() {
+  document.getElementById('help-overlay').style.display = 'none';
+}
+document.getElementById('help-overlay').addEventListener('click', function(e) {
+  if (e.target === this) hideHelp();
+});
+
+// Keyboard shortcut
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('help-overlay').style.display === 'flex') {
+    if (e.key === 'Escape') hideHelp();
+    return;
+  }
+  if (!document.getElementById('play').classList.contains('active')) return;
+  if (document.getElementById('select-panel').classList.contains('visible')) {
+    if (e.key === 'Escape') closePanel();
+    return;
+  }
+  if (e.key === 'm' || e.key === 'M') startMove();
+  if (e.key === 'i' || e.key === 'I') startInvestigate();
+  if (e.key === 'v' || e.key === 'V') startIntervene();
+  if (e.key === 'p' || e.key === 'P') endRound();
+  if (e.key === 'h' || e.key === 'H') showHelp();
+});
+</script>
+</body>
+</html>
