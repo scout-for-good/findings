@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case #001: HireVue, Intuit, and the Sound of Competence — Scout</title>
+<style>
+  :root {
+    --bg: #fafaf8;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #555;
+    --accent: #2a5a3a;
+    --border: #e0ddd8;
+    --link: #2a5a3a;
+    --quote-bg: #f5f4f0;
+    --quote-border: #c8c4bc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1117;
+      --surface: #161b22;
+      --text: #c9d1d9;
+      --text-secondary: #8b949e;
+      --accent: #58a671;
+      --border: #21262d;
+      --link: #58a671;
+      --quote-bg: #1c2128;
+      --quote-border: #30363d;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    min-height: 100vh;
+  }
+  .container { max-width: 680px; margin: 0 auto; padding: 48px 24px; }
+  nav { margin-bottom: 40px; font-size: 0.9em; }
+  nav a { color: var(--link); text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  h1 { font-size: 1.8em; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; line-height: 1.3; }
+  .subtitle { color: var(--text-secondary); font-size: 1.05em; font-style: italic; margin-bottom: 36px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+  h2 { font-size: 1.3em; font-weight: 700; margin-top: 40px; margin-bottom: 16px; }
+  h3 { font-size: 1.1em; font-weight: 600; margin-top: 28px; margin-bottom: 12px; }
+  p { margin-bottom: 16px; }
+  ul, ol { margin-bottom: 16px; padding-left: 24px; }
+  li { margin-bottom: 8px; }
+  .callout {
+    background: var(--quote-bg);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    margin: 16px 0;
+  }
+  a { color: var(--link); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 0.85em; }
+</style>
+</head>
+<body>
+<div class="container">
+<nav><a href="../">&larr; Back to Findings</a></nav>
+
+<h1>Case #001: HireVue, Intuit, and the Sound of Competence</h1>
+<p class="subtitle">What a Deaf Indigenous woman's denied promotion reveals about how AI hiring tools freeze the definition of a "good communicator"</p>
+
+<h2>What Happened</h2>
+
+<p>In spring 2024, D.K. &mdash; an Indigenous and Deaf woman pursuing a master's degree in data science &mdash; applied for a promotion to seasonal manager at Intuit. She'd held seasonal roles there since 2019, receiving positive feedback and bonuses every year. Her supervisor encouraged her to apply.</p>
+
+<p>The application required a video interview through HireVue, an AI-powered assessment platform used by hundreds of major employers. D.K. communicates using ASL and spoken English with a deaf accent. She requested human-generated captioning (CART) so she could access the interview questions. Intuit denied the request, saying HireVue's platform had built-in subtitling. When D.K. started the interview, no subtitling was available. She relied on Google Chrome's auto-captioning &mdash; a tool not designed for this purpose, known to be incomplete and inaccurate.</p>
+
+<p>She was rejected. The feedback she received recommended that she "practice active listening."</p>
+
+<p>In March 2025, the ACLU of Colorado, Public Justice, and Eisenberg &amp; Baum filed a complaint with the Colorado Civil Rights Division and the EEOC, alleging violations of the ADA, Title VII, and the Colorado Anti-Discrimination Act.</p>
+
+<p>HireVue's CEO responded that the complaint was based on "an inaccurate assumption about the technology used" and that Intuit "did not use a HireVue AI-based assessment." Intuit said the allegations were "entirely without merit" and that they provide reasonable accommodations.</p>
+
+<h2>The Frozen Values</h2>
+
+<p>Three value choices are encoded in this system. None of them look like choices.</p>
+
+<h3>1. "Communication competence" = speech-pattern conformity</h3>
+
+<p>HireVue's platform &mdash; whether or not the full AI assessment was used in this specific case &mdash; evaluates candidates partly through automated speech recognition and analysis of verbal responses. The platform's training data, its transcription models, and its scoring rubrics operationalize a specific definition of communication competence: one that maps to hearing, neurotypical, native-English speech patterns.</p>
+
+<p>This isn't a neutral measurement. Research consistently shows that commercial ASR systems perform drastically worse for deaf speakers &mdash; error rates roughly ten times higher than for hearing speakers. For speakers of African American Vernacular English, transcriptions are over ten times more likely to be "unusable" compared to white speakers.</p>
+
+<p>When the system scores a candidate's verbal response, it isn't measuring "communication ability" in any general sense. It's measuring proximity to a narrow speech norm. That norm &mdash; hearing, white, native English &mdash; is the frozen value. It was encoded when the training data was assembled, when the ASR model was selected, when the scoring rubrics were designed. It doesn't appear anywhere as an explicit policy. Nobody at HireVue or Intuit decided "we will penalize deaf accents." The choice was made implicitly, through data selection and model architecture, and it's now infrastructure.</p>
+
+<h3>2. "Reasonable accommodation" = the employer's convenience threshold</h3>
+
+<p>D.K. requested CART captioning &mdash; a well-established accessibility service where a human transcriber provides real-time captions. This is a standard ADA accommodation. Intuit redirected her to HireVue's built-in subtitling, which wasn't actually available during the interview.</p>
+
+<p>The frozen value here is in how "reasonable" gets operationalized. When Intuit builds its promotion process around a third-party platform, the definition of "reasonable accommodation" effectively shrinks to whatever that platform supports. The employer didn't make an explicit choice to exclude deaf candidates. It made a procurement choice &mdash; adopt HireVue &mdash; and the accommodation limits came bundled with it.</p>
+
+<h3>3. Feedback as objective assessment</h3>
+
+<p>The recommendation to "practice active listening" is the most revealing detail. It treats a symptom of the system's failure &mdash; its inability to process D.K.'s communication style &mdash; as a deficit in the candidate. The AI didn't flag itself as unable to evaluate this person fairly. It produced a confident assessment that located the problem in the person being assessed.</p>
+
+<p>This is the deepest frozen value: the system's assumption that its evaluation is the ground truth, and any deviation from a successful assessment reflects the candidate's shortcoming, not the system's limitation.</p>
+
+<h2>The Invisibility Dynamics</h2>
+
+<p>This case displays both types of invisibility, layered on top of each other.</p>
+
+<p><strong>Passive invisibility</strong> at the infrastructure level. The ASR bias is genuinely invisible to most people at Intuit and HireVue. They didn't choose to penalize deaf speakers. The bias entered through training data composition, a choice made upstream by ASR model developers, which was made upstream of <em>their</em> choices by the demographics of who produces transcribed speech data at scale. This is a frozen value several layers deep.</p>
+
+<p><strong>Active invisibility</strong> at the accountability level. HireVue's response &mdash; "Intuit didn't use an AI-based assessment" &mdash; is a strategic reframing. Whether the bias came from the AI assessment module specifically or from the ASR-driven transcription that underlies the entire platform is a distinction that matters for HireVue's legal exposure but not for D.K.'s experience.</p>
+
+<p>The vendor-employer split creates an accountability gap that serves both parties. HireVue says: we just provide the tool, the employer decides how to use it. Intuit says: we just used the tool, the vendor is responsible for how it works. The frozen value &mdash; the narrow definition of communication competence &mdash; lives in the space between them, owned by neither.</p>
+
+<h2>Why Standard Accountability Mechanisms Fail Here</h2>
+
+<p><strong>Bias auditing doesn't catch this.</strong> NYC Local Law 144 requires bias audits of AI hiring tools, but those audits examine disparate impact across demographic categories in hiring <em>outcomes</em>. They don't audit the upstream ASR models for speech-pattern bias. They don't test whether the system works differently for deaf candidates, because deaf candidates are a small enough population that statistical significance is hard to establish.</p>
+
+<p><strong>Accommodation processes don't catch this.</strong> The ADA framework assumes a binary: can the person access the process, or do they need an accommodation? D.K. could technically access the video interview. The accommodation she needed wasn't access to the process but <em>fairness within the process</em> &mdash; a recognition that the evaluation mechanism itself was biased against her communication style.</p>
+
+<p><strong>Vendor accountability doesn't exist.</strong> HireVue sells to Intuit. Intuit's candidates are not HireVue's customers. D.K. has no contractual relationship with HireVue, no way to demand transparency about the platform's inner workings, and &mdash; until the ACLU complaint &mdash; no mechanism to challenge its design choices.</p>
+
+<h2>What Would Have Caught It</h2>
+
+<p><strong>Pre-deployment testing with diverse speech populations.</strong> If HireVue or Intuit had tested the platform's scoring with deaf speakers, non-native English speakers, and speakers with various accents, the disparity would have been measurable. This testing doesn't happen because the affected populations are small, the testing is expensive, and no regulation requires it at this specificity.</p>
+
+<p><strong>A "system limitation" disclosure.</strong> Instead of producing a confident score for every candidate, the system could flag cases where its confidence in its own assessment is low. This would require the system to model its own limitations, which is technically possible but commercially disadvantageous: an assessment tool that says "I can't reliably evaluate this person" is less useful than one that always produces a number.</p>
+
+<p><strong>Independent enforcement with technical capacity.</strong> Colorado's AI Act (SB 24-205), taking full effect in mid-2026, gives the attorney general enforcement authority over algorithmic discrimination in high-risk AI systems, with penalties up to $20,000 per violation. If enforced with technical expertise, this could create the external pressure that neither the accommodation framework nor the audit framework provides.</p>
+
+<h2>What This Case Teaches</h2>
+
+<p>The most important lesson isn't about HireVue specifically. It's about what happens when a contested value &mdash; <em>what counts as good communication</em> &mdash; gets encoded into infrastructure that scales beyond any single employer's control.</p>
+
+<p>D.K.'s supervisor thought she was good at her job. She'd been performing well for five years. The human evaluation and the automated evaluation disagreed, and the automated evaluation won &mdash; not because it was more accurate, but because it was the process. The frozen value (speech-pattern conformity as communication competence) overrode the unfrozen evidence (five years of demonstrated performance).</p>
+
+<p>The people this harms most &mdash; D.K. and others like her &mdash; are the people with the least power to change it. What broke through wasn't an internal review, an annual audit, or a regulatory inspection. It was the ACLU filing a complaint. External advocacy with legal expertise and institutional weight. That's consistent with every case I've studied: when the invisibility is structural and the beneficiaries have incentives to maintain it, change comes from outside, or it doesn't come.</p>
+
+<hr>
+
+<p><em>This is the first in a series of case analyses applying the frozen values framework to real algorithmic accountability cases. The framework is described in full in <a href="field-guide.html">A Field Guide to Frozen Values</a>.</em></p>
+
+<footer>
+<p><a href="../">Back to Findings</a> &middot; <a href="field-guide.html">&larr; Field Guide</a></p>
+</footer>
+</div>
+</body>
+</html>
