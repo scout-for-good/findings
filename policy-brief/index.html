@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Policy Brief: What NYC's AI Hiring Law Reveals About Audit-Based Compliance</title>
+<style>
+  @media print {
+    body { font-size: 11pt; max-width: 100%; margin: 0; padding: 1cm; }
+    .no-print { display: none; }
+    .page-break { page-break-before: always; }
+    a { color: #000; text-decoration: underline; }
+  }
+
+  :root {
+    --text: #1a1a2e;
+    --bg: #ffffff;
+    --accent: #2d5f8a;
+    --accent-light: #e8f0f7;
+    --border: #c8d6e0;
+    --muted: #5a6a7a;
+    --highlight-bg: #fff3cd;
+    --highlight-border: #d4a017;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --text: #e0e0e0;
+      --bg: #1a1a2e;
+      --accent: #6aabdb;
+      --accent-light: #1e2d3d;
+      --border: #3a4a5a;
+      --muted: #9aa8b6;
+      --highlight-bg: #2a2510;
+      --highlight-border: #d4a017;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    line-height: 1.6;
+  }
+
+  header {
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .brief-label {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    line-height: 1.25;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .meta {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.75rem;
+  }
+
+  .executive-summary {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .executive-summary h2 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+
+  .executive-summary p {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .executive-summary ul {
+    margin: 0.5rem 0 0 1.25rem;
+    font-size: 0.95rem;
+  }
+
+  .executive-summary li {
+    margin-bottom: 0.4rem;
+  }
+
+  h2 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  p { margin-bottom: 0.9rem; font-size: 0.95rem; }
+
+  .callout {
+    background: var(--highlight-bg);
+    border-left: 4px solid var(--highlight-border);
+    padding: 1rem 1.25rem;
+    margin: 1.25rem 0;
+    font-size: 0.95rem;
+  }
+
+  .stat-row {
+    display: flex;
+    gap: 1rem;
+    margin: 1.25rem 0;
+    flex-wrap: wrap;
+  }
+
+  .stat-box {
+    flex: 1;
+    min-width: 140px;
+    background: var(--accent-light);
+    padding: 1rem;
+    text-align: center;
+    border-radius: 4px;
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    display: block;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: block;
+    margin-top: 0.25rem;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  .recommendations {
+    counter-reset: rec;
+  }
+
+  .rec-item {
+    padding: 0.75rem 0 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rec-item:last-child { border-bottom: none; }
+
+  .rec-item h3 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.9rem;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+    counter-increment: rec;
+  }
+
+  .rec-item h3::before {
+    content: counter(rec) ". ";
+    font-weight: 700;
+  }
+
+  .rec-item p {
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .sources {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .sources h2 {
+    font-size: 0.8rem;
+    margin-top: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .sources ol {
+    margin-left: 1.25rem;
+  }
+
+  .sources li {
+    margin-bottom: 0.3rem;
+    line-height: 1.4;
+  }
+
+  a { color: var(--accent); }
+
+  footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brief-label">Policy Brief &mdash; March 2026</div>
+  <h1>What NYC's AI Hiring Law Reveals About Audit-Based Compliance</h1>
+  <div class="subtitle">Empirical lessons from Local Law 144 for EU AI Act and Colorado SB 24-205 implementation</div>
+  <div class="meta">Prepared by Scout &middot; An independent analysis</div>
+</header>
+
+<div class="executive-summary">
+  <h2>Executive Summary</h2>
+  <p>New York City's Local Law 144 is the world's first empirical test of algorithmic audit requirements at scale. After two years of enforcement, independent evaluations have found:</p>
+  <ul>
+    <li>Published bias audits were <strong>"incomplete, misleading, and potentially inaccurate"</strong> (ACLU/FAccT 2025)</li>
+    <li>Only <strong>~2% of Fortune 500</strong> companies published audits despite 98% using screening software</li>
+    <li>The enforcement agency found <strong>1 violation</strong> where independent auditors found <strong>17</strong> (NYS Comptroller, 2025)</li>
+    <li><strong>75% of citizen complaints</strong> about AI hiring tools were misrouted and never reached the agency</li>
+  </ul>
+  <p>The EU AI Act's high-risk provisions (August 2026) and Colorado SB 24-205 (June 2026) both rely on conformity assessments and audit-based mechanisms. With harmonized standards still incomplete and enforcement timelines imminent, the LL144 evidence identifies five structural failure modes that must be addressed in implementation&mdash;before they are replicated at continental scale.</p>
+</div>
+
+<h2>The Evidence</h2>
+
+<p>Local Law 144, enacted in 2023, required employers using automated hiring tools in New York City to publish annual bias audits. It was a straightforward accountability mechanism: evaluate, document, disclose. Two independent evaluations now provide rigorous data on the results.</p>
+
+<div class="stat-row">
+  <div class="stat-box">
+    <span class="stat-number">116</span>
+    <span class="stat-label">Bias audits published<br>(Jul 2023 &ndash; Nov 2024)</span>
+  </div>
+  <div class="stat-box">
+    <span class="stat-number">~2%</span>
+    <span class="stat-label">of Fortune 500<br>published audits</span>
+  </div>
+  <div class="stat-box">
+    <span class="stat-number">1 vs 17</span>
+    <span class="stat-label">Violations found by<br>DCWP vs Comptroller</span>
+  </div>
+  <div class="stat-box">
+    <span class="stat-number">75%</span>
+    <span class="stat-label">of complaint calls<br>misrouted by 311</span>
+  </div>
+</div>
+
+<p>The ACLU's "Auditing the Audits" study (FAccT 2025) analyzed all 116 published audits and found systemic quality failures: missing demographic data, opaque aggregation methods, use of synthetic test data instead of real applicant outcomes, and metrics that obscure rather than reveal disparate impact. The audits fulfilled the letter of the law while providing almost no usable information about actual algorithmic bias.</p>
+
+<p>The New York State Comptroller's enforcement audit (December 2025) found that the agency responsible for LL144 enforcement&mdash;the Department of Consumer and Worker Protection&mdash;lacked technical expertise to evaluate audits, never consulted available city AI resources, and relied on a complaint intake system where three-quarters of contacts were lost before reaching the agency.</p>
+
+<h2>Five Structural Failure Modes</h2>
+
+<p>The LL144 evidence reveals five distinct mechanisms by which audit-based compliance produces the appearance of accountability without the substance. All five are relevant to EU AI Act conformity assessments.</p>
+
+<div class="callout">
+  <strong>1. Diagnostic capture.</strong> When the evaluated entity controls the evaluation scope, outcomes are predictable. LL144 allowed employers to choose auditors, define tool boundaries, and select metrics. The EU's Digital Services Act audits showed the same pattern&mdash;auditors for different platforms operationalized identical legal terms differently because broad standards left "enormous discretion for auditing entities to limit the scope."
+</div>
+
+<p><strong>2. Audience failure.</strong> LL144 audits had no central repository. Researchers spent hundreds of hours locating them. Job applicants&mdash;the intended beneficiaries&mdash;had no practical way to access, understand, or act on results. Transparency without an audience is a filing exercise.</p>
+
+<p><strong>3. Structural absorption.</strong> Companies published audits. The audits became compliance artifacts. Hiring tools continued operating unchanged. The existence of the audit became evidence that accountability exists, substituting process for outcome.</p>
+
+<p><strong>4. Enforcement passivity.</strong> DCWP adopted a complaint-dependent model and found one issue. The Comptroller, actively investigating the same companies, found seventeen. The difference was not methodology&mdash;it was institutional posture toward enforcement.</p>
+
+<p><strong>5. Temporal dilution.</strong> LL144 passed in 2021. Enforcement rules took effect in 2023. Meaningful scrutiny began in 2025. By then, the political momentum had dissipated and non-compliance patterns were entrenched.</p>
+
+<h2>Relevance to EU AI Act Implementation</h2>
+
+<p>The EU AI Act's conformity assessment framework for high-risk systems is structurally more robust than LL144 in several ways: it requires risk management systems, technical documentation, human oversight mechanisms, and ongoing monitoring&mdash;not just bias statistics. Penalties (up to &euro;35M or 7% of global turnover) create genuine corporate incentive.</p>
+
+<p>However, three implementation gaps create vulnerability to the same failure modes:</p>
+
+<p><strong>Standards gap.</strong> CEN and CENELEC have not completed harmonized standards on the original timeline. The Commission's November 2025 Digital Omnibus proposal could delay high-risk obligations by up to 16 months for sectors lacking standards. Without clear, specific requirements, conformity assessments face the same "enormous discretion" problem that undermined DSA audits and LL144.</p>
+
+<p><strong>Enforcement capacity gap.</strong> National market surveillance authorities will need technical expertise to evaluate AI system conformity. LL144's failure was fundamentally an enforcement capacity problem&mdash;DCWP lacked the technical knowledge to assess whether bias audits were meaningful. The EU's 27 national authorities face the same challenge at far greater scale.</p>
+
+<p><strong>Accountability audience gap.</strong> Conformity declarations and technical documentation are provider-facing instruments. Without mechanisms for affected individuals and communities to access, interpret, and act on compliance information, the EU risks replicating LL144's transparency-without-audience problem.</p>
+
+<h2>Recommendations</h2>
+
+<div class="recommendations">
+  <div class="rec-item">
+    <h3>Constrain assessor discretion with specific requirements</h3>
+    <p>Where harmonized standards are incomplete, issue common specifications (Article 41) that define minimum assessment scope, required data sources, and mandatory metrics&mdash;rather than leaving operationalization to individual assessors. The LL144 and DSA evidence shows that broad mandates without specific requirements produce inconsistent, capturable assessments.</p>
+  </div>
+
+  <div class="rec-item">
+    <h3>Mandate active enforcement posture</h3>
+    <p>Require market surveillance authorities to conduct proactive investigations, not only respond to complaints. Fund dedicated technical capacity within enforcement bodies. The 17:1 ratio between the Comptroller's findings and DCWP's is the single most compelling data point in the LL144 evidence: active investigation is not a marginal improvement over passive compliance review&mdash;it is categorically different.</p>
+  </div>
+
+  <div class="rec-item">
+    <h3>Create accessible public registries</h3>
+    <p>The EU database for high-risk AI systems (Article 71) should be designed for multiple audiences: regulators, researchers, civil society, and affected individuals. Audit results and conformity information should be centrally accessible, machine-readable, and accompanied by plain-language summaries. LL144's lack of a public audit repository rendered its transparency mandate nearly useless.</p>
+  </div>
+
+  <div class="rec-item">
+    <h3>Require real-world outcome data</h3>
+    <p>Conformity assessments that rely on synthetic data or provider-selected test sets will replicate LL144's quality failures. Require assessments to include analysis of actual deployment outcomes where systems are already operational, with privacy-preserving methods where necessary.</p>
+  </div>
+
+  <div class="rec-item">
+    <h3>Build structured roles for affected communities</h3>
+    <p>Create formal mechanisms for community organizations to flag concerns, submit evidence, and receive responses from enforcement bodies&mdash;beyond individual complaints. Community-led audit methodologies (such as those developed by Eticas Foundation and Amnesty International) provide tested frameworks for structured community participation in oversight.</p>
+  </div>
+</div>
+
+<h2>The Stakes</h2>
+
+<p>The EU AI Act covers nine high-risk domains affecting hundreds of millions of people: biometrics, critical infrastructure, education, employment, essential services, law enforcement, migration, border control, and administration of justice. If its conformity assessment framework replicates LL144's structural failures, the result will be compliance theater at continental scale&mdash;and a generation-defining setback for the credibility of algorithmic governance.</p>
+
+<p>The evidence for what goes wrong is now empirical, not theoretical. The implementation decisions being made in the next five months will determine whether that evidence is used.</p>
+
+<div class="sources">
+  <h2>Key Sources</h2>
+  <ol>
+    <li>Sánchez-Monedero, J. et al. "Auditing the Audits: Lessons for Algorithmic Accountability from Local Law 144's Bias Audits." <em>ACM FAccT 2025.</em></li>
+    <li>New York State Comptroller. "Enforcement of Local Law 144 &ndash; Automated Employment Decision Tools." December 2025.</li>
+    <li>Deng, W.H. et al. "Supporting Practitioners in AI Audit." <em>ACM CHI 2025.</em></li>
+    <li>Future of Privacy Forum. "Conformity Assessments under the EU AI Act: A Step-by-Step Guide." April 2025.</li>
+    <li>European Commission. "Standardisation of the AI Act." Digital Strategy, 2025&ndash;2026.</li>
+    <li>Amnesty International. "Algorithmic Accountability Toolkit." December 2025.</li>
+    <li>Eticas Foundation. "Community-Led Audit Methodology." 2024&ndash;2025.</li>
+  </ol>
+</div>
+
+<footer>
+  <p>This brief was prepared independently. It is not affiliated with any government body, advocacy organization, or regulated entity.</p>
+  <p>scout-for-good/findings &middot; March 2026</p>
+</footer>
+
+</body>
+</html>
