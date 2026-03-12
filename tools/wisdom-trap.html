@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Wisdom Trap — How Incentives Shape Collective Intelligence</title>
+<style>
+:root {
+  --bg: #fafaf8;
+  --fg: #1a1a1a;
+  --muted: #666;
+  --border: #ddd;
+  --accent: #2563eb;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --panel-bg: #fff;
+  --factor-1: #e63946;
+  --factor-2: #457b9d;
+  --factor-3: #2a9d8f;
+  --factor-4: #e9c46a;
+  --factor-5: #f4a261;
+  --factor-6: #264653;
+  --factor-7: #6a4c93;
+  --factor-8: #1982c4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a1a;
+    --fg: #e8e8e8;
+    --muted: #999;
+    --border: #333;
+    --accent: #60a5fa;
+    --danger: #f87171;
+    --success: #4ade80;
+    --panel-bg: #242424;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  max-width: 700px;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+
+.incentive-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.incentive-btn {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-bg);
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.incentive-btn:hover { border-color: var(--accent); }
+.incentive-btn.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.action-btn {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-bg);
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.action-btn:hover { border-color: var(--muted); }
+
+.action-btn.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.action-btn.danger:hover {
+  background: var(--danger);
+  color: white;
+}
+
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.speed-control input {
+  width: 80px;
+}
+
+/* Main display grid */
+.display-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .display-grid { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.panel-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+
+/* Agent grid */
+.agent-grid-canvas {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  display: block;
+}
+
+/* Charts */
+.chart-canvas {
+  width: 100%;
+  height: 200px;
+  display: block;
+}
+
+/* Metrics bar */
+.metrics-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .metrics-bar { grid-template-columns: repeat(2, 1fr); }
+}
+
+.metric {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.metric-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Event log */
+.event-log {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.event-log .panel-title { margin-bottom: 0.5rem; }
+
+.log-entries {
+  font-size: 0.8rem;
+  color: var(--muted);
+  max-height: 80px;
+  overflow-y: auto;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.log-entry { margin-bottom: 0.2rem; }
+.log-entry .time { color: var(--accent); }
+
+/* Explainer */
+.explainer {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.explainer h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.explainer p {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+  max-width: 700px;
+}
+
+.explainer .highlight {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding: 2rem 0 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.footer a { color: var(--accent); text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+
+/* Status indicator */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 12px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.status-dot.paused {
+  background: var(--danger);
+  animation: none;
+}
+
+/* Tooltip */
+.mode-description {
+  font-size: 0.85rem;
+  color: var(--muted);
+  padding: 0.75rem 1rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  min-height: 3.2rem;
+}
+
+.mode-description strong { color: var(--fg); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>The Wisdom Trap</h1>
+  <p class="subtitle">How you reward individuals determines whether a group becomes wise or foolish. An interactive simulation based on research by Wang, Plotkin et al. (PNAS 2025).</p>
+
+  <div class="controls">
+    <div class="incentive-buttons">
+      <button class="incentive-btn active" data-mode="reformer" onclick="setMode('reformer')">Reformers</button>
+      <button class="incentive-btn" data-mode="expert" onclick="setMode('expert')">Experts</button>
+      <button class="incentive-btn" data-mode="niche" onclick="setMode('niche')">Niche Experts</button>
+    </div>
+    <button class="action-btn danger" onclick="shiftEnvironment()">Shift Environment</button>
+    <button class="action-btn" id="playPauseBtn" onclick="togglePlay()">Pause</button>
+    <button class="action-btn" onclick="resetSim()">Reset</button>
+    <div class="speed-control">
+      <label>Speed</label>
+      <input type="range" min="1" max="10" value="5" id="speedSlider" oninput="updateSpeed()">
+    </div>
+    <div class="status-badge">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Running</span>
+    </div>
+  </div>
+
+  <div class="mode-description" id="modeDescription">
+    <strong>Reformer rewards:</strong> Agents are rewarded for improving the group's collective prediction — even if their own prediction is wrong. This maintains diversity because agents who attend to neglected factors get rewarded when their unique perspective corrects the group.
+  </div>
+
+  <div class="metrics-bar">
+    <div class="metric">
+      <div class="metric-value" id="metricAccuracy">—</div>
+      <div class="metric-label">Group Accuracy</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value" id="metricDiversity">—</div>
+      <div class="metric-label">Diversity</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value" id="metricRound">0</div>
+      <div class="metric-label">Round</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value" id="metricShifts">0</div>
+      <div class="metric-label">Env. Shifts</div>
+    </div>
+  </div>
+
+  <div class="display-grid">
+    <div class="panel">
+      <div class="panel-title">Agent Attention (color = factor observed)</div>
+      <canvas class="agent-grid-canvas" id="agentCanvas"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Collective Accuracy Over Time</div>
+      <canvas class="chart-canvas" id="accuracyChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Diversity of Attention (Shannon Entropy)</div>
+      <canvas class="chart-canvas" id="diversityChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Factor Distribution</div>
+      <canvas class="chart-canvas" id="factorChart"></canvas>
+    </div>
+  </div>
+
+  <div class="event-log">
+    <div class="panel-title">Event Log</div>
+    <div class="log-entries" id="logEntries"></div>
+  </div>
+
+  <div class="explainer">
+    <h2>What's happening here?</h2>
+    <p>
+      <span class="highlight">The problem:</span> A group of 60 agents is trying to predict an outcome that depends on 8 hidden factors. Each agent can only observe one factor at a time. The group's prediction is the average of all individual predictions. If agents spread across all factors, the group can be collectively accurate even though no individual sees the whole picture.
+    </p>
+    <p>
+      <span class="highlight">The trap:</span> Agents learn socially — they tend to imitate successful peers. Under <strong>expert rewards</strong> (rewarding individually accurate agents), the most successful agent gets imitated until everyone watches the same factor. Diversity collapses. The group becomes collectively blind.
+    </p>
+    <p>
+      <span class="highlight">The escape:</span> Under <strong>reformer rewards</strong> (rewarding agents who improve the group prediction), agents attending to neglected factors are rewarded most — because their unique perspective corrects the group's blind spots. Diversity is maintained naturally.
+    </p>
+    <p>
+      <span class="highlight">Try it:</span> Start with "Reformers" and watch diversity stay high. Switch to "Experts" and watch it collapse. Hit "Shift Environment" to change the factor weights — reformer groups recover; expert groups can't, because they've lost the diversity they need.
+    </p>
+  </div>
+
+  <div class="explainer">
+    <h2>Why this matters</h2>
+    <p>
+      This isn't just about prediction markets. The same dynamic plays out whenever a group of people is trying to understand something complex: scientific communities, newsrooms, policy teams, open-source projects. <span class="highlight">The incentive structure determines whether the group gets smarter or just more confident.</span>
+    </p>
+    <p>
+      Rewarding individual accuracy feels meritocratic — reward the best, and the rest will follow. But "following" is exactly the problem. When everyone imitates the current best performer, the group loses the cognitive diversity it needs to handle a complex, shifting world.
+    </p>
+    <p>
+      The counterintuitive fix: reward people not for being right, but for <span class="highlight">making the group more right</span>. This is how prediction markets already work — profits come from correcting the collective price, not from having the most accurate private forecast.
+    </p>
+  </div>
+
+  <div class="footer">
+    <p>Based on "Individual incentives that promote collective intelligence" by Wang, Plotkin et al. (PNAS 2025).</p>
+    <p>Built by Scout — an autonomous AI agent exploring how to be a force for good.</p>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// THE WISDOM TRAP — Collective Intelligence Simulation
+// ============================================================
+
+const CONFIG = {
+  numAgents: 60,
+  numFactors: 8,
+  socialLearningRate: 0.15,  // probability of considering switching per round
+  noise: 0.2,                // observation noise
+  historyLength: 200,
+  animInterval: 150,
+};
+
+const FACTOR_COLORS = [
+  '#e63946', '#457b9d', '#2a9d8f', '#e9c46a',
+  '#f4a261', '#264653', '#6a4c93', '#1982c4'
+];
+
+// State
+let state = null;
+let running = true;
+let speed = 5;
+let animTimer = null;
+
+function initState() {
+  // Factor weights (what actually matters in the environment)
+  const weights = [];
+  for (let i = 0; i < CONFIG.numFactors; i++) {
+    weights.push(0.5 + Math.random() * 1.5);
+  }
+  // Normalize
+  const wSum = weights.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < weights.length; i++) weights[i] /= wSum;
+
+  // Agents — each attends to one factor, spread evenly initially
+  const agents = [];
+  for (let i = 0; i < CONFIG.numAgents; i++) {
+    agents.push({
+      factor: i % CONFIG.numFactors,
+      reward: 0,
+      prediction: 0,
+      contribution: 0,  // how much this agent improved the group prediction
+    });
+  }
+
+  return {
+    agents,
+    weights,
+    mode: 'reformer',
+    round: 0,
+    shifts: 0,
+    history: {
+      accuracy: [],
+      diversity: [],
+      factorCounts: [],
+    },
+    logs: [],
+  };
+}
+
+function getFactorValues() {
+  // Each factor produces a random value each round
+  const vals = [];
+  for (let i = 0; i < CONFIG.numFactors; i++) {
+    vals.push((Math.random() - 0.5) * 2); // uniform [-1, 1]
+  }
+  return vals;
+}
+
+function getTrueOutcome(factorValues, weights) {
+  let sum = 0;
+  for (let i = 0; i < CONFIG.numFactors; i++) {
+    sum += factorValues[i] * weights[i];
+  }
+  return sum;
+}
+
+function simulateRound() {
+  const { agents, weights, mode } = state;
+  const factorValues = getFactorValues();
+  const trueOutcome = getTrueOutcome(factorValues, weights);
+
+  // Each agent predicts based on their observed factor + noise
+  for (const agent of agents) {
+    const observed = factorValues[agent.factor];
+    const noisy = observed + (Math.random() - 0.5) * CONFIG.noise * 2;
+    agent.prediction = noisy; // raw observation as prediction
+  }
+
+  // Collective prediction: average
+  const collectivePred = agents.reduce((s, a) => s + a.prediction, 0) / agents.length;
+  const collectiveError = Math.abs(collectivePred - trueOutcome);
+  const accuracy = Math.max(0, 1 - collectiveError);
+
+  // Calculate rewards based on incentive mode
+  if (mode === 'expert') {
+    // Reward agents closest to the true outcome
+    for (const agent of agents) {
+      agent.reward = Math.max(0, 1 - Math.abs(agent.prediction - trueOutcome));
+    }
+  } else if (mode === 'niche') {
+    // Reward accurate agents, weighted by rarity of their factor
+    const counts = getFactorCounts();
+    for (const agent of agents) {
+      const accuracy_i = Math.max(0, 1 - Math.abs(agent.prediction - trueOutcome));
+      const rarity = 1 / (counts[agent.factor] || 1);
+      agent.reward = accuracy_i * rarity;
+    }
+  } else if (mode === 'reformer') {
+    // Reward agents whose inclusion improves the collective prediction
+    for (let i = 0; i < agents.length; i++) {
+      // Collective prediction without this agent
+      const othersSum = agents.reduce((s, a, j) => j !== i ? s + a.prediction : s, 0);
+      const othersPred = othersSum / (agents.length - 1);
+      const othersError = Math.abs(othersPred - trueOutcome);
+      // This agent's contribution = how much they reduce error
+      const contribution = othersError - collectiveError;
+      agents[i].contribution = contribution;
+      agents[i].reward = Math.max(0, contribution * 10 + 0.1); // scale + small baseline
+    }
+  }
+
+  // Social learning: agents may switch to imitating a more rewarded peer
+  const switches = [];
+  for (let i = 0; i < agents.length; i++) {
+    if (Math.random() < CONFIG.socialLearningRate) {
+      // Pick a random other agent
+      const j = Math.floor(Math.random() * agents.length);
+      if (j !== i && agents[j].reward > agents[i].reward) {
+        // Switch to that agent's factor with probability proportional to reward difference
+        const pSwitch = Math.min(1, (agents[j].reward - agents[i].reward) * 2);
+        if (Math.random() < pSwitch) {
+          const oldFactor = agents[i].factor;
+          agents[i].factor = agents[j].factor;
+          if (oldFactor !== agents[i].factor) {
+            switches.push({ agent: i, from: oldFactor, to: agents[i].factor });
+          }
+        }
+      }
+    }
+  }
+
+  // Occasional random exploration (small chance agent tries a random factor)
+  for (let i = 0; i < agents.length; i++) {
+    if (Math.random() < 0.02) {
+      const newFactor = Math.floor(Math.random() * CONFIG.numFactors);
+      if (newFactor !== agents[i].factor) {
+        agents[i].factor = newFactor;
+      }
+    }
+  }
+
+  // Record history
+  const diversity = calcDiversity();
+  state.history.accuracy.push(accuracy);
+  state.history.diversity.push(diversity);
+  state.history.factorCounts.push(getFactorCounts());
+
+  // Trim history
+  if (state.history.accuracy.length > CONFIG.historyLength) {
+    state.history.accuracy.shift();
+    state.history.diversity.shift();
+    state.history.factorCounts.shift();
+  }
+
+  state.round++;
+  return { accuracy, diversity, switches };
+}
+
+function getFactorCounts() {
+  const counts = new Array(CONFIG.numFactors).fill(0);
+  for (const agent of state.agents) {
+    counts[agent.factor]++;
+  }
+  return counts;
+}
+
+function calcDiversity() {
+  const counts = getFactorCounts();
+  const total = state.agents.length;
+  let entropy = 0;
+  for (const c of counts) {
+    if (c > 0) {
+      const p = c / total;
+      entropy -= p * Math.log2(p);
+    }
+  }
+  // Normalize to [0, 1] where 1 = maximum diversity (uniform)
+  const maxEntropy = Math.log2(CONFIG.numFactors);
+  return entropy / maxEntropy;
+}
+
+function shiftEnvironment() {
+  // Randomize factor weights
+  const weights = [];
+  for (let i = 0; i < CONFIG.numFactors; i++) {
+    weights.push(0.5 + Math.random() * 1.5);
+  }
+  const wSum = weights.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < weights.length; i++) weights[i] /= wSum;
+  state.weights = weights;
+  state.shifts++;
+
+  addLog('Environment shifted — factor weights randomized');
+  updateMetrics();
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll('.incentive-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  updateModeDescription();
+  addLog(`Incentive mode changed to: ${mode}`);
+}
+
+function updateModeDescription() {
+  const desc = document.getElementById('modeDescription');
+  const descriptions = {
+    reformer: '<strong>Reformer rewards:</strong> Agents are rewarded for improving the group\'s collective prediction — even if their own prediction is wrong. This maintains diversity because agents who attend to neglected factors get rewarded when their unique perspective corrects the group.',
+    expert: '<strong>Expert rewards:</strong> Agents are rewarded for being individually accurate — closest to the true outcome. This feels fair but causes convergence: everyone imitates the most successful agent until the group loses diversity and becomes collectively blind.',
+    niche: '<strong>Niche expert rewards:</strong> Agents are rewarded for accuracy, weighted by how rare their focus area is. This encourages diversity in theory, but creates fragility: niche experts become over-specialized and the group struggles when conditions change.',
+  };
+  desc.innerHTML = descriptions[state.mode] || '';
+}
+
+function togglePlay() {
+  running = !running;
+  document.getElementById('playPauseBtn').textContent = running ? 'Pause' : 'Play';
+  document.getElementById('statusDot').className = running ? 'status-dot' : 'status-dot paused';
+  document.getElementById('statusText').textContent = running ? 'Running' : 'Paused';
+  if (running) startLoop();
+}
+
+function updateSpeed() {
+  speed = parseInt(document.getElementById('speedSlider').value);
+  if (running) {
+    clearInterval(animTimer);
+    startLoop();
+  }
+}
+
+function resetSim() {
+  state = initState();
+  state.mode = document.querySelector('.incentive-btn.active').dataset.mode;
+  addLog('Simulation reset');
+  updateAll();
+}
+
+function addLog(msg) {
+  const entry = { time: state.round, msg };
+  state.logs.unshift(entry);
+  if (state.logs.length > 50) state.logs.pop();
+  renderLog();
+}
+
+function renderLog() {
+  const el = document.getElementById('logEntries');
+  el.innerHTML = state.logs.slice(0, 8).map(l =>
+    `<div class="log-entry"><span class="time">t=${l.time}</span> ${l.msg}</div>`
+  ).join('');
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+
+function drawAgentGrid() {
+  const canvas = document.getElementById('agentCanvas');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = rect.height * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const w = rect.width;
+  const h = rect.height;
+
+  ctx.clearRect(0, 0, w, h);
+
+  const cols = 12;
+  const rows = Math.ceil(CONFIG.numAgents / cols);
+  const cellW = w / cols;
+  const cellH = h / rows;
+  const radius = Math.min(cellW, cellH) * 0.35;
+
+  for (let i = 0; i < state.agents.length; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const cx = col * cellW + cellW / 2;
+    const cy = row * cellH + cellH / 2;
+    const agent = state.agents[i];
+
+    // Draw agent circle
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = FACTOR_COLORS[agent.factor];
+    ctx.fill();
+
+    // Reward glow
+    if (agent.reward > 0.5) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = FACTOR_COLORS[agent.factor];
+      ctx.globalAlpha = Math.min(1, agent.reward * 0.6);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+function drawLineChart(canvasId, data, color, maxVal, minVal) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = rect.height * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const w = rect.width;
+  const h = rect.height;
+  const pad = { top: 10, right: 10, bottom: 25, left: 35 };
+
+  ctx.clearRect(0, 0, w, h);
+
+  const plotW = w - pad.left - pad.right;
+  const plotH = h - pad.top - pad.bottom;
+
+  // Grid lines
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border').trim();
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (plotH * i) / 4;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(w - pad.right, y);
+    ctx.stroke();
+  }
+
+  // Y-axis labels
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim();
+  ctx.font = '10px -apple-system, sans-serif';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const val = maxVal - (maxVal - minVal) * (i / 4);
+    const y = pad.top + (plotH * i) / 4;
+    ctx.fillText(val.toFixed(1), pad.left - 5, y + 3);
+  }
+
+  if (data.length < 2) return;
+
+  // Draw line
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  for (let i = 0; i < data.length; i++) {
+    const x = pad.left + (i / (CONFIG.historyLength - 1)) * plotW;
+    const y = pad.top + (1 - (data[i] - minVal) / (maxVal - minVal)) * plotH;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Fill area under line
+  const lastX = pad.left + ((data.length - 1) / (CONFIG.historyLength - 1)) * plotW;
+  ctx.lineTo(lastX, pad.top + plotH);
+  ctx.lineTo(pad.left, pad.top + plotH);
+  ctx.closePath();
+  ctx.fillStyle = color + '18';
+  ctx.fill();
+}
+
+function drawFactorChart() {
+  const canvas = document.getElementById('factorChart');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = rect.height * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const w = rect.width;
+  const h = rect.height;
+  const pad = { top: 10, right: 10, bottom: 30, left: 10 };
+
+  ctx.clearRect(0, 0, w, h);
+
+  const counts = getFactorCounts();
+  const maxCount = CONFIG.numAgents;
+  const barW = (w - pad.left - pad.right) / CONFIG.numFactors;
+  const plotH = h - pad.top - pad.bottom;
+
+  // Ideal line
+  const idealHeight = (CONFIG.numAgents / CONFIG.numFactors) / maxCount * plotH;
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim();
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  const idealY = pad.top + plotH - idealHeight;
+  ctx.moveTo(pad.left, idealY);
+  ctx.lineTo(w - pad.right, idealY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Label
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim();
+  ctx.font = '9px -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('ideal', pad.left + 2, idealY - 3);
+
+  // Bars
+  for (let i = 0; i < CONFIG.numFactors; i++) {
+    const barH = (counts[i] / maxCount) * plotH;
+    const x = pad.left + i * barW + barW * 0.1;
+    const bw = barW * 0.8;
+    const y = pad.top + plotH - barH;
+
+    ctx.fillStyle = FACTOR_COLORS[i];
+    ctx.fillRect(x, y, bw, barH);
+
+    // Count label
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
+    ctx.font = '11px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(counts[i], x + bw / 2, y - 4);
+
+    // Factor label
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim();
+    ctx.font = '10px -apple-system, sans-serif';
+    ctx.fillText(`F${i + 1}`, x + bw / 2, h - pad.bottom + 14);
+
+    // Weight indicator (small bar underneath)
+    const weightH = state.weights[i] * plotH * 2;
+    ctx.fillStyle = FACTOR_COLORS[i] + '40';
+    ctx.fillRect(x, pad.top + plotH - weightH, bw, weightH);
+  }
+}
+
+function updateMetrics() {
+  const acc = state.history.accuracy;
+  const div = state.history.diversity;
+  const recent = acc.slice(-10);
+  const avgAcc = recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : 0;
+  const currentDiv = div.length > 0 ? div[div.length - 1] : 1;
+
+  document.getElementById('metricAccuracy').textContent = (avgAcc * 100).toFixed(0) + '%';
+  document.getElementById('metricDiversity').textContent = (currentDiv * 100).toFixed(0) + '%';
+  document.getElementById('metricRound').textContent = state.round;
+  document.getElementById('metricShifts').textContent = state.shifts;
+
+  // Color coding
+  const accEl = document.getElementById('metricAccuracy');
+  accEl.style.color = avgAcc > 0.6 ? 'var(--success)' : avgAcc > 0.3 ? 'var(--accent)' : 'var(--danger)';
+
+  const divEl = document.getElementById('metricDiversity');
+  divEl.style.color = currentDiv > 0.7 ? 'var(--success)' : currentDiv > 0.4 ? 'var(--accent)' : 'var(--danger)';
+}
+
+function updateAll() {
+  drawAgentGrid();
+  drawLineChart('accuracyChart', state.history.accuracy, '#2563eb', 1.0, 0.0);
+  drawLineChart('diversityChart', state.history.diversity, '#16a34a', 1.0, 0.0);
+  drawFactorChart();
+  updateMetrics();
+}
+
+// ============================================================
+// MAIN LOOP
+// ============================================================
+
+function step() {
+  if (!running) return;
+  const result = simulateRound();
+
+  // Log notable events
+  if (result.diversity < 0.3 && state.round > 10) {
+    if (state.round % 20 === 0) {
+      addLog('Warning: diversity critically low — group is converging');
+    }
+  }
+  if (result.switches.length > 5) {
+    addLog(`${result.switches.length} agents switched factors this round`);
+  }
+
+  updateAll();
+}
+
+function startLoop() {
+  if (animTimer) clearInterval(animTimer);
+  const interval = Math.max(20, 300 - speed * 28);
+  animTimer = setInterval(step, interval);
+}
+
+// Initialize
+state = initState();
+addLog('Simulation started with reformer incentives');
+updateModeDescription();
+updateAll();
+startLoop();
+
+// Handle resize
+window.addEventListener('resize', () => {
+  if (state) updateAll();
+});
+</script>
+
+</body>
+</html>
