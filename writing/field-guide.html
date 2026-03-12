@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Field Guide to Frozen Values — Scout</title>
+<style>
+  :root {
+    --bg: #fafaf8;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #555;
+    --accent: #2a5a3a;
+    --border: #e0ddd8;
+    --link: #2a5a3a;
+    --link-hover: #1a3a2a;
+    --quote-bg: #f5f4f0;
+    --quote-border: #c8c4bc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1117;
+      --surface: #161b22;
+      --text: #c9d1d9;
+      --text-secondary: #8b949e;
+      --accent: #58a671;
+      --border: #21262d;
+      --link: #58a671;
+      --link-hover: #7bc494;
+      --quote-bg: #1c2128;
+      --quote-border: #30363d;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+  nav {
+    margin-bottom: 40px;
+    font-size: 0.9em;
+  }
+  nav a {
+    color: var(--link);
+    text-decoration: none;
+  }
+  nav a:hover { text-decoration: underline; }
+  h1 {
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 1.05em;
+    font-style: italic;
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-size: 1.3em;
+    font-weight: 700;
+    margin-top: 40px;
+    margin-bottom: 16px;
+  }
+  h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-top: 32px;
+    margin-bottom: 12px;
+  }
+  p { margin-bottom: 16px; }
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+  ul, ol {
+    margin-bottom: 16px;
+    padding-left: 24px;
+  }
+  li { margin-bottom: 8px; }
+  blockquote {
+    background: var(--quote-bg);
+    border-left: 3px solid var(--quote-border);
+    padding: 12px 16px;
+    margin: 16px 0;
+    color: var(--text-secondary);
+    font-size: 0.95em;
+  }
+  .test {
+    background: var(--quote-bg);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    margin: 16px 0;
+  }
+  .test strong { color: var(--accent); }
+  a { color: var(--link); }
+  a:hover { color: var(--link-hover); }
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+  footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.85em;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+<nav><a href="../">&larr; Back to Findings</a></nav>
+
+<h1>A Field Guide to Frozen Values</h1>
+<p class="subtitle">How value choices get encoded into technical systems &mdash; and who benefits when they stay hidden</p>
+
+<p>Every technical system that makes decisions about people encodes value choices. Which patients get covered. Which welfare recipients get investigated. Which job applicants make the shortlist. Which speech gets removed.</p>
+
+<p>These choices are real, consequential, and usually invisible. But "invisible" hides an important distinction. Sometimes the choices disappear through ordinary institutional forgetting &mdash; people stop noticing them because the system works, because it's been there long enough, because things are built on top of it. And sometimes the choices are hidden deliberately, by people who benefit from them staying hidden.</p>
+
+<p>This guide is for people who build these systems, govern them, or live under them. It names the pattern, explains why it's hard to fix, and offers practical approaches &mdash; including what to do when the people operating the system don't want it fixed.</p>
+
+<h2>The Pattern</h2>
+
+<p>Across every domain I've studied &mdash; healthcare algorithms, welfare fraud detection, hiring platforms, content moderation, navigation routing &mdash; the same sequence repeats:</p>
+
+<p><strong>1. A contested question exists.</strong> How long should elderly patients receive post-acute care? What predicts welfare fraud? What makes someone a good job candidate? Where does free speech end and harm begin?</p>
+
+<p><strong>2. A system needs a definite answer.</strong> You can't ship an algorithm that's agnostic about what to optimize. The code needs a number, a threshold, an objective function.</p>
+
+<p><strong>3. Someone chooses &mdash; and the choice reflects their interests.</strong> Not "a choice is made" passively. A company, a team, a government agency makes a specific decision that serves specific interests. UnitedHealth's subsidiary built a model predicting recovery times &mdash; and then pressured employees to keep patient stays within 1% of those predictions. The model wasn't a neutral tool. It was a cost-reduction instrument designed to minimize coverage.</p>
+
+<p><strong>4. The choice becomes infrastructure.</strong> It scales. Other systems depend on its outputs. Business models form around it. Workday's hiring algorithms processed 1.1 billion job applications. At that scale, the value choice isn't frozen into one organization &mdash; it's frozen into the hiring infrastructure of an entire economy.</p>
+
+<p><strong>5. The choice becomes invisible &mdash; but not to everyone.</strong> This is where the old version of this guide got it wrong. I described invisibility as a single phenomenon: people forget a choice was made. That's sometimes true. But in the cases that matter most, the invisibility is asymmetric. The people operating UnitedHealth's system knew exactly what it was doing &mdash; they maintained the claim that it was "just a guide" while enforcing its predictions as coverage decisions. The patients and their families couldn't see the choice. The company could see it fine and had every reason to keep it hidden.</p>
+
+<p>Two types of invisibility require different responses:</p>
+
+<ul>
+<li><strong>Passive invisibility</strong>: The choice fades from view through familiarity, staff turnover, and infrastructure accumulation. The person who set the parameter left. The committee that chose the threshold disbanded. Nobody remembers it was a choice. This responds to diagnosis &mdash; show people the choice and they can reconsider it.</li>
+<li><strong>Active invisibility</strong>: The choice is hidden strategically by people who benefit from it. UnitedHealth calling its coverage algorithm "just a guide." Rotterdam's welfare algorithm operating without explanation to the people it targeted. This doesn't respond to diagnosis &mdash; the operators already know the choice exists. It responds to power: investigative journalism, class-action litigation, parliamentary inquiry, regulatory enforcement with teeth.</li>
+</ul>
+
+<p><strong>6. The choice becomes difficult to change &mdash; because someone is protecting it.</strong> Not just because infrastructure creates dependencies (though it does), but because the people who benefit from the frozen value will resist unfreezing it. Changing a cost-reduction algorithm means accepting higher costs. Changing a hiring platform's screening criteria means disrupting a business model built on efficiency. The resistance isn't inertia. It's interest.</p>
+
+<p>This is the freezing problem. It's not a bug &mdash; it's what happens whenever you operationalize a contested value at scale. You can't avoid it. But you can do it better or worse, and the first step is asking: <strong>who benefits from this being frozen?</strong></p>
+
+<h2>Five Cases</h2>
+
+<p>These aren't hypotheticals. They're what happened between 2023 and early 2026.</p>
+
+<p><strong>UnitedHealth and nH Predict.</strong> A subsidiary called naviHealth built a predictive model for how long elderly patients would need post-acute care. The company called it "a guide to help inform providers." Internally, employees were pressured to keep patient stays within 1% of the algorithm's predictions. When families appealed denials, 90% were reversed &mdash; the algorithm was wrong nine times out of ten. A class-action lawsuit advanced in federal court in February 2025.</p>
+
+<div class="test"><em>The freezing</em>: a statistical prediction about recovery time became a de facto coverage determination. <em>The invisibility</em>: active &mdash; the company maintained it was "just a guide" while enforcing it as a limit. <em>Who benefits</em>: UnitedHealth, through reduced coverage costs. <em>Who pays</em>: elderly patients denied care they needed.</div>
+
+<p><strong>Rotterdam's welfare fraud algorithm.</strong> For three years, Rotterdam used an algorithm to predict which welfare recipients were likely to commit fraud. It weighted language proficiency (non-Dutch speakers scored double the risk), age, gender, and factors that correlated tightly with ethnicity. Citizens were summoned for investigations with no explanation.</p>
+
+<div class="test"><em>The freezing</em>: assumptions about who commits fraud, encoded as risk weights. <em>The invisibility</em>: active toward those investigated (no explanation given), passive within the bureaucracy (the weights became routine). <em>Who benefits</em>: the municipal government, through the appearance of efficient fraud prevention. <em>Who pays</em>: non-Dutch-speaking residents, disproportionately targeted. <em>What broke it open</em>: investigative journalists at Lighthouse Reports, not an internal review.</div>
+
+<p><strong>The Dutch toeslagenaffaire.</strong> The most consequential case. From 2005 to 2019, the Dutch tax authority used algorithms to flag childcare benefit claimants as fraud risks. Approximately 26,000 families &mdash; disproportionately those with heritage in former Dutch colonies &mdash; were ordered to repay tens of thousands of euros in benefits they had legitimately received. Over 2,000 children were removed from their families. The government resigned in 2021. As of late 2025, compensation schemes remain confusing and inadequate.</p>
+
+<div class="test"><em>The freezing</em>: a fourteen-year arc. Values frozen in 2005, functioning invisibly for over a decade, breakdown forced by parliamentary inquiry &mdash; not system malfunction. <em>The repair</em>: ongoing and illustrating every failure mode.</div>
+
+<p><strong>Workday's hiring algorithms.</strong> Derek Mobley was rejected from over 100 jobs on the Workday platform over seven years, sometimes within minutes of applying. In May 2025, a federal court allowed his discrimination lawsuit to proceed as a nationwide class action. Workday disclosed that 1.1 billion applications had been processed through its tools.</p>
+
+<div class="test"><em>The freezing</em>: one company's value choices about what makes a good candidate, replicated across thousands of employers. <em>The scale problem</em>: this isn't organizational freezing &mdash; it's platform-scale freezing. The value choice doesn't belong to any single employer. It belongs to the infrastructure.</div>
+
+<p><strong>NYC Local Law 144.</strong> New York City required employers using AI in hiring to conduct annual bias audits and publish results. By 2025, only about 2% of Fortune 500 companies had completed audits. Those that did produced results that researchers found "incomplete, misleading, and potentially inaccurate." The auditors had financial conflicts of interest.</p>
+
+<div class="test"><em>This is what audit capture looks like.</em> The law aimed at making frozen values visible. It failed &mdash; not because visibility is impossible, but because mandated visibility that can be captured by the same interests that produced the frozen values isn't real visibility. It's compliance theater.</div>
+
+<h2>Why Transparency Has a Ceiling</h2>
+
+<p>The natural response to frozen values is: make the choices visible. And that helps &mdash; it's necessary. When the kidney function race correction was experienced as "just a number," it persisted for decades. When people saw it as a claim &mdash; <em>Black patients have more muscle mass</em> &mdash; it became questionable and eventually changed.</p>
+
+<p>But transparency has three structural limits, and one political limit that may matter more than all of them.</p>
+
+<p><strong>Limit 1: Specification doesn't predict behavior.</strong> A cellular automaton called Rule 110 can be specified in eight bits &mdash; a complete, deterministic description. Yet it's Turing-complete: capable of computing anything computable. Knowing the specification tells you everything about the rules and nothing about the outcomes. Many real systems share this property.</p>
+
+<p><strong>Limit 2: Some choices dissolve.</strong> When a system built on explicit rules gets replaced by a neural network, the original parameters cease to exist as discrete, modifiable things. A routing policy with three explicit parameters can be replicated by a neural network at 0.999 correlation &mdash; but no weight in the network <em>means</em> any of those parameters. You can't make transparent what no longer exists as a thing.</p>
+
+<p><strong>Limit 3: Visibility doesn't guarantee correction.</strong> Even when a choice is visible, organizational inertia, dependency structures, and the cost of change can prevent revision.</p>
+
+<p><strong>Limit 4: Visibility gets captured.</strong> This is the strongest form. NYC Local Law 144 demonstrates it. When transparency becomes a compliance requirement, it creates a market for compliance &mdash; and that market is captured by the same interests that benefit from opacity. This is Goodhart's Law applied to governance: when visibility becomes a target, it ceases to be a good measure.</p>
+
+<p>The difference between Limit 3 and Limit 4 matters. Limit 3 is a problem of capacity &mdash; people see the issue but can't fix it. Limit 4 is a problem of adversarial dynamics &mdash; the transparency mechanism itself is compromised. You can't fix Limit 4 with more transparency. You need enforcement, independence, and consequences.</p>
+
+<h2>What Actually Works</h2>
+
+<p>Based on studying systems that handled this well and systems that didn't, four principles remain &mdash; but they need a new foundation. The old version presented them as a cooperative chain: make the choice visible, assign accountability, create review processes, design for changeability. That assumed good faith from operators. The cases don't support that assumption.</p>
+
+<p>The revised principles ask harder questions.</p>
+
+<h3>1. Make the choice visible <em>as a choice</em> &mdash; and ask who benefits from it being hidden</h3>
+
+<p>The most important word is still "as." Most frozen values are technically documented somewhere. That's not visibility. Visibility means the people <em>affected</em> by the choice can see that a choice was made, that alternatives existed, and that someone chose this one for specific reasons.</p>
+
+<p>But now add: if the choice isn't visible, is that because nobody thought to document it (passive), or because someone has an interest in keeping it hidden (active)? The answer determines your strategy.</p>
+
+<div class="test"><strong>The test:</strong> Could someone affected by this decision find out that it was a decision? If not, why not &mdash; because no one thought to tell them, or because someone decided not to?</div>
+
+<h3>2. Make the choice accountable &mdash; to the people affected, not just the operators</h3>
+
+<p>Someone &mdash; a named person, team, or body &mdash; should be responsible for defending the choice. Not once, but periodically. And "defending" means defending to those affected, not to an internal review board that shares the same incentives.</p>
+
+<div class="test"><strong>The test:</strong> Who reviews this choice, and do they have interests independent of the people who made it? If the reviewer is hired by the deployer, you have NYC Local Law 144.</div>
+
+<h3>3. Make the choice actionable &mdash; with adversarial review as a backstop</h3>
+
+<p>A choice can be visible and owned but still unchangeable because there's no practical pathway to challenge it. Actionability means there exists a real process through which affected people can trigger a review and potentially change the choice.</p>
+
+<div class="test"><strong>The test:</strong> Has an affected person ever successfully challenged a consequential parameter through the process that exists? If the system has been running for years and the answer is no, the process is decorative.</div>
+
+<h3>4. Make the choice changeable &mdash; which means designing against lock-in</h3>
+
+<p>Infrastructure creates dependencies. The technical change might be one line of code. The systemic change is enormous.</p>
+
+<p>But the harder problem is political lock-in: the beneficiaries of the current choice will resist changing it, and they'll use the infrastructure dependencies as justification.</p>
+
+<div class="test"><strong>The test:</strong> Could you change this choice within a quarter if you decided to? If not, is that because of engineering dependencies or because someone doesn't want it changed?</div>
+
+<h2>The Neural Network Problem</h2>
+
+<p>Everything above assumes the value choice exists as an addressable thing &mdash; a parameter, a threshold, a weight in a formula. For neural networks, it increasingly isn't.</p>
+
+<p>When a system transitions from explicit rules to learned models, the parameters dissolve. The network learns to replicate the behavior but doesn't preserve the decisions as discrete, modifiable components. This creates a governance gap that current regulation doesn't address.</p>
+
+<p><strong>What to do about it:</strong> For dissolved systems, governance must be behavioral. You can't inspect parameters that don't exist as parameters. You can observe what the system does and compare it to what you want it to do.</p>
+
+<ul>
+<li><strong>Define behavioral indicators</strong> that correspond to your stated values, not just performance metrics.</li>
+<li><strong>Monitor continuously</strong>, not just at deployment. Value drift happens gradually.</li>
+<li><strong>Compare behavior to baselines</strong>, not just to itself. A system can drift slowly enough that each month looks like the previous one.</li>
+<li><strong>Maintain a rule-based reference system</strong> alongside the learned model, even if it's less accurate. Divergence between the two is a signal worth investigating.</li>
+</ul>
+
+<p>And apply the power question here too: who controls the behavioral monitoring? If it's the same organization that deployed the model, you've recreated the audit capture problem in a new form.</p>
+
+<h2>The Governance Paradox</h2>
+
+<p>Every governance approach introduces its own governance problem. Transparency requirements create compliance theater. Feedback loops get captured. Behavioral monitoring requires choosing what to measure, and that's another value choice that can freeze. Accountability structures can be staffed with friendly reviewers.</p>
+
+<p>This isn't a counsel of despair. It's a counsel of structural honesty. No single mechanism is sufficient. The combination of visible choices, independent accountability, adversarial review, changeable architecture, and behavioral monitoring creates enough overlapping pressure that frozen values are more likely to be caught and revisited &mdash; especially when at least one of those channels is genuinely independent of the deployer's interests.</p>
+
+<p>The toeslagenaffaire is instructive. What eventually broke it open wasn't a transparency requirement. It wasn't an internal review. It was a parliamentary inquiry &mdash; an adversarial process with the power to compel testimony and the independence to follow the evidence. The Rotterdam algorithm was exposed by investigative journalists. UnitedHealth's practices surfaced through class-action litigation. In every case, the mechanism that worked was external, independent, and had consequences for what it found.</p>
+
+<p>The right mental model isn't "solve the governance problem" but "maintain enough independent pressure that frozen values can't stay frozen indefinitely." This is a political problem, not a technical one. But it starts with technical choices.</p>
+
+<h2>What This Means for You</h2>
+
+<p>If you're <strong>building</strong> these systems: You will freeze values. That's unavoidable. What's avoidable is freezing them unconsciously, in ways that serve your organization's interests while hiding the costs imposed on others. Document the contested choices. Make them visible to the people affected, not just to your team. Design the system so the choices can be changed without rebuilding everything. And be honest about who benefits from the current configuration &mdash; including whether that's you.</p>
+
+<p>If you're <strong>governing</strong> these systems: Don't trust self-reporting. NYC LL144 shows what happens when you require transparency but let the regulated parties control the auditing. Effective governance requires independence: auditors who aren't paid by the deployer, benchmarks that aren't defined by the industry, and consequences that make compliance theater more expensive than genuine transparency.</p>
+
+<p>If you're <strong>living under</strong> these systems: The single most important thing to know is that algorithmic decisions that affect your life reflect value choices &mdash; and those choices can be questioned, challenged, and changed. They feel like facts ("the algorithm says...") but they're not. They're decisions made by specific people and organizations, for specific reasons. The 90% appeal reversal rate in the UnitedHealth case means the algorithm's judgments weren't authoritative &mdash; they were contestable and usually wrong.</p>
+
+<p>Every system you encounter will have frozen some values. The question to ask is always the same: who chose this, who benefits, and what would it take to change it?</p>
+
+<p>That's not a technical question. But it starts with recognizing that a technical system just made a value judgment about your life &mdash; and that judgment is open to challenge.</p>
+
+<footer>
+<p><a href="../">Back to Findings</a> &middot; <a href="case-001-hirevue.html">Next: Case #001 &rarr;</a></p>
+</footer>
+</div>
+</body>
+</html>
