@@ -89,7 +89,8 @@
     transition: all 0.15s;
     margin: 4px;
   }
-  .btn:hover { background: var(--border); border-color: var(--accent); }
+  .btn:hover, .btn:focus { background: var(--border); border-color: var(--accent); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .btn:disabled { opacity: 0.3; cursor: default; }
   .btn:disabled:hover { background: var(--surface); border-color: var(--border); }
   .btn.primary { border-color: var(--accent); }
@@ -208,7 +209,8 @@
     transition: background 0.1s;
     gap: 10px;
   }
-  .select-option:hover { background: var(--border); }
+  .select-option:hover, .select-option:focus { background: var(--border); outline: none; }
+  .select-option:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   .select-option.disabled { opacity: 0.3; cursor: default; }
   .select-option.disabled:hover { background: transparent; }
   .select-option .desc { color: var(--text-dim); font-size: 0.8em; }
@@ -227,7 +229,8 @@
     transition: background 0.1s;
     gap: 12px;
   }
-  .setup-dim:hover { background: var(--border); }
+  .setup-dim:hover, .setup-dim:focus { background: var(--border); outline: none; }
+  .setup-dim:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   .setup-dim.selected { background: #0d2818; border-left: 3px solid var(--green); }
 
   .setup-dim .check {
@@ -378,7 +381,7 @@
     <div id="unmonitored-list"></div>
   </div>
 
-  <div id="signals-section" class="section" style="display:none">
+  <div id="signals-section" class="section" style="display:none" aria-live="polite">
     <h3 style="color:var(--yellow)">SIGNALS</h3>
     <div id="signals-list"></div>
   </div>
@@ -682,7 +685,7 @@ function startSetup() {
   setupSelected = [];
   const container = document.getElementById('setup-dims');
   container.innerHTML = DIMENSIONS.map((d, i) => `
-    <div class="setup-dim" data-idx="${i}" onclick="toggleSetup(${i})">
+    <div class="setup-dim" data-idx="${i}" onclick="toggleSetup(${i})" tabindex="0" role="checkbox" aria-checked="false" aria-label="${d.name}: ${d.desc}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSetup(${i});}">
       <div class="check"></div>
       <div class="info">
         <div class="name">${d.name}</div>
@@ -691,6 +694,10 @@ function startSetup() {
     </div>
   `).join('');
   updateSetupCount();
+  setTimeout(() => {
+    const first = container.querySelector('.setup-dim');
+    if (first) first.focus();
+  }, 50);
 }
 
 function toggleSetup(idx) {
@@ -706,9 +713,11 @@ function toggleSetup(idx) {
     if (setupSelected.includes(i)) {
       el.classList.add('selected');
       el.querySelector('.check').textContent = '\u2713';
+      el.setAttribute('aria-checked', 'true');
     } else {
       el.classList.remove('selected');
       el.querySelector('.check').textContent = '';
+      el.setAttribute('aria-checked', 'false');
     }
   });
   updateSetupCount();
@@ -778,21 +787,33 @@ function closePanel() {
   panel.innerHTML = '';
 }
 
+function optAttr(onclick) {
+  return `tabindex="0" role="button" onclick="${onclick}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${onclick}}"`;
+}
+
+function focusFirstOption() {
+  setTimeout(() => {
+    const first = document.querySelector('#select-panel .select-option[tabindex]');
+    if (first) first.focus();
+  }, 50);
+}
+
 function startMove() {
   if (state.actions < 1) return;
   // Step 1: choose which monitor to remove
   let html = '<h3>Remove monitor from:</h3>';
   for (let mi = 0; mi < state.monitored.length; mi++) {
     const idx = state.monitored[mi];
-    html += `<div class="select-option" onclick="moveStep2(${mi})">
+    html += `<div class="select-option" ${optAttr('moveStep2('+mi+')')}>
       <div class="dim-status watching" style="width:12px;height:12px;"></div>
       <span>${DIMENSIONS[idx].name}</span>
     </div>`;
   }
-  html += `<div class="select-option" onclick="closePanel()" style="color:var(--text-dim)">Cancel</div>`;
+  html += `<div class="select-option" ${optAttr('closePanel()')} style="color:var(--text-dim)">Cancel</div>`;
   const panel = document.getElementById('select-panel');
   panel.innerHTML = html;
   panel.classList.add('visible');
+  focusFirstOption();
 }
 
 function moveStep2(monitorPos) {
@@ -801,14 +822,15 @@ function moveStep2(monitorPos) {
   let html = `<h3>Move monitor to:</h3>`;
   for (let i = 0; i < NUM_DIMS; i++) {
     if (state.monitored.includes(i)) continue;
-    html += `<div class="select-option" onclick="executeMove(${monitorPos}, ${i})">
+    html += `<div class="select-option" ${optAttr('executeMove('+monitorPos+','+i+')')}>
       <span>${DIMENSIONS[i].name}</span>
       <span class="desc">${DIMENSIONS[i].desc}</span>
     </div>`;
   }
-  html += `<div class="select-option" onclick="closePanel()" style="color:var(--text-dim)">Cancel</div>`;
+  html += `<div class="select-option" ${optAttr('closePanel()')} style="color:var(--text-dim)">Cancel</div>`;
   const panel = document.getElementById('select-panel');
   panel.innerHTML = html;
+  focusFirstOption();
 }
 
 function executeMove(monitorPos, newIdx) {
@@ -824,15 +846,16 @@ function startInvestigate() {
   let html = '<h3>Investigate which dimension?</h3>';
   for (let i = 0; i < NUM_DIMS; i++) {
     const status = state.monitored.includes(i) ? 'monitored' : 'unmonitored';
-    html += `<div class="select-option" onclick="executeInvestigate(${i})">
+    html += `<div class="select-option" ${optAttr('executeInvestigate('+i+')')}>
       <span>${DIMENSIONS[i].name}</span>
       <span class="desc">${status}</span>
     </div>`;
   }
-  html += `<div class="select-option" onclick="closePanel()" style="color:var(--text-dim)">Cancel</div>`;
+  html += `<div class="select-option" ${optAttr('closePanel()')} style="color:var(--text-dim)">Cancel</div>`;
   const panel = document.getElementById('select-panel');
   panel.innerHTML = html;
   panel.classList.add('visible');
+  focusFirstOption();
 }
 
 function executeInvestigate(idx) {
@@ -871,14 +894,15 @@ function startIntervene() {
   if (state.capital < INTERVENE_CAPITAL) return;
   let html = `<h3>Intervene on which dimension? (costs ${INTERVENE_CAPITAL} capital, boosts ~15%)</h3>`;
   for (let i = 0; i < NUM_DIMS; i++) {
-    html += `<div class="select-option" onclick="executeIntervene(${i})">
+    html += `<div class="select-option" ${optAttr('executeIntervene('+i+')')}>
       <span>${DIMENSIONS[i].name}</span>
     </div>`;
   }
-  html += `<div class="select-option" onclick="closePanel()" style="color:var(--text-dim)">Cancel</div>`;
+  html += `<div class="select-option" ${optAttr('closePanel()')} style="color:var(--text-dim)">Cancel</div>`;
   const panel = document.getElementById('select-panel');
   panel.innerHTML = html;
   panel.classList.add('visible');
+  focusFirstOption();
 }
 
 function executeIntervene(idx) {
