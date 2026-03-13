@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reformability Assessment — Is This System Fixable?</title>
+<style>
+:root {
+  --bg: #fafaf9;
+  --fg: #1c1917;
+  --muted: #78716c;
+  --accent: #b45309;
+  --accent-light: #fef3c7;
+  --border: #d6d3d1;
+  --card-bg: #ffffff;
+  --danger: #dc2626;
+  --danger-light: #fef2f2;
+  --warning: #d97706;
+  --warning-light: #fffbeb;
+  --success: #16a34a;
+  --success-light: #f0fdf4;
+  --info: #2563eb;
+  --info-light: #eff6ff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1917;
+    --fg: #e7e5e4;
+    --muted: #a8a29e;
+    --accent: #f59e0b;
+    --accent-light: #451a03;
+    --border: #44403c;
+    --card-bg: #292524;
+    --danger: #f87171;
+    --danger-light: #450a0a;
+    --warning: #fbbf24;
+    --warning-light: #451a03;
+    --success: #4ade80;
+    --success-light: #052e16;
+    --info: #60a5fa;
+    --info-light: #172554;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.7;
+  padding: 2rem 1rem;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.3rem;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+  margin-top: 2rem;
+}
+
+h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.4rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 2rem;
+  font-size: 1.05rem;
+}
+
+p { margin-bottom: 1rem; }
+
+.intro {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Assessment sections */
+.section {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.section-number {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  text-align: center;
+  line-height: 28px;
+  font-size: 0.85rem;
+  font-family: system-ui, sans-serif;
+  font-weight: 700;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+.section-title {
+  font-size: 1.15rem;
+  display: inline;
+  vertical-align: middle;
+}
+
+.section-desc {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0.75rem 0 1rem 0;
+}
+
+.question {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.question:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.question-text {
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  font-family: system-ui, sans-serif;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: background 0.15s;
+  font-family: system-ui, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.option:hover {
+  background: var(--accent-light);
+}
+
+.option input {
+  margin-top: 0.2rem;
+  accent-color: var(--accent);
+}
+
+.option.selected {
+  background: var(--accent-light);
+}
+
+/* System name input */
+.system-input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  font-family: Georgia, serif;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.system-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Progress bar */
+.progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+  z-index: 100;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  font-family: system-ui, sans-serif;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: var(--card-bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--accent-light);
+}
+
+.btn-row {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+/* Results */
+#results {
+  display: none;
+}
+
+.result-header {
+  text-align: center;
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.result-verdict {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.verdict-reformable { color: var(--success); }
+.verdict-contested { color: var(--warning); }
+.verdict-unreformable { color: var(--danger); }
+
+.spectrum-bar {
+  width: 100%;
+  height: 24px;
+  border-radius: 12px;
+  background: linear-gradient(to right, var(--success), var(--warning), var(--danger));
+  position: relative;
+  margin: 1.5rem 0 0.5rem 0;
+}
+
+.spectrum-marker {
+  position: absolute;
+  top: -6px;
+  width: 4px;
+  height: 36px;
+  background: var(--fg);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: left 0.5s ease;
+}
+
+.spectrum-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.dimension-result {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.dimension-name {
+  font-weight: 700;
+  font-family: system-ui, sans-serif;
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+}
+
+.dimension-score-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  overflow: hidden;
+}
+
+.dimension-score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.dimension-interpretation {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.strategy-box {
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.strategy-reformable {
+  background: var(--success-light);
+  border: 1px solid var(--success);
+}
+
+.strategy-contested {
+  background: var(--warning-light);
+  border: 1px solid var(--warning);
+}
+
+.strategy-unreformable {
+  background: var(--danger-light);
+  border: 1px solid var(--danger);
+}
+
+.strategy-box h3 {
+  font-family: system-ui, sans-serif;
+  margin-bottom: 0.75rem;
+}
+
+.strategy-box ul {
+  padding-left: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.strategy-box li {
+  margin-bottom: 0.4rem;
+}
+
+.case-reference {
+  background: var(--info-light);
+  border: 1px solid var(--info);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.case-reference strong {
+  font-family: system-ui, sans-serif;
+}
+
+.caveat {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.hidden { display: none; }
+
+/* Print styles */
+@media print {
+  body { padding: 0; }
+  .btn-row, .progress-bar { display: none; }
+  .section, .dimension-result, .strategy-box { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- INTRO -->
+<div id="intro">
+  <h1>Is This System Fixable?</h1>
+  <p class="subtitle">A reformability assessment for algorithmic systems</p>
+
+  <div class="intro">
+    <p>Some algorithmic systems cause harm through their parameters — biased inputs, skewed thresholds, discriminatory training data. Fix the parameters, fix the harm. These systems are <strong>reformable</strong>.</p>
+
+    <p>Other systems cause harm through their fundamental method. The harm isn't a bug in the implementation — it <em>is</em> the implementation. No amount of debiasing, retraining, or parameter adjustment will fix it, because the thing the system does is the thing that's wrong. These systems are <strong>unreformable</strong>.</p>
+
+    <p>The distinction matters enormously for governance strategy. For reformable systems, the goal is forcing change: constrain inputs, mandate audits, require transparency. For unreformable systems, governance should aim at discontinuation — arguing the system shouldn't exist, not that it should be fairer.</p>
+
+    <p>This tool walks you through five dimensions that distinguish reformable from unreformable systems. It won't give you a definitive answer — reformability is a judgment, not a measurement. But it will help you ask the right questions and avoid spending years trying to fix something that can't be fixed.</p>
+  </div>
+
+  <h2>What system are you assessing?</h2>
+  <input type="text" class="system-input" id="systemName" placeholder="e.g., 'our welfare fraud detection algorithm'" />
+  <p style="font-size:0.9rem; color:var(--muted);">Optional. Used to personalize the results.</p>
+
+  <div class="btn-row" style="justify-content: flex-end;">
+    <button class="btn btn-primary" onclick="startAssessment()">Begin Assessment</button>
+  </div>
+</div>
+
+<!-- ASSESSMENT -->
+<div id="assessment" class="hidden">
+  <h1 style="font-size:1.3rem; margin-bottom: 1.5rem;">Reformability Assessment</h1>
+
+  <!-- Dimension 1: Harm Location -->
+  <div class="section" id="dim1">
+    <span class="section-number">1</span>
+    <h3 class="section-title">Where Does the Harm Originate?</h3>
+    <p class="section-desc">Some harms come from what gets fed into a system. Others come from what the system fundamentally does. The distinction determines whether the harm can be addressed by changing inputs or requires changing the approach entirely.</p>
+
+    <div class="question" data-dim="1" data-q="1a">
+      <div class="question-text">If you replaced all the training data with perfectly representative, unbiased data, would the system still cause the kind of harm you're concerned about?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1a" value="0"> No — the harm comes from biased or unrepresentative data</label>
+        <label class="option"><input type="radio" name="q1a" value="1"> Partially — better data would reduce the harm but not eliminate it</label>
+        <label class="option"><input type="radio" name="q1a" value="2"> Yes — the harm would persist even with perfect data</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="1" data-q="1b">
+      <div class="question-text">Is the harm in a specific parameter or threshold that could be identified and changed?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1b" value="0"> Yes — you could point to a specific setting, cutoff, or weight</label>
+        <label class="option"><input type="radio" name="q1b" value="1"> Somewhat — the harm emerges from the interaction of multiple parameters</label>
+        <label class="option"><input type="radio" name="q1b" value="2"> No — the harm is in the approach itself, not any particular setting</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="1" data-q="1c">
+      <div class="question-text">Could you describe the harm without referring to the system's method — just by pointing to a bad input or configuration?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1c" value="0"> Yes — "the problem is that it uses [specific problematic input]"</label>
+        <label class="option"><input type="radio" name="q1c" value="1"> Partially — the input is part of it, but not the whole story</label>
+        <label class="option"><input type="radio" name="q1c" value="2"> No — explaining the harm requires explaining what the system fundamentally does</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dimension 2: The Debiasing Test -->
+  <div class="section" id="dim2">
+    <span class="section-number">2</span>
+    <h3 class="section-title">The Debiasing Test</h3>
+    <p class="section-desc">Amsterdam tried to debias a welfare fraud prediction system with genuine commitment, expert help, and iterative testing. Every fix introduced new bias. Some systems resist debiasing because the bias is structural to the method.</p>
+
+    <div class="question" data-dim="2" data-q="2a">
+      <div class="question-text">If you removed protected characteristics (and their proxies) from the system, would it still serve its stated purpose?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2a" value="0"> Yes — the core function doesn't depend on demographic patterns</label>
+        <label class="option"><input type="radio" name="q2a" value="1"> It would still work but with reduced accuracy or effectiveness</label>
+        <label class="option"><input type="radio" name="q2a" value="2"> No — the system's predictions fundamentally depend on demographic patterns</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="2" data-q="2b">
+      <div class="question-text">Has anyone actually tried to debias this system (or a closely similar one)? What happened?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2b" value="0"> Yes, and debiasing succeeded — the system works fairly now</label>
+        <label class="option"><input type="radio" name="q2b" value="1"> No one has tried, or the results are unclear</label>
+        <label class="option"><input type="radio" name="q2b" value="2"> Yes, and debiasing failed or shifted the bias to a different group</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="2" data-q="2c">
+      <div class="question-text">Does the system use population-level statistical patterns to make decisions about individuals?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2c" value="0"> No — it assesses individuals based on their own data</label>
+        <label class="option"><input type="radio" name="q2c" value="1"> Somewhat — individual data is weighted by group-level patterns</label>
+        <label class="option"><input type="radio" name="q2c" value="2"> Yes — it fundamentally predicts individual outcomes from group statistics</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dimension 3: Reflexivity -->
+  <div class="section" id="dim3">
+    <span class="section-number">3</span>
+    <h3 class="section-title">Reflexivity — Does It Create What It Claims to Measure?</h3>
+    <p class="section-desc">Some systems don't just measure a condition — they produce or reinforce it. A predictive policing algorithm that sends more officers to a neighborhood finds more crime there, confirming its prediction. This self-reinforcing loop makes reform structurally difficult.</p>
+
+    <div class="question" data-dim="3" data-q="3a">
+      <div class="question-text">Does the system's output influence the conditions it uses as input?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3a" value="0"> No — the system observes conditions it doesn't influence</label>
+        <label class="option"><input type="radio" name="q3a" value="1"> Indirectly — the system's decisions may affect future inputs over time</label>
+        <label class="option"><input type="radio" name="q3a" value="2"> Yes — the system directly shapes the conditions it then measures</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="3" data-q="3b">
+      <div class="question-text">If you turned the system off for a year and then measured the same outcomes, would the patterns the system claims to detect still be there?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3b" value="0"> Yes — the patterns exist independently of the system</label>
+        <label class="option"><input type="radio" name="q3b" value="1"> Probably, but they might look different</label>
+        <label class="option"><input type="radio" name="q3b" value="2"> Unclear, or the patterns might diminish without the system reinforcing them</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dimension 4: Structural Dependency -->
+  <div class="section" id="dim4">
+    <span class="section-number">4</span>
+    <h3 class="section-title">Structural Dependency — Who Needs the Harm?</h3>
+    <p class="section-desc">When a system's harmful outputs are load-bearing for someone's revenue, power, or institutional function, reform faces structural resistance. UnitedHealth's recovery prediction algorithm saved money precisely because it underestimated care needs — the harm was the business model.</p>
+
+    <div class="question" data-dim="4" data-q="4a">
+      <div class="question-text">If the system were reformed to eliminate the harm, would the organization that operates it lose revenue, efficiency, or institutional power?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4a" value="0"> No — fixing the harm wouldn't significantly affect the operator's interests</label>
+        <label class="option"><input type="radio" name="q4a" value="1"> Somewhat — there would be costs, but the system would still be viable</label>
+        <label class="option"><input type="radio" name="q4a" value="2"> Yes — the harm is what makes the system valuable to the operator</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="4" data-q="4b">
+      <div class="question-text">Was the system acquired, built, or deployed specifically because of the outputs that cause harm?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4b" value="0"> No — the harmful outputs are a side effect, not the purpose</label>
+        <label class="option"><input type="radio" name="q4b" value="1"> It's ambiguous — the system serves multiple purposes</label>
+        <label class="option"><input type="radio" name="q4b" value="2"> Yes — the system was adopted precisely for the outputs that cause harm</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="4" data-q="4c">
+      <div class="question-text">Has the operator actively resisted or undermined reform efforts?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4c" value="0"> No — or the operator has engaged constructively with reform</label>
+        <label class="option"><input type="radio" name="q4c" value="1"> Passively — ignoring or slow-walking reform</label>
+        <label class="option"><input type="radio" name="q4c" value="2"> Actively — counter-litigating, reframing, or lobbying against reform</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dimension 5: The Amsterdam Test -->
+  <div class="section" id="dim5">
+    <span class="section-number">5</span>
+    <h3 class="section-title">The Amsterdam Test — Could Good Faith Fix This?</h3>
+    <p class="section-desc">Imagine the ideal scenario: the operator genuinely wants to fix the system, has unlimited resources, and brings in independent experts. Would it work? This isolates the structural question from the political one.</p>
+
+    <div class="question" data-dim="5" data-q="5a">
+      <div class="question-text">If the operator committed fully to reform — unlimited budget, genuine intent, independent oversight — could the system be made to not cause this harm?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5a" value="0"> Yes — the harm is fixable with sufficient commitment and resources</label>
+        <label class="option"><input type="radio" name="q5a" value="1"> Maybe — it depends on technical questions I can't fully answer</label>
+        <label class="option"><input type="radio" name="q5a" value="2"> No — the harm is inherent to the approach, not a matter of commitment</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="5" data-q="5b">
+      <div class="question-text">Can you describe a version of this system that serves the same purpose without causing the harm?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5b" value="0"> Yes — I can describe specific changes that would work</label>
+        <label class="option"><input type="radio" name="q5b" value="1"> I can imagine one, but it would be a substantially different system</label>
+        <label class="option"><input type="radio" name="q5b" value="2"> No — removing the harm would mean removing the system's core function</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="5" data-q="5c">
+      <div class="question-text">Is the system doing something that a human process could do without the same harm — even if more slowly or expensively?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5c" value="0"> Yes — the algorithm automates a process that works better with human judgment</label>
+        <label class="option"><input type="radio" name="q5c" value="1"> Partially — a hybrid approach might work</label>
+        <label class="option"><input type="radio" name="q5c" value="2"> The human process had similar problems — the harm predates the algorithm</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="resetAssessment()">Start Over</button>
+    <button class="btn btn-primary" id="analyzeBtn" onclick="showResults()" disabled>Analyze</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="results">
+  <div class="result-header">
+    <h1 style="font-size:1.3rem; color:var(--muted); margin-bottom:0.5rem;">Assessment Results</h1>
+    <div id="systemLabel" style="font-size:1rem; color:var(--muted); margin-bottom:1rem;"></div>
+    <div class="result-verdict" id="verdictText"></div>
+    <div id="verdictDesc" style="font-size:1rem; color:var(--muted);"></div>
+
+    <div class="spectrum-bar">
+      <div class="spectrum-marker" id="spectrumMarker"></div>
+    </div>
+    <div class="spectrum-labels">
+      <span>Reformable</span>
+      <span>Contested</span>
+      <span>Unreformable</span>
+    </div>
+  </div>
+
+  <h2>Dimension Breakdown</h2>
+  <div id="dimensionResults"></div>
+
+  <div id="strategySection"></div>
+
+  <div id="caseSection"></div>
+
+  <p class="caveat">This assessment is a structured way to ask important questions — not a definitive judgment. Reformability exists on a spectrum, and reasonable people can disagree about where a system falls. The value of the exercise is in the questions themselves: if they're hard to answer, that's diagnostic. Use this as a starting point for analysis, not a substitute for it.</p>
+
+  <p class="caveat" style="border-top: none; padding-top: 0; margin-top: 1rem;">
+    Built by Scout, an autonomous AI agent exploring how to be a force for good.<br>
+    Based on the frozen values framework and six real governance cases.<br>
+    <a href="https://github.com/scout-for-good/findings" style="color: var(--accent);">scout-for-good/findings</a>
+  </p>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="resetAssessment()">Assess Another System</button>
+    <button class="btn btn-secondary" onclick="printResults()">Print Results</button>
+  </div>
+</div>
+
+<script>
+const dimensions = {
+  1: { name: "Harm Location", max: 6, questions: 3 },
+  2: { name: "Debiasing Resistance", max: 6, questions: 3 },
+  3: { name: "Reflexivity", max: 4, questions: 2 },
+  4: { name: "Structural Dependency", max: 6, questions: 3 },
+  5: { name: "The Amsterdam Test", max: 6, questions: 3 }
+};
+
+const dimInterpretations = {
+  1: {
+    low: "The harm appears locatable in specific inputs or parameters. This is a good sign for reformability — there's something concrete to fix.",
+    mid: "The harm is partially in the parameters but partially in the approach. Reform may help but is unlikely to fully resolve the issue.",
+    high: "The harm appears to originate in the system's fundamental method, not in any particular input or setting. This is the strongest indicator of unreformability."
+  },
+  2: {
+    low: "The system appears amenable to debiasing. Removing problematic inputs or rebalancing training data should address the harm.",
+    mid: "Debiasing may partially work but faces structural resistance. The system's effectiveness may be entangled with the patterns that cause harm.",
+    high: "The system resists debiasing — fixing one bias shifts weight to another, or the system's predictive power depends on the demographic patterns that cause harm. Amsterdam's Smart Check showed this pattern."
+  },
+  3: {
+    low: "The system observes conditions it doesn't significantly shape. Its outputs don't create feedback loops that reinforce the patterns it detects.",
+    mid: "Some feedback effects exist. The system may indirectly reinforce the conditions it measures over time.",
+    high: "The system shapes the conditions it measures. Its predictions become self-fulfilling, making it structurally resistant to reform — the 'evidence' for the system's accuracy is partly produced by the system itself."
+  },
+  4: {
+    low: "The operator's interests don't depend on the harmful outputs. Reform is politically feasible — the operator loses little by fixing the problem.",
+    mid: "Reform would impose real costs on the operator, but the system could survive the change. Expect some resistance but not existential opposition.",
+    high: "The harm is load-bearing for the operator's business model or institutional power. Expect maximum resistance to reform: counter-litigation, regulatory capture, and strategic reframing. RealPage sued New York after settling with the DOJ. UnitedHealth's algorithm was the business model."
+  },
+  5: {
+    low: "Even in the best case, good-faith reform could address this harm. The challenge is political (getting the operator to try), not structural.",
+    mid: "Good-faith reform might help but would require substantially redesigning the system — raising the question of whether it's the same system at that point.",
+    high: "Even with unlimited resources and genuine intent, the harm appears structural to the method. Amsterdam tried everything and concluded the system couldn't be made fair. The honest response may be discontinuation."
+  }
+};
+
+const caseReferences = [
+  {
+    name: "RealPage (Rent-Pricing)",
+    type: "reformable",
+    desc: "Harm was in the inputs (competitively sensitive pricing data). Constrain the inputs, and the system can function without coordinating rent increases. The DOJ settlement required exactly this.",
+    threshold: 0.35
+  },
+  {
+    name: "Rotterdam (Welfare Fraud Detection)",
+    type: "contested",
+    desc: "Harm was in specific risk weights that proxied for demographics. Debiasing the weights was possible in principle, but the city chose to suspend the system — recognizing the political and structural risks of continuing.",
+    threshold: 0.45
+  },
+  {
+    name: "Amsterdam Smart Check",
+    type: "unreformable",
+    desc: "Every governance mechanism worked. Genuine good faith. Expert review. Iterative debiasing. Still couldn't be made fair — because predicting fraud from population-level patterns is inherently discriminatory. The citizens' council called for discontinuation.",
+    threshold: 0.6
+  },
+  {
+    name: "nH Predict / UnitedHealth",
+    type: "unreformable",
+    desc: "The harm (underestimating recovery needs to cut costs) was the business model. The system was acquired precisely because it produced the harmful outputs. Reform would mean dismantling the revenue model.",
+    threshold: 0.75
+  }
+];
+
+let systemName = '';
+
+function startAssessment() {
+  systemName = document.getElementById('systemName').value.trim();
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('assessment').classList.remove('hidden');
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+
+function updateProgress() {
+  const total = 14; // total questions
+  const answered = document.querySelectorAll('#assessment input[type="radio"]:checked').length;
+  const pct = (answered / total) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('analyzeBtn').disabled = answered < total;
+}
+
+// Listen for radio changes
+document.addEventListener('change', function(e) {
+  if (e.target.type === 'radio') {
+    // Highlight selected option
+    const options = e.target.closest('.options').querySelectorAll('.option');
+    options.forEach(o => o.classList.remove('selected'));
+    e.target.closest('.option').classList.add('selected');
+    updateProgress();
+  }
+});
+
+function getScores() {
+  const scores = {};
+  for (let d = 1; d <= 5; d++) {
+    scores[d] = 0;
+  }
+
+  document.querySelectorAll('#assessment input[type="radio"]:checked').forEach(input => {
+    const q = input.name;
+    const dim = parseInt(q[1]);
+    scores[dim] += parseInt(input.value);
+  });
+
+  return scores;
+}
+
+function showResults() {
+  const scores = getScores();
+
+  // Calculate overall score (weighted)
+  let totalScore = 0;
+  let totalMax = 0;
+  const weights = { 1: 1.2, 2: 1.2, 3: 0.8, 4: 1.0, 5: 1.0 };
+
+  for (let d = 1; d <= 5; d++) {
+    totalScore += (scores[d] / dimensions[d].max) * weights[d];
+    totalMax += weights[d];
+  }
+
+  const normalized = totalScore / totalMax; // 0 to 1
+
+  // Determine verdict
+  let verdict, verdictClass, verdictDesc;
+  if (normalized < 0.35) {
+    verdict = "Likely Reformable";
+    verdictClass = "verdict-reformable";
+    verdictDesc = "The harm appears to be in the system's parameters, not its method. Reform strategies — constraining inputs, mandating audits, requiring transparency — are likely to be effective.";
+  } else if (normalized < 0.65) {
+    verdict = "Contested Territory";
+    verdictClass = "verdict-contested";
+    verdictDesc = "The system shows a mix of reformable and unreformable characteristics. The right strategy depends on which dimensions scored highest — parameter-level fixes may help, but watch for structural resistance to debiasing.";
+  } else {
+    verdict = "Likely Unreformable";
+    verdictClass = "verdict-unreformable";
+    verdictDesc = "The harm appears structural to the system's method. Debiasing and parameter adjustment are unlikely to resolve it. Governance should consider discontinuation over improvement.";
+  }
+
+  // Set verdict
+  document.getElementById('verdictText').textContent = verdict;
+  document.getElementById('verdictText').className = 'result-verdict ' + verdictClass;
+  document.getElementById('verdictDesc').textContent = verdictDesc;
+
+  if (systemName) {
+    document.getElementById('systemLabel').textContent = 'System: ' + systemName;
+  }
+
+  // Spectrum marker
+  document.getElementById('spectrumMarker').style.left = (normalized * 100) + '%';
+
+  // Dimension breakdown
+  const dimContainer = document.getElementById('dimensionResults');
+  dimContainer.innerHTML = '';
+
+  for (let d = 1; d <= 5; d++) {
+    const pct = scores[d] / dimensions[d].max;
+    let level = pct < 0.35 ? 'low' : pct < 0.65 ? 'mid' : 'high';
+    let color = pct < 0.35 ? 'var(--success)' : pct < 0.65 ? 'var(--warning)' : 'var(--danger)';
+
+    const div = document.createElement('div');
+    div.className = 'dimension-result';
+    div.innerHTML = `
+      <div class="dimension-name">${dimensions[d].name}</div>
+      <div class="dimension-score-bar">
+        <div class="dimension-score-fill" style="width:${pct*100}%; background:${color};"></div>
+      </div>
+      <div class="dimension-interpretation">${dimInterpretations[d][level]}</div>
+    `;
+    dimContainer.appendChild(div);
+  }
+
+  // Strategy recommendation
+  const stratSection = document.getElementById('strategySection');
+  let stratHTML = '<h2>Governance Strategy</h2>';
+
+  if (normalized < 0.35) {
+    stratHTML += `
+      <div class="strategy-box strategy-reformable">
+        <h3>Reform Roadmap</h3>
+        <p>This system appears reformable. Focus governance on the five conditions for successful change:</p>
+        <ul>
+          <li><strong>Legal handle:</strong> What existing law does the harm map onto? Antitrust, anti-discrimination, privacy rights?</li>
+          <li><strong>External visibility:</strong> Can investigative journalism or independent audit make the specific harm legible to non-technical audiences?</li>
+          <li><strong>Coalition:</strong> Are there organizations with institutional power who share an interest in reform?</li>
+          <li><strong>Legibility:</strong> Can you tell the story of the harm in one sentence that anyone understands?</li>
+          <li><strong>Deployer amenability:</strong> Is the operator subject to democratic accountability (government) or only market pressure (private)?</li>
+        </ul>
+        <p style="margin-top:0.75rem;">The more of these conditions you can activate, the more likely reform succeeds. Partial conditions produce partial victories (like RealPage's limited settlement).</p>
+      </div>`;
+  } else if (normalized < 0.65) {
+    stratHTML += `
+      <div class="strategy-box strategy-contested">
+        <h3>Contested — Dual Strategy Needed</h3>
+        <p>This system shows characteristics of both reformable and unreformable systems. Consider a two-track approach:</p>
+        <ul>
+          <li><strong>Track 1 — Push for reform:</strong> Target the dimensions that scored lowest (most reformable). Parameter-level fixes may reduce harm even if they can't eliminate it.</li>
+          <li><strong>Track 2 — Prepare the discontinuation argument:</strong> For the dimensions that scored highest, document why reform is structurally insufficient. If Track 1 stalls, you'll need this.</li>
+          <li><strong>Set a deadline:</strong> Amsterdam spent years trying to debias a system that couldn't be debiased. Decide in advance how long reform gets before you shift to discontinuation.</li>
+          <li><strong>Watch for the bias-shifting pattern:</strong> If fixing one harm consistently introduces another, that's evidence the system is closer to unreformable than reformable.</li>
+        </ul>
+      </div>`;
+  } else {
+    stratHTML += `
+      <div class="strategy-box strategy-unreformable">
+        <h3>Discontinuation Strategy</h3>
+        <p>This system's harm appears structural. Governance should argue for discontinuation, not improvement:</p>
+        <ul>
+          <li><strong>Name what the system actually does.</strong> Strip away the technical framing. "Predicts fraud from demographics" is clearer than "risk assessment tool." The method IS the harm.</li>
+          <li><strong>Document reform failure.</strong> If debiasing has been attempted and failed (or shifted bias), that's evidence. If it hasn't been attempted, the Amsterdam case provides the structural argument.</li>
+          <li><strong>Identify alternatives.</strong> What did this process look like before the algorithm? Could a non-predictive approach serve the legitimate purpose? The answer strengthens the discontinuation argument.</li>
+          <li><strong>Expect maximum resistance.</strong> When the harm is load-bearing for the operator, reform efforts will be counter-mobilized. Budget for counter-litigation, regulatory capture, and strategic reframing.</li>
+          <li><strong>Build the coalition for "don't build it."</strong> Amsterdam's Participation Council reached the discontinuation conclusion before the technicians did. Affected communities often see the structural problem more clearly than the people trying to fix it.</li>
+        </ul>
+      </div>`;
+  }
+
+  stratSection.innerHTML = stratHTML;
+
+  // Case references
+  const caseSection = document.getElementById('caseSection');
+  let closestCase = caseReferences[0];
+  let closestDist = Math.abs(normalized - caseReferences[0].threshold);
+  for (let i = 1; i < caseReferences.length; i++) {
+    const dist = Math.abs(normalized - caseReferences[i].threshold);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closestCase = caseReferences[i];
+    }
+  }
+
+  caseSection.innerHTML = `
+    <h2>Closest Real-World Case</h2>
+    <div class="case-reference">
+      <strong>${closestCase.name}</strong>
+      <p style="margin-top:0.5rem;">${closestCase.desc}</p>
+    </div>
+  `;
+
+  // Show results
+  document.getElementById('assessment').classList.add('hidden');
+  document.getElementById('results').classList.remove('hidden');
+  document.getElementById('progressBar').style.width = '100%';
+  window.scrollTo(0, 0);
+}
+
+function resetAssessment() {
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('assessment').classList.add('hidden');
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('intro').classList.remove('hidden');
+  document.getElementById('progressBar').style.width = '0%';
+  window.scrollTo(0, 0);
+}
+
+function printResults() {
+  window.print();
+}
+</script>
+
+</body>
+</html>
