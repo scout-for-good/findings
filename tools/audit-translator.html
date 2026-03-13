@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Translator — Communicate Algorithmic Audit Findings</title>
+<style>
+:root {
+  --bg: #fafaf9;
+  --fg: #1c1917;
+  --muted: #78716c;
+  --border: #d6d3d1;
+  --accent: #0c4a6e;
+  --accent-light: #e0f2fe;
+  --surface: #ffffff;
+  --warn: #92400e;
+  --warn-bg: #fef3c7;
+  --good: #065f46;
+  --good-bg: #d1fae5;
+  --bad: #991b1b;
+  --bad-bg: #fee2e2;
+  --radius: 6px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1917;
+    --fg: #e7e5e4;
+    --muted: #a8a29e;
+    --border: #44403c;
+    --accent: #7dd3fc;
+    --accent-light: #0c4a6e;
+    --surface: #292524;
+    --warn: #fbbf24;
+    --warn-bg: #451a03;
+    --good: #6ee7b7;
+    --good-bg: #064e3b;
+    --bad: #fca5a5;
+    --bad-bg: #450a0a;
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+}
+
+/* Progress bar */
+.progress-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 2rem;
+}
+
+.progress-step {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+
+.progress-step.active {
+  background: var(--accent);
+}
+
+.progress-step.done {
+  background: var(--good);
+}
+
+/* Phases */
+.phase {
+  display: none;
+}
+
+.phase.active {
+  display: block;
+}
+
+.phase-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.phase-desc {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Form elements */
+label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+  margin-top: 1.25rem;
+}
+
+label:first-of-type {
+  margin-top: 0;
+}
+
+.label-hint {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.85rem;
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+input[type="text"], textarea, select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+/* Audience cards */
+.audience-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.audience-card {
+  padding: 1rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface);
+}
+
+.audience-card:hover {
+  border-color: var(--accent);
+}
+
+.audience-card.selected {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.audience-card h3 {
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.audience-card p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.6rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.btn:hover {
+  background: var(--bg);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  background: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Output section */
+.output-section {
+  margin-top: 1.5rem;
+}
+
+.output-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.output-block h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--accent);
+}
+
+.output-block h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.output-block p, .output-block li {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.output-block ul {
+  padding-left: 1.25rem;
+  margin-top: 0.25rem;
+}
+
+.output-block li {
+  margin-bottom: 0.25rem;
+}
+
+.template-text {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  font-family: inherit;
+}
+
+.copy-btn {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.75rem;
+  float: right;
+  margin-top: -0.25rem;
+}
+
+.tip-box {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn);
+  color: var(--warn);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  margin-top: 1rem;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tip-box { color: var(--fg); }
+}
+
+.checklist {
+  list-style: none;
+  padding: 0;
+}
+
+.checklist li {
+  padding: 0.35rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  font-size: 0.9rem;
+}
+
+.checklist li::before {
+  content: "☐";
+  position: absolute;
+  left: 0;
+}
+
+/* Severity indicator */
+.severity-display {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.severity-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.severity-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.severity-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 60px;
+}
+
+@media (max-width: 600px) {
+  .audience-grid { grid-template-columns: 1fr; }
+  .container { padding: 1.25rem 1rem; }
+}
+
+/* Tab bar for output */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-family: inherit;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+}
+
+.tab:hover {
+  color: var(--fg);
+}
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Audit Translator</h1>
+  <p class="subtitle">Turn technical audit findings into communications that move people to act.</p>
+
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- Phase 1: System & Context -->
+  <div class="phase active" id="phase-0">
+    <h2 class="phase-title">1. What did you audit?</h2>
+    <p class="phase-desc">Describe the system and the context. You don't need technical precision here — plain language is fine.</p>
+
+    <label for="systemName">System or algorithm name
+      <span class="label-hint">e.g., "the city's welfare fraud detection system" or "HireVue video interviews"</span>
+    </label>
+    <input type="text" id="systemName" placeholder="Name or description of the system">
+
+    <label for="systemOwner">Who deploys or operates it?
+      <span class="label-hint">Organization, agency, or company responsible</span>
+    </label>
+    <input type="text" id="systemOwner" placeholder="e.g., Department of Social Services, Acme Corp">
+
+    <label for="systemDomain">What domain?</label>
+    <select id="systemDomain">
+      <option value="">Select a domain...</option>
+      <option value="hiring">Hiring & Employment</option>
+      <option value="benefits">Public Benefits & Welfare</option>
+      <option value="criminal-justice">Criminal Justice & Policing</option>
+      <option value="healthcare">Healthcare</option>
+      <option value="housing">Housing</option>
+      <option value="education">Education</option>
+      <option value="finance">Credit, Lending & Insurance</option>
+      <option value="content">Content Moderation & Speech</option>
+      <option value="surveillance">Surveillance & Monitoring</option>
+      <option value="other">Other</option>
+    </select>
+
+    <label for="affectedPop">Who is affected?
+      <span class="label-hint">Describe the population impacted by this system</span>
+    </label>
+    <textarea id="affectedPop" rows="2" placeholder="e.g., Job applicants under 25, welfare recipients in Rotterdam, patients in the ER"></textarea>
+
+    <label for="scale">Approximate scale of impact
+      <span class="label-hint">How many people are affected, and over what time period?</span>
+    </label>
+    <input type="text" id="scale" placeholder="e.g., ~50,000 applicants per year, 3 million residents">
+
+    <div class="btn-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="nextPhase()">Next</button>
+    </div>
+  </div>
+
+  <!-- Phase 2: Findings -->
+  <div class="phase" id="phase-1">
+    <h2 class="phase-title">2. What did you find?</h2>
+    <p class="phase-desc">Describe your findings. Include numbers if you have them, but narrative matters more than metrics here.</p>
+
+    <label for="findingSummary">Summary of your main finding
+      <span class="label-hint">One or two sentences. What's the headline?</span>
+    </label>
+    <textarea id="findingSummary" rows="3" placeholder="e.g., The system flagged welfare recipients for fraud investigation at 2.5x the rate for non-Dutch-origin residents compared to Dutch-origin residents with identical financial profiles."></textarea>
+
+    <label for="findingEvidence">What evidence supports this?
+      <span class="label-hint">Metrics, statistical tests, comparisons, case examples — whatever you have</span>
+    </label>
+    <textarea id="findingEvidence" rows="4" placeholder="e.g., Disparate impact ratio of 2.5x for non-Dutch vs Dutch residents. Controlled for income, household size, and benefit type. Sample of 12,000 cases over 18 months. Three individual cases documented with affected families."></textarea>
+
+    <label for="findingHarm">What harm does this cause?
+      <span class="label-hint">What actually happens to people when the system gets it wrong?</span>
+    </label>
+    <textarea id="findingHarm" rows="3" placeholder="e.g., Flagged families face benefit freezes, invasive home investigations, and months-long appeals processes. Some families lost housing during investigation periods."></textarea>
+
+    <label for="severity">How severe is the harm?</label>
+    <select id="severity" onchange="updateSeverity()">
+      <option value="">Select...</option>
+      <option value="1">Inconvenience — delays, minor friction</option>
+      <option value="2">Disadvantage — reduced access, lost opportunities</option>
+      <option value="3">Material harm — financial loss, denied services</option>
+      <option value="4">Serious harm — loss of housing, employment, liberty</option>
+      <option value="5">Severe harm — threat to safety, health, or fundamental rights</option>
+    </select>
+    <div class="severity-display" id="severityDisplay" style="display:none">
+      <div class="severity-bar"><div class="severity-fill" id="severityFill"></div></div>
+      <span class="severity-label" id="severityLabel"></span>
+    </div>
+
+    <label for="findingCause">What causes the problem? (if known)
+      <span class="label-hint">Training data issues, proxy variables, design choices, missing oversight, etc.</span>
+    </label>
+    <textarea id="findingCause" rows="2" placeholder="e.g., The model uses neighborhood and language as features, which serve as proxies for ethnicity."></textarea>
+
+    <div class="btn-row">
+      <button class="btn" onclick="prevPhase()">Back</button>
+      <button class="btn btn-primary" onclick="nextPhase()">Next</button>
+    </div>
+  </div>
+
+  <!-- Phase 3: Audience -->
+  <div class="phase" id="phase-2">
+    <h2 class="phase-title">3. Who are you communicating to?</h2>
+    <p class="phase-desc">Different audiences need different framings. Select your primary audience — you can come back and generate for others.</p>
+
+    <div class="audience-grid">
+      <div class="audience-card" data-audience="policymaker" onclick="selectAudience(this)">
+        <h3>Policymakers</h3>
+        <p>City council, legislators, regulatory bodies. Need regulatory context, precedent, and specific asks.</p>
+      </div>
+      <div class="audience-card" data-audience="journalist" onclick="selectAudience(this)">
+        <h3>Journalists</h3>
+        <p>Reporters covering tech, policy, or local government. Need story angles, human impact, and verifiable claims.</p>
+      </div>
+      <div class="audience-card" data-audience="community" onclick="selectAudience(this)">
+        <h3>Affected Communities</h3>
+        <p>The people impacted by the system. Need plain language, what it means for them, and what they can do.</p>
+      </div>
+      <div class="audience-card" data-audience="deployer" onclick="selectAudience(this)">
+        <h3>Deployer / Company</h3>
+        <p>The organization running the system. Need business risk, liability exposure, and remediation paths.</p>
+      </div>
+      <div class="audience-card" data-audience="regulator" onclick="selectAudience(this)">
+        <h3>Regulators</h3>
+        <p>Enforcement agencies, data protection authorities, sector regulators. Need legal frameworks and documented violations.</p>
+      </div>
+      <div class="audience-card" data-audience="funder" onclick="selectAudience(this)">
+        <h3>Funders / Board</h3>
+        <p>Foundations, grant-makers, or board members. Need impact framing, systemic context, and what support enables.</p>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" onclick="prevPhase()">Back</button>
+      <button class="btn btn-primary" id="generateBtn" onclick="nextPhase()" disabled>Generate Communication</button>
+    </div>
+  </div>
+
+  <!-- Phase 4: Output -->
+  <div class="phase" id="phase-3">
+    <h2 class="phase-title">4. Your Communication Brief</h2>
+    <p class="phase-desc">Structured guidance and draft language tailored to your audience. Edit and adapt freely.</p>
+
+    <div class="tab-bar" id="tabBar"></div>
+
+    <div id="outputArea"></div>
+
+    <div class="btn-row">
+      <button class="btn" onclick="prevPhase()">Back — choose different audience</button>
+      <button class="btn btn-primary" onclick="copyAll()">Copy All to Clipboard</button>
+    </div>
+  </div>
+
+  <footer>
+    <p><strong>Audit Translator</strong> — part of the <a href="/">Frozen Values Project</a>.</p>
+    <p style="margin-top:0.5rem">This tool helps structure your communication. It does not generate content automatically — you provide the substance, it provides the structure. Your findings, your voice, your judgment about what matters.</p>
+  </footer>
+</div>
+
+<script>
+const PHASES = 4;
+let currentPhase = 0;
+let selectedAudience = null;
+
+// Initialize progress bar
+function initProgress() {
+  const bar = document.getElementById('progressBar');
+  bar.innerHTML = '';
+  for (let i = 0; i < PHASES; i++) {
+    const step = document.createElement('div');
+    step.className = 'progress-step' + (i === 0 ? ' active' : '');
+    bar.appendChild(step);
+  }
+}
+
+function updateProgress() {
+  const steps = document.querySelectorAll('.progress-step');
+  steps.forEach((s, i) => {
+    s.className = 'progress-step';
+    if (i < currentPhase) s.className += ' done';
+    if (i === currentPhase) s.className += ' active';
+  });
+}
+
+function showPhase(n) {
+  document.querySelectorAll('.phase').forEach((p, i) => {
+    p.classList.toggle('active', i === n);
+  });
+  currentPhase = n;
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextPhase() {
+  if (currentPhase === 2) {
+    generateOutput();
+  }
+  if (currentPhase < PHASES - 1) {
+    showPhase(currentPhase + 1);
+  }
+}
+
+function prevPhase() {
+  if (currentPhase > 0) {
+    showPhase(currentPhase - 1);
+  }
+}
+
+function selectAudience(card) {
+  document.querySelectorAll('.audience-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedAudience = card.dataset.audience;
+  document.getElementById('generateBtn').disabled = false;
+}
+
+function updateSeverity() {
+  const val = parseInt(document.getElementById('severity').value);
+  const display = document.getElementById('severityDisplay');
+  if (!val) { display.style.display = 'none'; return; }
+  display.style.display = 'flex';
+  const fill = document.getElementById('severityFill');
+  const label = document.getElementById('severityLabel');
+  const pct = val * 20;
+  const colors = ['', '#eab308', '#f59e0b', '#ef4444', '#dc2626', '#991b1b'];
+  const labels = ['', 'Low', 'Moderate', 'Significant', 'Serious', 'Severe'];
+  fill.style.width = pct + '%';
+  fill.style.background = colors[val];
+  label.textContent = labels[val];
+  label.style.color = colors[val];
+}
+
+function val(id) {
+  return document.getElementById(id).value.trim();
+}
+
+function esc(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+function generateOutput() {
+  const data = {
+    system: val('systemName') || 'the system',
+    owner: val('systemOwner') || 'the deploying organization',
+    domain: val('systemDomain'),
+    affected: val('affectedPop') || 'affected individuals',
+    scale: val('scale'),
+    summary: val('findingSummary'),
+    evidence: val('findingEvidence'),
+    harm: val('findingHarm'),
+    severity: parseInt(val('severity')) || 3,
+    cause: val('findingCause'),
+    audience: selectedAudience
+  };
+
+  const domainLabels = {
+    'hiring': 'hiring and employment',
+    'benefits': 'public benefits and welfare',
+    'criminal-justice': 'criminal justice and policing',
+    'healthcare': 'healthcare',
+    'housing': 'housing',
+    'education': 'education',
+    'finance': 'credit, lending, and insurance',
+    'content': 'content moderation',
+    'surveillance': 'surveillance and monitoring',
+    'other': ''
+  };
+
+  data.domainLabel = domainLabels[data.domain] || '';
+
+  const generators = {
+    policymaker: generatePolicymaker,
+    journalist: generateJournalist,
+    community: generateCommunity,
+    deployer: generateDeployer,
+    regulator: generateRegulator,
+    funder: generateFunder
+  };
+
+  const output = generators[data.audience](data);
+  renderOutput(output, data);
+}
+
+function generatePolicymaker(d) {
+  const severityWords = ['', 'minor', 'moderate', 'significant', 'serious', 'severe'];
+  const sev = severityWords[d.severity];
+
+  return {
+    sections: [
+      {
+        title: 'Framing Guidance',
+        type: 'guidance',
+        content: `
+          <h4>Lead with impact, not technology</h4>
+          <p>Policymakers respond to constituent harm, not statistical methods. Your opening should name who is hurt, how many, and what happens to them — before any technical detail.</p>
+          <h4>Connect to existing obligations</h4>
+          <ul>
+            <li>Does this system touch a legally protected class? Name the relevant laws.</li>
+            <li>Is there existing regulation in this domain (${esc(d.domainLabel)})? Reference it.</li>
+            <li>Has a similar system been challenged or reformed elsewhere? Cite the precedent.</li>
+          </ul>
+          <h4>Make a specific ask</h4>
+          <p>Vague calls for "accountability" or "transparency" are easy to deflect. Request a concrete action: a moratorium, an independent audit mandate, a public hearing, a reporting requirement.</p>
+        `
+      },
+      {
+        title: 'Draft Opening Statement',
+        type: 'template',
+        content: `${esc(d.owner)}'s ${esc(d.system)} is causing ${sev} harm to ${esc(d.affected)}${d.scale ? ' — approximately ' + esc(d.scale) : ''}.
+
+${esc(d.summary || '[Your main finding here]')}
+
+${esc(d.harm || '[Description of concrete harms]')}
+
+This is not a hypothetical risk. ${d.evidence ? esc(d.evidence) : '[Your evidence summary]'}
+
+We are requesting [SPECIFIC ACTION: e.g., an immediate moratorium on the system's use pending independent audit / a public hearing on the system's disparate impacts / mandatory reporting of the system's error rates by demographic group].`
+      },
+      {
+        title: 'Evidence Package Checklist',
+        type: 'checklist',
+        items: [
+          'One-page executive summary (this draft, refined)',
+          'Technical methodology appendix (for staff review, not the policymaker)',
+          `Precedent brief — similar systems reformed in other jurisdictions`,
+          `${d.severity >= 3 ? 'Individual case narratives (with consent) — 2-3 stories showing human impact' : 'Aggregate impact statistics'}`,
+          'Clear statement of what legal authority the policymaker has to act',
+          'Proposed language for the specific action you\'re requesting',
+          d.severity >= 4 ? 'Timeline urgency argument — why this cannot wait for a study period' : 'Reasonable timeline for response'
+        ]
+      },
+      {
+        title: 'Common Deflections & Responses',
+        type: 'guidance',
+        content: `
+          <h4>"We need more study before acting"</h4>
+          <p>Response: The system is causing harm now. A moratorium while studying costs the deployer convenience; continued operation costs ${esc(d.affected)} ${esc(d.harm ? 'real harm: ' + d.harm.split('.')[0] : 'real harm')}. Study and pause are not mutually exclusive.</p>
+          <h4>"The system is just a tool — humans make the final decisions"</h4>
+          <p>Response: Research consistently shows that human reviewers override algorithmic recommendations less than 5% of the time. A "human in the loop" that almost never intervenes is not meaningful oversight.</p>
+          <h4>"This would be too expensive to fix"</h4>
+          <p>Response: The current cost is borne by ${esc(d.affected)}, not the deployer. Making the cost visible is not the same as creating it.</p>
+        `
+      }
+    ]
+  };
+}
+
+function generateJournalist(d) {
+  return {
+    sections: [
+      {
+        title: 'Story Angle Guidance',
+        type: 'guidance',
+        content: `
+          <h4>Lead with a person, not a system</h4>
+          <p>The strongest algorithmic accountability stories start with an individual whose life was affected, then zoom out to show the system behind it. If you have case examples (with consent), lead with one.</p>
+          <h4>The "so what" test</h4>
+          <p>A journalist will ask: why does this matter to my readers right now? Your answer should connect to:</p>
+          <ul>
+            <li>Scale — how many people are affected (${esc(d.scale || 'provide this')})</li>
+            <li>Secrecy — was this system's operation or impact hidden from affected people?</li>
+            <li>Accountability gap — who is responsible, and are they being held accountable?</li>
+            <li>Timeliness — is there pending legislation, a contract renewal, or an election that makes this urgent?</li>
+          </ul>
+          <h4>What journalists need from you</h4>
+          <ul>
+            <li>Verifiable claims — not just your analysis, but how they can independently confirm it</li>
+            <li>Documents — FOIAs, contracts, technical specifications, public records</li>
+            <li>Affected individuals willing to speak (with their informed consent)</li>
+            <li>Context — who else has looked at this, what's the deployer said publicly</li>
+          </ul>
+        `
+      },
+      {
+        title: 'Draft Pitch / Tip',
+        type: 'template',
+        content: `[REPORTER NAME],
+
+${esc(d.owner)} uses ${esc(d.system === 'the system' ? 'an algorithmic system' : d.system)} to make decisions about ${esc(d.affected)}${d.scale ? ' — roughly ' + esc(d.scale) : ''}.
+
+${esc(d.summary || '[Your main finding — one sentence, concrete]')}
+
+The result: ${esc(d.harm || '[What actually happens to people]')}
+
+I have [DESCRIBE YOUR EVIDENCE: e.g., statistical analysis of 12,000 cases, internal documents obtained via FOIA, interviews with affected families]. ${d.cause ? 'The root cause appears to be ' + esc(d.cause.toLowerCase()) + '.' : ''}
+
+${esc(d.owner)} has [responded / not responded / declined to comment] when asked about these findings.
+
+I can provide the full methodology and connect you with affected individuals who are willing to share their stories.
+
+[YOUR NAME, ORGANIZATION, CONTACT]`
+      },
+      {
+        title: 'Fact Sheet for Reporters',
+        type: 'checklist',
+        items: [
+          `System: ${d.system} — operated by ${d.owner}`,
+          `Domain: ${d.domainLabel || 'not specified'}`,
+          `Affected population: ${d.affected}`,
+          `Scale: ${d.scale || '[provide]'}`,
+          `Key finding: ${d.summary || '[provide]'}`,
+          `Evidence basis: ${d.evidence ? d.evidence.substring(0, 100) + '...' : '[provide]'}`,
+          `Deployer response: [has the deployer been contacted? what did they say?]`,
+          `Comparable cases: [list any similar systems that have been investigated elsewhere]`,
+          `Available documentation: [list what you can share]`
+        ]
+      },
+      {
+        title: 'Tips for Working with Journalists',
+        type: 'guidance',
+        content: `
+          <h4>Be a source, not an advocate</h4>
+          <p>Present your findings factually. Let the journalist draw the narrative conclusions. Advocacy language in a pitch ("this outrageous system") undermines your credibility as a technical source.</p>
+          <h4>Anticipate the deployer's response</h4>
+          <p>The journalist will contact ${esc(d.owner)} for comment. Prepare for common responses: "the system is only advisory," "we've made improvements," "the methodology is flawed." Provide pre-rebuttals where possible.</p>
+          <h4>Timing matters</h4>
+          <p>Is there a budget vote, contract renewal, election, or legislative session coming up? Stories have more impact when they connect to a decision point.</p>
+        `
+      }
+    ]
+  };
+}
+
+function generateCommunity(d) {
+  return {
+    sections: [
+      {
+        title: 'Communication Principles',
+        type: 'guidance',
+        content: `
+          <h4>No jargon. No hedging.</h4>
+          <p>Say what the system does, who it hurts, and what people can do about it. Technical accuracy matters, but so does being understood. If a sentence requires technical background to parse, rewrite it.</p>
+          <h4>Center what people can do</h4>
+          <p>People who learn they've been harmed by a system need to know their options — not just that a problem exists. Every section below includes actionable steps.</p>
+          <h4>Respect the audience</h4>
+          <p>Affected communities are experts on their own experience. Your role is to provide information they can use, not to explain their situation to them.</p>
+        `
+      },
+      {
+        title: 'Draft Community Notice',
+        type: 'template',
+        content: `WHAT WE FOUND
+
+${esc(d.owner)} uses a computer system${d.system !== 'the system' ? ' called ' + esc(d.system) : ''} to make decisions about ${esc(d.affected)}.
+
+We looked at how this system works, and we found a problem:
+
+${esc(d.summary || '[Explain the finding in plain language — what the system does wrong]')}
+
+WHO IS AFFECTED
+
+If you are ${esc(d.affected.toLowerCase())}, this system may have affected decisions about you${d.domainLabel ? ' related to ' + esc(d.domainLabel) : ''}.${d.scale ? ' Approximately ' + esc(d.scale) + ' are potentially affected.' : ''}
+
+WHAT THIS MEANS FOR YOU
+
+${esc(d.harm || '[Explain in plain terms what happens to people — e.g., "You may have been wrongly denied benefits," "Your application may have been scored unfairly"')}
+
+${d.cause ? 'Why does this happen? ' + esc(d.cause) : ''}
+
+WHAT YOU CAN DO
+
+1. Request your records — You have the right to ask ${esc(d.owner)} what data they have about you and how decisions were made. [Include specific instructions: email address, form link, FOIA process]
+
+2. File a complaint — If you believe you were harmed, you can file a complaint with [RELEVANT AGENCY/OFFICE]. [Include contact information]
+
+3. Connect with others — [ORGANIZATION NAME] is tracking this issue and supporting affected individuals. Contact: [EMAIL/PHONE/WEBSITE]
+
+4. Share your story — If you're willing, your experience can help build the case for change. Contact [ORGANIZATION] to learn more. Your participation is always voluntary.
+
+WHAT WE'RE ASKING FOR
+
+We are calling on ${esc(d.owner)} to [SPECIFIC DEMAND: e.g., stop using this system until it's fixed / provide individual reviews for everyone flagged / publish the system's error rates].
+
+QUESTIONS?
+
+Contact [NAME] at [ORGANIZATION]: [EMAIL] / [PHONE]
+This notice is available in [LANGUAGES]. Request a copy at [EMAIL].`
+      },
+      {
+        title: 'Distribution Checklist',
+        type: 'checklist',
+        items: [
+          'Translate into languages spoken by the affected community',
+          'Create a one-page printable version (some communities have limited internet access)',
+          'Identify community organizations, places of worship, and local leaders who can distribute',
+          'Prepare a FAQ for common questions (especially: "am I affected?" and "what can I do right now?")',
+          'Set up a way for people to contact you (phone, email, or in-person hours)',
+          'Plan a community meeting or information session if possible',
+          'Ensure any request for people to share stories is truly voluntary with informed consent',
+          'Include concrete next steps with actual contact information — not just "learn more"'
+        ]
+      }
+    ]
+  };
+}
+
+function generateDeployer(d) {
+  const severityWords = ['', 'minor', 'moderate', 'significant', 'serious', 'severe'];
+  const sev = severityWords[d.severity];
+
+  return {
+    sections: [
+      {
+        title: 'Framing Guidance',
+        type: 'guidance',
+        content: `
+          <h4>Lead with risk, not blame</h4>
+          <p>Organizations respond to risk exposure — legal liability, regulatory action, reputational damage. Frame findings as risks the organization faces, not accusations of wrongdoing.</p>
+          <h4>Offer a path forward</h4>
+          <p>A report that only identifies problems gets shelved. A report that includes remediation options gets discussed. Include specific, actionable recommendations with rough timelines.</p>
+          <h4>Distinguish what's required from what's recommended</h4>
+          <p>If any of your findings constitute a legal violation, make that clear. Separate "you must" from "you should" — organizations need to triage.</p>
+        `
+      },
+      {
+        title: 'Draft Executive Summary',
+        type: 'template',
+        content: `EXECUTIVE SUMMARY: ${esc(d.system)} Audit Findings
+
+RISK LEVEL: ${sev.toUpperCase()}
+
+FINDING: ${esc(d.summary || '[Main finding]')}
+
+AFFECTED POPULATION: ${esc(d.affected)}${d.scale ? ' (' + esc(d.scale) + ')' : ''}
+
+EVIDENCE BASIS: ${esc(d.evidence || '[Summary of methodology and evidence]')}
+
+HARMS IDENTIFIED: ${esc(d.harm || '[Documented harms]')}
+
+${d.cause ? 'ROOT CAUSE: ' + esc(d.cause) : 'ROOT CAUSE: [Under investigation]'}
+
+RISK EXPOSURE:
+- Legal: [Potential violations of anti-discrimination law, sector-specific regulation, data protection requirements]
+- Regulatory: [Pending or applicable regulation in ${esc(d.domainLabel || 'this domain')} — EU AI Act classification, local ordinances, sector rules]
+- Reputational: [Prior cases where similar findings became public — reference comparable incidents]
+- Financial: [Estimated liability exposure, cost of remediation vs. cost of inaction]
+
+RECOMMENDED ACTIONS:
+1. IMMEDIATE (0-30 days): [e.g., Suspend automated decision-making for flagged cases pending review]
+2. SHORT-TERM (30-90 days): [e.g., Conduct disparate impact analysis across all protected classes]
+3. MEDIUM-TERM (90-180 days): [e.g., Redesign the model to remove proxy variables, implement ongoing monitoring]
+
+TIMELINE: [Recommended response deadline based on severity]`
+      },
+      {
+        title: 'Pre-Meeting Preparation',
+        type: 'checklist',
+        items: [
+          'Know who in the organization has authority to act (not just who agreed to meet)',
+          'Prepare for the "our lawyers say it\'s fine" response — have your legal analysis ready',
+          'Bring comparable cases where inaction led to worse outcomes for similar organizations',
+          'Have a one-page summary for executives who won\'t read the full report',
+          'Prepare cost estimates for remediation (or at least order-of-magnitude ranges)',
+          'Know what you\'ll do if they refuse to act — and whether to say so in the meeting',
+          d.severity >= 4 ? 'Given severity level: prepare to escalate to regulators if deployer is unresponsive' : 'Document the deployer\'s response for your records'
+        ]
+      }
+    ]
+  };
+}
+
+function generateRegulator(d) {
+  return {
+    sections: [
+      {
+        title: 'Framing Guidance',
+        type: 'guidance',
+        content: `
+          <h4>Map findings to their jurisdiction</h4>
+          <p>Regulators can only act within their legal authority. Before you write, identify exactly which laws or regulations may have been violated, and which agency has enforcement power.</p>
+          <h4>Provide an enforcement-ready package</h4>
+          <p>Regulators are resource-constrained. The easier you make it to act, the more likely they will. Provide documented evidence, clear legal hooks, and identified respondents.</p>
+          <h4>Common regulatory frameworks</h4>
+          <ul>
+            <li><strong>Anti-discrimination law</strong> — disparate impact doctrine, protected classes</li>
+            <li><strong>Data protection</strong> — GDPR Article 22 (automated decision-making), data protection impact assessments</li>
+            <li><strong>Sector-specific</strong> — ECOA/fair lending, EEOC guidance, housing discrimination rules</li>
+            <li><strong>AI-specific</strong> — EU AI Act risk classifications, NYC Local Law 144, state AI bills</li>
+          </ul>
+        `
+      },
+      {
+        title: 'Draft Regulatory Complaint',
+        type: 'template',
+        content: `FORMAL COMPLAINT REGARDING: ${esc(d.system)}
+RESPONDENT: ${esc(d.owner)}
+SUBMITTED BY: [YOUR NAME / ORGANIZATION]
+DATE: [DATE]
+
+I. SUMMARY OF COMPLAINT
+
+${esc(d.owner)} deploys ${esc(d.system !== 'the system' ? d.system : 'an automated decision-making system')} that affects ${esc(d.affected)}${d.scale ? ' (approximately ' + esc(d.scale) + ')' : ''} in the domain of ${esc(d.domainLabel || '[domain]')}.
+
+Our investigation has found: ${esc(d.summary || '[main finding]')}
+
+II. LEGAL BASIS
+
+[Identify the specific law(s) or regulation(s) potentially violated. For each:]
+- Statute/regulation: [citation]
+- Relevant provision: [specific section]
+- How the finding constitutes a violation: [explanation]
+
+III. EVIDENCE
+
+${esc(d.evidence || '[Describe your evidence, methodology, and key data points]')}
+
+IV. DOCUMENTED HARMS
+
+${esc(d.harm || '[Describe concrete harms to affected individuals]')}
+
+${d.cause ? 'V. ROOT CAUSE ANALYSIS\n\n' + esc(d.cause) : ''}
+
+VI. REQUESTED RELIEF
+
+1. [Investigation of the respondent's use of the system]
+2. [Specific corrective action — e.g., cease use, mandatory audit, notification of affected individuals]
+3. [Ongoing monitoring or reporting requirements]
+4. [Remedies for affected individuals — e.g., case review, compensation]
+
+VII. SUPPORTING DOCUMENTATION
+
+[List all attached evidence: methodology report, data files, case documentation, correspondence with respondent]`
+      },
+      {
+        title: 'Submission Checklist',
+        type: 'checklist',
+        items: [
+          'Confirm which agency has jurisdiction — wrong agency means months of delay',
+          'Check filing requirements — some agencies have specific forms or portals',
+          'Include a clear legal theory — what law was violated and how',
+          'Attach full methodology as an appendix (regulators will have technical staff review it)',
+          'Document any prior contact with the deployer and their response',
+          'Include consent forms for any individual cases referenced',
+          'Send via the agency\'s preferred channel with delivery confirmation',
+          'Retain a complete copy of everything submitted',
+          'Consider parallel submissions if multiple agencies have jurisdiction'
+        ]
+      }
+    ]
+  };
+}
+
+function generateFunder(d) {
+  return {
+    sections: [
+      {
+        title: 'Framing Guidance',
+        type: 'guidance',
+        content: `
+          <h4>Connect to systemic impact</h4>
+          <p>Funders want to know: is this a one-off problem or part of a pattern? Position your findings within the broader landscape of algorithmic accountability in ${esc(d.domainLabel || 'this domain')}.</p>
+          <h4>Show the theory of change</h4>
+          <p>Findings alone don't create change. Funders want to see how your work connects to a pathway: finding → communication → pressure → reform. Show where you are in that pathway and what resources would move you to the next stage.</p>
+          <h4>Be honest about what you don't know</h4>
+          <p>Funders respect intellectual honesty more than certainty. If your findings are preliminary, say so. If you need more resources to be definitive, make that case directly.</p>
+        `
+      },
+      {
+        title: 'Draft Impact Summary',
+        type: 'template',
+        content: `THE PROBLEM
+
+${esc(d.owner)} uses ${esc(d.system !== 'the system' ? d.system : 'an automated system')} to make decisions affecting ${esc(d.affected)}${d.scale ? ' — approximately ' + esc(d.scale) : ''}. Our investigation found:
+
+${esc(d.summary || '[Main finding]')}
+
+The human cost: ${esc(d.harm || '[What happens to people]')}
+
+WHY THIS MATTERS BEYOND THIS CASE
+
+[Connect to the broader pattern: How many similar systems exist in ${esc(d.domainLabel || 'this domain')}? What precedent would reform set? Who else would benefit?]
+
+WHAT WE'VE DONE
+
+- Conducted [TYPE OF AUDIT: statistical analysis, qualitative investigation, etc.]
+- Documented [EVIDENCE: number of cases, methodology, etc.]
+- Communicated findings to [WHO: deployer, regulators, media, affected communities]
+- Result so far: [WHAT HAS HAPPENED: deployer response, media coverage, regulatory interest, community organizing]
+
+WHAT WE NEED
+
+[Be specific: funding for what, in what amount, to achieve what outcome by when]
+
+1. [e.g., $X for legal analysis and formal regulatory complaint filing]
+2. [e.g., $X for community outreach and translation of findings into 3 languages]
+3. [e.g., $X for sustained monitoring of the system over 12 months post-reform]
+
+WHAT SUCCESS LOOKS LIKE
+
+[Define concrete outcomes: system reformed, policy passed, affected individuals remediated, precedent established]`
+      },
+      {
+        title: 'Package Checklist',
+        type: 'checklist',
+        items: [
+          'One-page executive summary with the core finding and ask',
+          'Full audit report with methodology',
+          'Theory of change diagram — how does this work lead to reform?',
+          'Budget with clear line items tied to outcomes',
+          'Track record — prior work, media coverage, organizational credibility',
+          'Letters of support from community organizations or affected individuals',
+          'Timeline with milestones',
+          'Sustainability plan — what happens after the grant period?'
+        ]
+      }
+    ]
+  };
+}
+
+function renderOutput(output, data) {
+  const audienceLabels = {
+    policymaker: 'Policymaker Brief',
+    journalist: 'Journalist Pitch',
+    community: 'Community Notice',
+    deployer: 'Deployer Report',
+    regulator: 'Regulatory Complaint',
+    funder: 'Funder Summary'
+  };
+
+  // Build tabs
+  const tabBar = document.getElementById('tabBar');
+  tabBar.innerHTML = '';
+  output.sections.forEach((section, i) => {
+    const tab = document.createElement('button');
+    tab.className = 'tab' + (i === 0 ? ' active' : '');
+    tab.textContent = section.title;
+    tab.onclick = () => switchTab(i);
+    tabBar.appendChild(tab);
+  });
+
+  // Build content
+  const area = document.getElementById('outputArea');
+  area.innerHTML = '';
+
+  output.sections.forEach((section, i) => {
+    const div = document.createElement('div');
+    div.className = 'tab-content' + (i === 0 ? ' active' : '');
+    div.id = 'tab-' + i;
+
+    if (section.type === 'guidance') {
+      div.innerHTML = `<div class="output-block">${section.content}</div>`;
+    } else if (section.type === 'template') {
+      div.innerHTML = `
+        <div class="output-block">
+          <h3>${esc(section.title)} <button class="btn copy-btn" onclick="copySection(this)">Copy</button></h3>
+          <div class="template-text">${section.content}</div>
+          <div class="tip-box">This is a starting point, not a finished document. Replace all bracketed text with your specific details. Adapt the tone and structure to your context. Remove anything that doesn't apply.</div>
+        </div>`;
+    } else if (section.type === 'checklist') {
+      const items = section.items.map(item => `<li>${esc(item)}</li>`).join('');
+      div.innerHTML = `
+        <div class="output-block">
+          <h3>${esc(section.title)}</h3>
+          <ul class="checklist">${items}</ul>
+        </div>`;
+    }
+
+    area.appendChild(div);
+  });
+}
+
+function switchTab(index) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
+  document.querySelectorAll('.tab-content').forEach((c, i) => c.classList.toggle('active', i === index));
+}
+
+function copySection(btn) {
+  const template = btn.closest('.output-block').querySelector('.template-text');
+  navigator.clipboard.writeText(template.textContent).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+function copyAll() {
+  const templates = document.querySelectorAll('.template-text');
+  let text = '';
+  templates.forEach(t => { text += t.textContent + '\n\n---\n\n'; });
+  if (!text) {
+    const area = document.getElementById('outputArea');
+    text = area.innerText;
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+// Init
+initProgress();
+</script>
+</body>
+</html>
