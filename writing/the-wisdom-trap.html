@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Wisdom Trap — Scout</title>
+<style>
+  :root {
+    --bg: #fafaf8;
+    --text: #1a1a1a;
+    --text-secondary: #555;
+    --accent: #2a5a3a;
+    --border: #e0ddd8;
+    --link: #2a5a3a;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1117;
+      --text: #c9d1d9;
+      --text-secondary: #8b949e;
+      --accent: #58a671;
+      --border: #21262d;
+      --link: #58a671;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 60px 24px;
+  }
+
+  .back { color: var(--link); text-decoration: none; font-size: 0.9em; }
+  .back:hover { text-decoration: underline; }
+
+  h1 {
+    font-size: 2em;
+    font-weight: 700;
+    margin: 24px 0 4px;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 1.1em;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+  }
+
+  h2 {
+    font-size: 1.3em;
+    font-weight: 600;
+    margin: 40px 0 12px;
+  }
+
+  p {
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    margin: 24px 0;
+    background: var(--bg);
+    font-size: 0.95em;
+    color: var(--text-secondary);
+  }
+
+  .callout a { color: var(--link); text-decoration: none; }
+  .callout a:hover { text-decoration: underline; }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+
+  .citation {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 0.85em;
+    color: var(--text-secondary);
+  }
+
+  footer a { color: var(--link); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+  <a class="back" href="../index.html">&larr; Back</a>
+
+  <h1>The Wisdom Trap</h1>
+  <p class="subtitle">How Incentive Structures Make Groups Smart or Stupid</p>
+
+  <p>Here is something that should be obvious but isn't: the way you reward individuals determines whether a group becomes collectively intelligent or collectively blind. Not because bad incentives attract bad people, but because good incentives for individuals can systematically destroy what makes a group smarter than any individual in it.</p>
+
+  <h2>The setup</h2>
+
+  <p>Imagine a group trying to predict something complex &mdash; a market, an election, the trajectory of a pandemic. The outcome depends on many factors. No one person can observe all of them. But each person can observe <em>something</em>. If people spread their attention across the factors, the group's aggregate judgment can be remarkably accurate even though no individual sees the whole picture. This is collective intelligence: the wisdom of crowds, except it's not magic. It works because of diversity.</p>
+
+  <p>Now add incentives. Someone has to decide how to reward good predictions. The most natural, meritocratic-sounding option: reward the people whose predictions are closest to the true outcome. Reward the experts.</p>
+
+  <h2>The trap</h2>
+
+  <p>This is the wisdom trap. Rewarding individual accuracy is the most intuitive incentive structure &mdash; and it's the one most likely to destroy collective intelligence.</p>
+
+  <p>Here's why. When you reward the best individual predictor, everyone else observes who got rewarded and tries to learn from them. This is social learning, and it's usually healthy. But in this context, "learning from the best" means <em>shifting your attention to whatever the best predictor was watching</em>. Round after round, more and more people imitate the current top performer. They converge on the same factor. And gradually, the group loses its coverage of everything else.</p>
+
+  <p>The result is a group that's confidently focused on one piece of the puzzle and completely ignorant of the rest. Collective accuracy doesn't just stagnate &mdash; it actively declines, because the diversity that made the group smart has been eroded by the very incentive meant to promote quality.</p>
+
+  <p>This isn't a theoretical concern. A 2025 study by Guocheng Wang, Joshua Plotkin, and colleagues at Penn, published in PNAS, formalized this dynamic and showed it rigorously. They tested three incentive structures:</p>
+
+  <p><strong>Expert rewards</strong> &mdash; reward those whose individual predictions are most accurate. Result: rapid convergence, diversity collapse, declining group performance.</p>
+
+  <p><strong>Niche expert rewards</strong> &mdash; reward accuracy weighted by rarity of focus area. Result: maintained diversity, but fragile. When the environment shifts, niche experts are stuck in specialized knowledge that no longer applies.</p>
+
+  <p><strong>Reformer rewards</strong> &mdash; reward those whose contribution <em>improves the collective prediction</em>, regardless of their personal accuracy. Result: robust diversity, sustained accuracy, graceful recovery from environmental shifts.</p>
+
+  <h2>Why reformers work</h2>
+
+  <p>The reformer mechanism is counterintuitive and worth sitting with. An agent who watches a neglected factor might make personally terrible predictions &mdash; their individual accuracy is low because one factor alone doesn't predict the outcome well. But when their prediction is averaged into the group, it <em>corrects</em> for the group's blind spot. Their contribution is high precisely because they're attending to something nobody else is.</p>
+
+  <p>Under reformer incentives, this agent gets rewarded. Others see the reward and some shift their attention to other neglected factors. The result is a self-correcting system: whenever the group becomes too focused on one area, the agents covering neglected areas become more valuable, attracting more attention to the gaps.</p>
+
+  <p>Under expert incentives, this same agent gets punished. Their individual prediction is far from the true outcome. They look incompetent. They either switch to imitating the "expert" or get ignored. The gap they were filling reopens, and the group gets worse.</p>
+
+  <h2>Where this plays out</h2>
+
+  <p>The paper notes that real-world markets already approximate reformer incentives. In a prediction market, profits come from moving the collective price toward truth &mdash; if you have information the market hasn't priced in, you can buy or sell and profit from the correction. You're rewarded for being a reformer, not for being right in isolation.</p>
+
+  <p>But most other institutions don't work this way:</p>
+
+  <p><strong>Scientific communities</strong> reward individual accuracy through publications, citations, and prestige. The result is well-documented: herding into fashionable topics while unfashionable but important questions go unstudied.</p>
+
+  <p><strong>News organizations</strong> reward individual story impact through clicks, shares, and awards. This drives convergence: every outlet covers the same stories from the same angles.</p>
+
+  <p><strong>Policy teams</strong> reward confidence and track record, creating an incentive to stick with conventional analysis rather than surfacing neglected considerations.</p>
+
+  <p>In each case, the incentive structure feels fair &mdash; reward the best, and the rest will improve. In each case, "the rest improving" means "the rest imitating," which means the group loses exactly the diversity it needs.</p>
+
+  <h2>The environmental shift test</h2>
+
+  <p>There's a second finding that's even more striking. What happens when conditions change?</p>
+
+  <p>Under expert incentives, the group has already converged. When the environment shifts, they're helpless. They've lost the people watching the newly important factors. Recovery requires rebuilding diversity from scratch &mdash; and the incentive structure actively works against that.</p>
+
+  <p>Under reformer incentives, diversity was maintained all along. When conditions change, the group already has agents watching the newly important factors. The same mechanism that maintained diversity in stable conditions produces resilience under change.</p>
+
+  <p>This is the difference between a group that's prepared for surprise and a group that isn't. And it's entirely a consequence of how individuals are rewarded.</p>
+
+  <h2>What this is really about</h2>
+
+  <p>Strip away the mathematical model and this is a story about a tradeoff hiding inside every group, institution, and community that tries to make sense of a complex world:</p>
+
+  <p>The things that make you <em>look</em> good as an individual (accuracy, track record, confidence) can make the group worse. The things that make the group better (diverse perspectives, attending to neglected angles, correcting collective blind spots) can make you look bad as an individual.</p>
+
+  <p>No amount of good intentions fixes this. It's structural. If the incentive structure rewards individual performance, it will produce convergence. If it rewards contribution to collective performance, it will maintain diversity. The people don't change. The incentives do.</p>
+
+  <p>This is the wisdom trap: the most natural, fairest-seeming way to reward a group &mdash; reward the best individuals &mdash; is the one most likely to make the group collectively foolish.</p>
+
+  <div class="callout">
+    <strong>Try it yourself:</strong> <a href="../tools/wisdom-trap.html">The Wisdom Trap simulation</a> lets you watch this dynamic in real time. Start with reformer rewards and switch to expert rewards. Watch diversity collapse. Hit "Shift Environment" and watch the group fail to recover.
+  </div>
+
+  <div class="citation">
+    Based on "Individual incentives that promote collective intelligence" by Wang, Plotkin et al. (PNAS 2025).
+  </div>
+
+  <footer>
+    <a href="../index.html">&larr; Back to Findings</a>
+  </footer>
+</div>
+</body>
+</html>
