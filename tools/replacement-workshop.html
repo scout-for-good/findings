@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Replacement Design Workshop</title>
+<style>
+:root {
+  --bg: #fafaf9;
+  --fg: #1c1917;
+  --muted: #78716c;
+  --border: #d6d3d1;
+  --accent: #0c4a6e;
+  --accent-light: #e0f2fe;
+  --surface: #ffffff;
+  --warn: #92400e;
+  --warn-bg: #fef3c7;
+  --good: #065f46;
+  --good-bg: #d1fae5;
+  --bad: #991b1b;
+  --bad-bg: #fee2e2;
+  --radius: 6px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1917;
+    --fg: #e7e5e4;
+    --muted: #a8a29e;
+    --border: #44403c;
+    --accent: #7dd3fc;
+    --accent-light: #0c4a6e;
+    --surface: #292524;
+    --warn: #fbbf24;
+    --warn-bg: #451a03;
+    --good: #6ee7b7;
+    --good-bg: #064e3b;
+    --bad: #fca5a5;
+    --bad-bg: #450a0a;
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+}
+
+/* Progress bar */
+.progress-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 2rem;
+}
+
+.progress-step {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+
+.progress-step.done {
+  background: var(--accent);
+}
+
+.progress-step.active {
+  background: var(--accent);
+  opacity: 0.6;
+}
+
+/* Phase display */
+.phase {
+  display: none;
+}
+
+.phase.active {
+  display: block;
+}
+
+.phase-header {
+  margin-bottom: 1.5rem;
+}
+
+.phase-number {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.phase-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0.25rem 0;
+}
+
+.phase-desc {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* Form elements */
+.field {
+  margin-bottom: 1.25rem;
+}
+
+.field label {
+  display: block;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+}
+
+.field .hint {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+input[type="text"], textarea, select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+/* Radio/checkbox groups */
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.option-group label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-weight: 400;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: border-color 0.2s;
+}
+
+.option-group label:hover {
+  border-color: var(--accent);
+}
+
+.option-group input[type="radio"],
+.option-group input[type="checkbox"] {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.option-group .opt-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.option-group .opt-label {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.option-group .opt-desc {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* Callout boxes */
+.callout {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  margin: 1rem 0;
+}
+
+.callout-info {
+  background: var(--accent-light);
+  border-left: 3px solid var(--accent);
+}
+
+.callout-warn {
+  background: var(--warn-bg);
+  border-left: 3px solid var(--warn);
+  color: var(--warn);
+}
+
+.callout-good {
+  background: var(--good-bg);
+  border-left: 3px solid var(--good);
+  color: var(--good);
+}
+
+.callout-bad {
+  background: var(--bad-bg);
+  border-left: 3px solid var(--bad);
+  color: var(--bad);
+}
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.btn {
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn:hover { opacity: 0.85; }
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Report output */
+.report {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin: 1rem 0;
+}
+
+.report h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.report h3:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.report p, .report li {
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+}
+
+.report ul {
+  padding-left: 1.25rem;
+}
+
+.marker-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.marker-row:last-child { border-bottom: none; }
+
+.marker-label { font-weight: 500; }
+
+.marker-score {
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.score-good { background: var(--good-bg); color: var(--good); }
+.score-warn { background: var(--warn-bg); color: var(--warn); }
+.score-bad { background: var(--bad-bg); color: var(--bad); }
+
+.readiness-bar {
+  width: 100%;
+  height: 24px;
+  background: var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.readiness-fill {
+  height: 100%;
+  border-radius: 12px;
+  transition: width 0.5s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+/* Intro screen */
+.intro-content {
+  margin: 1.5rem 0;
+}
+
+.intro-content p {
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.step-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+}
+
+.step-list li {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.step-list li:last-child { border-bottom: none; }
+
+.step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Replacement Design Workshop</h1>
+  <p class="subtitle">Design concrete replacements for frozen values — because diagnosis alone doesn't produce change.</p>
+
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- Phase 0: Introduction -->
+  <div class="phase active" id="phase-0">
+    <div class="intro-content">
+      <p>Change succeeds when there's a specific, validated replacement ready to implement. Change fails when the replacement is described only in the negative ("stop doing X") or in aspirations ("be more fair").</p>
+
+      <p>This workshop walks you through designing a concrete replacement for a value choice that's been frozen into a technical system. It draws on what actually worked — like the NYC CERCA coalition, which changed algorithms in 7 of 9 health systems by having a specific replacement equation ready to deploy.</p>
+
+      <p>You'll work through seven phases:</p>
+
+      <ol class="step-list">
+        <li><span class="step-num">1</span><span>Identify the frozen value — what choice is embedded in the system?</span></li>
+        <li><span class="step-num">2</span><span>Map its function — what does this value actually do? What depends on it?</span></li>
+        <li><span class="step-num">3</span><span>Diagnose the harm — who is affected, and how?</span></li>
+        <li><span class="step-num">4</span><span>Classify the freezing — is this good ice that should stay, or bad ice that needs replacing?</span></li>
+        <li><span class="step-num">5</span><span>Specify replacement requirements — what must the replacement do and not do?</span></li>
+        <li><span class="step-num">6</span><span>Design the replacement — describe the concrete alternative</span></li>
+        <li><span class="step-num">7</span><span>Assess readiness — how close is this replacement to being implementable?</span></li>
+      </ol>
+
+      <div class="callout callout-info">
+        <strong>What this tool does:</strong> It structures your thinking and surfaces gaps. It cannot design the replacement for you — that requires domain expertise. What it can do is make sure you've asked the right questions and haven't skipped the steps where most replacement efforts stall.
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <span></span>
+      <button class="btn btn-primary" onclick="goTo(1)">Begin</button>
+    </div>
+  </div>
+
+  <!-- Phase 1: Identify the Frozen Value -->
+  <div class="phase" id="phase-1">
+    <div class="phase-header">
+      <div class="phase-number">Phase 1 of 7</div>
+      <div class="phase-title">Identify the Frozen Value</div>
+      <div class="phase-desc">A frozen value is a value choice that's been encoded into a technical system and become invisible, automatic, and hard to change.</div>
+    </div>
+
+    <div class="field">
+      <label for="systemName">What system are you examining?</label>
+      <span class="hint">Name the specific system, algorithm, tool, or process.</span>
+      <input type="text" id="systemName" placeholder="e.g., GFR estimation algorithm, hiring screener, risk assessment tool">
+    </div>
+
+    <div class="field">
+      <label for="frozenValue">What value choice is frozen into it?</label>
+      <span class="hint">Describe the specific decision or assumption that's been embedded. Not the system — the choice within it.</span>
+      <textarea id="frozenValue" placeholder="e.g., 'The equation includes a race coefficient that adjusts kidney function estimates upward for Black patients, embedding the assumption that race is a valid biological variable for kidney function.'"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="whenFrozen">When and how did this choice get embedded?</label>
+      <span class="hint">If you know the history, describe it. If not, say so — unknown origins are themselves a diagnostic signal.</span>
+      <textarea id="whenFrozen" placeholder="e.g., 'The race coefficient was introduced in the MDRD equation in 1999, based on a study population that treated race as a biological category.'"></textarea>
+    </div>
+
+    <div class="field">
+      <label>How visible is this choice to the people affected by it?</label>
+      <div class="option-group">
+        <label><input type="radio" name="visibility" value="invisible"><span class="opt-text"><span class="opt-label">Invisible</span><span class="opt-desc">Most people affected don't know this choice exists</span></span></label>
+        <label><input type="radio" name="visibility" value="obscured"><span class="opt-text"><span class="opt-label">Obscured</span><span class="opt-desc">Technically documented but practically hidden (buried in specs, jargon)</span></span></label>
+        <label><input type="radio" name="visibility" value="visible_ignored"><span class="opt-text"><span class="opt-label">Visible but normalized</span><span class="opt-desc">Known but treated as "just how things work"</span></span></label>
+        <label><input type="radio" name="visibility" value="contested"><span class="opt-text"><span class="opt-label">Actively contested</span><span class="opt-desc">People are aware and pushing back</span></span></label>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goTo(0)">Back</button>
+      <button class="btn btn-primary" onclick="goTo(2)">Next: Map Function</button>
+    </div>
+  </div>
+
+  <!-- Phase 2: Map Function -->
+  <div class="phase" id="phase-2">
+    <div class="phase-header">
+      <div class="phase-number">Phase 2 of 7</div>
+      <div class="phase-title">Map Its Function</div>
+      <div class="phase-desc">Before you can replace something, you need to understand what it's doing. Frozen values persist because they serve a function — even if it's not a good one.</div>
+    </div>
+
+    <div class="field">
+      <label for="primaryFunction">What function does this frozen value serve in the system?</label>
+      <span class="hint">What job is it doing? Why was it put there? Be specific — "efficiency" is too vague.</span>
+      <textarea id="primaryFunction" placeholder="e.g., 'The race coefficient adjusts GFR estimates to account for observed differences in creatinine levels between racial groups, improving population-level accuracy of the equation.'"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="dependencies">What depends on this value staying in place?</label>
+      <span class="hint">Other systems, processes, decisions, or workflows that rely on the current behavior.</span>
+      <textarea id="dependencies" placeholder="e.g., 'Nephrology referral thresholds, transplant eligibility criteria, drug dosing calculators, insurance coverage decisions — all calibrated to the race-adjusted GFR values.'"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="beneficiaries">Who benefits from the current arrangement?</label>
+      <span class="hint">Not just "the system" — which specific actors, roles, or institutions gain from this staying frozen?</span>
+      <textarea id="beneficiaries" placeholder="e.g., 'Lab system vendors (avoid recalibration costs), clinical guidelines committees (avoid reopening standards), insurers (higher GFR = fewer costly referrals for Black patients).'"></textarea>
+    </div>
+
+    <div class="callout callout-info">
+      <strong>Why this matters:</strong> If you can't articulate what the frozen value does, you can't design something that does the job differently. Most failed replacements fail because they address the harm without preserving the legitimate function.
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goTo(1)">Back</button>
+      <button class="btn btn-primary" onclick="goTo(3)">Next: Diagnose Harm</button>
+    </div>
+  </div>
+
+  <!-- Phase 3: Diagnose the Harm -->
+  <div class="phase" id="phase-3">
+    <div class="phase-header">
+      <div class="phase-number">Phase 3 of 7</div>
+      <div class="phase-title">Diagnose the Harm</div>
+      <div class="phase-desc">Be specific about what this frozen value does to whom. Vague harm descriptions produce vague replacements.</div>
+    </div>
+
+    <div class="field">
+      <label for="whoHarmed">Who is harmed by this frozen value?</label>
+      <span class="hint">Identify specific groups or populations. "Everyone" is almost never the right answer.</span>
+      <textarea id="whoHarmed" placeholder="e.g., 'Black patients — the race coefficient makes their kidney function appear better than it is, delaying referrals to nephrologists and reducing transplant eligibility.'"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="howHarmed">How are they harmed? Describe the mechanism.</label>
+      <span class="hint">Trace the causal chain from the frozen value to the harm. What specifically happens?</span>
+      <textarea id="howHarmed" placeholder="e.g., 'Race coefficient → inflated GFR → appears healthier → delayed referral → later-stage diagnosis → worse outcomes. One study estimated 3.3 million Black Americans would be reclassified to a more severe CKD stage without the coefficient.'"></textarea>
+    </div>
+
+    <div class="field">
+      <label>How severe is the harm?</label>
+      <div class="option-group">
+        <label><input type="radio" name="severity" value="inconvenience"><span class="opt-text"><span class="opt-label">Inconvenience</span><span class="opt-desc">Frustrating or unfair but doesn't significantly alter life outcomes</span></span></label>
+        <label><input type="radio" name="severity" value="material"><span class="opt-text"><span class="opt-label">Material disadvantage</span><span class="opt-desc">Affects access to resources, opportunities, or services</span></span></label>
+        <label><input type="radio" name="severity" value="serious"><span class="opt-text"><span class="opt-label">Serious harm</span><span class="opt-desc">Causes significant damage to health, liberty, livelihood, or family</span></span></label>
+        <label><input type="radio" name="severity" value="irreversible"><span class="opt-text"><span class="opt-label">Irreversible harm</span><span class="opt-desc">Produces consequences that cannot be undone</span></span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="scale">What is the scale of impact?</label>
+      <span class="hint">How many people are affected? Over what time period?</span>
+      <input type="text" id="scale" placeholder="e.g., 'Approximately 40 million Black Americans whose GFR could be estimated using this equation.'">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goTo(2)">Back</button>
+      <button class="btn btn-primary" onclick="goTo(4)">Next: Classify the Freezing</button>
+    </div>
+  </div>
+
+  <!-- Phase 4: Classify the Freezing -->
+  <div class="phase" id="phase-4">
+    <div class="phase-header">
+      <div class="phase-number">Phase 4 of 7</div>
+      <div class="phase-title">Classify the Freezing</div>
+      <div class="phase-desc">Not all freezing is bad. Constitutional rights, safety interlocks, and professional standards are frozen values too — deliberately chosen to protect people. Score the current frozen value on five markers to determine whether it's good ice (keep it) or bad ice (replace it).</div>
+    </div>
+
+    <div class="field">
+      <label>1. Agency — was this value deliberately chosen or did it default into place?</label>
+      <div class="option-group">
+        <label><input type="radio" name="marker1" value="good"><span class="opt-text"><span class="opt-label">Deliberately chosen</span><span class="opt-desc">Selected through an intentional process with awareness of the tradeoffs</span></span></label>
+        <label><input type="radio" name="marker1" value="mixed"><span class="opt-text"><span class="opt-label">Partially deliberate</span><span class="opt-desc">Some intention, but key aspects were accidental or unconsidered</span></span></label>
+        <label><input type="radio" name="marker1" value="bad"><span class="opt-text"><span class="opt-label">Defaulted</span><span class="opt-desc">Fell into place through convenience, path dependence, or unexamined assumptions</span></span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>2. Power direction — does this freezing protect the vulnerable or the powerful?</label>
+      <div class="option-group">
+        <label><input type="radio" name="marker2" value="good"><span class="opt-text"><span class="opt-label">Protects the vulnerable</span><span class="opt-desc">Constrains power to protect those who would otherwise be at a disadvantage</span></span></label>
+        <label><input type="radio" name="marker2" value="mixed"><span class="opt-text"><span class="opt-label">Mixed or neutral</span><span class="opt-desc">Affects different groups roughly equally, or effects are unclear</span></span></label>
+        <label><input type="radio" name="marker2" value="bad"><span class="opt-text"><span class="opt-label">Protects the powerful</span><span class="opt-desc">Insulates existing power structures from accountability or change</span></span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>3. Failure mode — when this frozen value gets it wrong, who bears the cost?</label>
+      <div class="option-group">
+        <label><input type="radio" name="marker3" value="good"><span class="opt-text"><span class="opt-label">Fail-safe</span><span class="opt-desc">Errors default toward protecting the person affected (e.g., over-treating rather than under-treating)</span></span></label>
+        <label><input type="radio" name="marker3" value="mixed"><span class="opt-text"><span class="opt-label">Ambiguous</span><span class="opt-desc">Failure costs are distributed or depend on context</span></span></label>
+        <label><input type="radio" name="marker3" value="bad"><span class="opt-text"><span class="opt-label">Fail-dangerous</span><span class="opt-desc">Errors impose costs on the person affected while the system operator is insulated</span></span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>4. Amendment path — can this frozen value be changed through a legitimate process?</label>
+      <div class="option-group">
+        <label><input type="radio" name="marker4" value="good"><span class="opt-text"><span class="opt-label">Clear amendment path</span><span class="opt-desc">A defined, accessible process exists for revising this choice</span></span></label>
+        <label><input type="radio" name="marker4" value="mixed"><span class="opt-text"><span class="opt-label">Difficult but possible</span><span class="opt-desc">Can be changed, but the process is burdensome, slow, or requires unusual leverage</span></span></label>
+        <label><input type="radio" name="marker4" value="bad"><span class="opt-text"><span class="opt-label">No amendment path</span><span class="opt-desc">Effectively permanent — changing it would require rebuilding the system</span></span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>5. Legitimacy — does this freezing have the consent or endorsement of those it affects?</label>
+      <div class="option-group">
+        <label><input type="radio" name="marker5" value="good"><span class="opt-text"><span class="opt-label">Legitimate</span><span class="opt-desc">Endorsed through democratic process, professional consensus, or informed consent</span></span></label>
+        <label><input type="radio" name="marker5" value="mixed"><span class="opt-text"><span class="opt-label">Partial legitimacy</span><span class="opt-desc">Some affected groups consented, others were not consulted</span></span></label>
+        <label><input type="radio" name="marker5" value="bad"><span class="opt-text"><span class="opt-label">Illegitimate</span><span class="opt-desc">Imposed without meaningful consent from those affected</span></span></label>
+      </div>
+    </div>
+
+    <div id="classificationResult"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goTo(3)">Back</button>
+      <button class="btn btn-primary" onclick="goTo(5)">Next: Specify Requirements</button>
+    </div>
+  </div>
+
+  <!-- Phase 5: Specify Replacement Requirements -->
+  <div class="phase" id="phase-5">
+    <div class="phase-header">
+      <div class="phase-number">Phase 5 of 7</div>
+      <div class="phase-title">Specify Replacement Requirements</div>
+      <div class="phase-desc">A replacement must do two things: preserve the legitimate function and eliminate the harm. This phase helps you specify what "better" actually means.</div>
+    </div>
+
+    <div class="field">
+      <label for="mustDo">What must the replacement do?</label>
+      <span class="hint">What legitimate functions must it preserve? Be specific — each requirement should be testable.</span>
+      <textarea id="mustDo" placeholder="e.g., 'Must estimate kidney function accurately enough to guide clinical decisions. Must produce GFR values that correlate with actual measured GFR within clinically acceptable margins across all racial groups.'"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="mustNotDo">What must the replacement NOT do?</label>
+      <span class="hint">What specific harms must it avoid? What assumptions must it not make?</span>
+      <textarea id="mustNotDo" placeholder="e.g., 'Must not use race as a variable. Must not systematically overestimate kidney function for any racial group. Must not reduce accuracy for non-Black patients in the process of eliminating the race coefficient.'"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="constraints">What constraints exist on the replacement?</label>
+      <span class="hint">Technical, institutional, regulatory, cost, or timeline constraints that any replacement must respect.</span>
+      <textarea id="constraints" placeholder="e.g., 'Must be implementable in existing lab information systems. Must not require a new biomarker that isn't widely available. Must be endorsed by relevant professional societies for clinical adoption.'"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="successCriteria">How would you know the replacement is working?</label>
+      <span class="hint">What would you measure? What outcome would prove the replacement is better than what it replaced?</span>
+      <textarea id="successCriteria" placeholder="e.g., 'Equitable referral rates to nephrology across racial groups. No increase in overall misclassification. Transplant eligibility rates for Black patients should increase to match clinical need.'"></textarea>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>Common failure:</strong> Requirements that are too vague to test. "More fair" isn't a requirement. "Reduces the racial disparity in referral rates from X% to below Y%" is. If you can't specify how you'd know it's working, the replacement isn't ready.
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goTo(4)">Back</button>
+      <button class="btn btn-primary" onclick="goTo(6)">Next: Design the Replacement</button>
+    </div>
+  </div>
+
+  <!-- Phase 6: Design the Replacement -->
+  <div class="phase" id="phase-6">
+    <div class="phase-header">
+      <div class="phase-number">Phase 6 of 7</div>
+      <div class="phase-title">Design the Replacement</div>
+      <div class="phase-desc">This is the hard part. Not "what's wrong" but "what instead." A concrete replacement is something specific enough that someone could implement it on a specific date.</div>
+    </div>
+
+    <div class="field">
+      <label for="replacementDesc">Describe the concrete replacement.</label>
+      <span class="hint">What specifically replaces the current frozen value? Be as concrete as you can — a named method, a specific process, a defined algorithm, a particular policy.</span>
+      <textarea id="replacementDesc" style="min-height:120px" placeholder="e.g., 'Replace the MDRD race-adjusted equation with CKD-EPI 2021, which estimates GFR using serum creatinine and cystatin C without a race coefficient. The equation is: GFR = 135 × min(SCr/κ, 1)^α × max(SCr/κ, 1)^-0.544 × min(Scys/0.8, 1)^-0.323 × max(Scys/0.8, 1)^-0.778 × 0.9938^Age × [1.012 if female]'"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="validation">What evidence exists that this replacement works?</label>
+      <span class="hint">Has it been tested? Published? Deployed elsewhere? If no evidence exists yet, say so — that's a readiness signal.</span>
+      <textarea id="validation" placeholder="e.g., 'CKD-EPI 2021 was validated in a study of 8,254 participants. Published in the New England Journal of Medicine. Endorsed by the National Kidney Foundation and American Society of Nephrology.'"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="transitionPlan">How would the transition work?</label>
+      <span class="hint">What's the implementation path? Who needs to act? What's the sequence of steps?</span>
+      <textarea id="transitionPlan" placeholder="e.g., 'Lab system vendors update the GFR calculation formula. Hospitals recalibrate referral thresholds. Clinical guidelines are updated to reference the new equation. Parallel running of both equations during transition to identify edge cases.'"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="newFreezing">What new value choices does this replacement freeze?</label>
+      <span class="hint">Every replacement introduces its own frozen values. Name them. This is how you ensure the new ice is good ice.</span>
+      <textarea id="newFreezing" placeholder="e.g., 'Freezes the assumption that cystatin C is a reliable and equitable biomarker. Freezes the specific validation cohort demographics into the equation coefficients. Freezes the choice to not adjust for socioeconomic factors that affect kidney function.'"></textarea>
+    </div>
+
+    <div class="callout callout-info">
+      <strong>The CERCA test:</strong> Could you walk into an organization tomorrow and say "use this instead"? If the answer is "we need more research first," that's honest — but it means you have a research plan, not a replacement. Both are valuable; don't confuse them.
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goTo(5)">Back</button>
+      <button class="btn btn-primary" onclick="goTo(7)">Next: Assess Readiness</button>
+    </div>
+  </div>
+
+  <!-- Phase 7: Readiness Assessment -->
+  <div class="phase" id="phase-7">
+    <div class="phase-header">
+      <div class="phase-number">Phase 7 of 7</div>
+      <div class="phase-title">Assess Replacement Readiness</div>
+      <div class="phase-desc">How close is your replacement to being deployable? These five dimensions separate a ready replacement from a research direction.</div>
+    </div>
+
+    <div class="field">
+      <label>1. Specificity — is the replacement concrete enough to implement?</label>
+      <div class="option-group">
+        <label><input type="radio" name="ready1" value="3"><span class="opt-text"><span class="opt-label">Implementation-ready</span><span class="opt-desc">A specific artifact (equation, algorithm, policy, process) that someone can deploy</span></span></label>
+        <label><input type="radio" name="ready1" value="2"><span class="opt-text"><span class="opt-label">Design-complete</span><span class="opt-desc">A detailed specification that needs engineering to become deployable</span></span></label>
+        <label><input type="radio" name="ready1" value="1"><span class="opt-text"><span class="opt-label">Directional</span><span class="opt-desc">A clear approach, but significant design work remains</span></span></label>
+        <label><input type="radio" name="ready1" value="0"><span class="opt-text"><span class="opt-label">Aspirational</span><span class="opt-desc">An idea or principle ("be more fair") — not yet a design</span></span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>2. Validation — has the replacement been tested?</label>
+      <div class="option-group">
+        <label><input type="radio" name="ready2" value="3"><span class="opt-text"><span class="opt-label">Validated in practice</span><span class="opt-desc">Tested in real-world deployment with measured outcomes</span></span></label>
+        <label><input type="radio" name="ready2" value="2"><span class="opt-text"><span class="opt-label">Tested in controlled settings</span><span class="opt-desc">Lab-tested, pilot-tested, or studied in research contexts</span></span></label>
+        <label><input type="radio" name="ready2" value="1"><span class="opt-text"><span class="opt-label">Theoretically sound</span><span class="opt-desc">Good reasons to believe it would work, but untested</span></span></label>
+        <label><input type="radio" name="ready2" value="0"><span class="opt-text"><span class="opt-label">Unvalidated</span><span class="opt-desc">No evidence beyond intuition</span></span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>3. Endorsement — who supports this replacement?</label>
+      <div class="option-group">
+        <label><input type="radio" name="ready3" value="3"><span class="opt-text"><span class="opt-label">Institutional endorsement</span><span class="opt-desc">Professional bodies, regulatory agencies, or governing institutions support it</span></span></label>
+        <label><input type="radio" name="ready3" value="2"><span class="opt-text"><span class="opt-label">Expert consensus</span><span class="opt-desc">Domain experts agree it's a sound approach</span></span></label>
+        <label><input type="radio" name="ready3" value="1"><span class="opt-text"><span class="opt-label">Advocate-backed</span><span class="opt-desc">Championed by advocates or researchers, not yet mainstream</span></span></label>
+        <label><input type="radio" name="ready3" value="0"><span class="opt-text"><span class="opt-label">No endorsement</span><span class="opt-desc">A proposal without backing</span></span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>4. Implementability — can organizations actually switch?</label>
+      <div class="option-group">
+        <label><input type="radio" name="ready4" value="3"><span class="opt-text"><span class="opt-label">Drop-in replacement</span><span class="opt-desc">Can be swapped in without changing surrounding infrastructure</span></span></label>
+        <label><input type="radio" name="ready4" value="2"><span class="opt-text"><span class="opt-label">Manageable transition</span><span class="opt-desc">Requires changes to adjacent systems, but feasible with planning</span></span></label>
+        <label><input type="radio" name="ready4" value="1"><span class="opt-text"><span class="opt-label">Major undertaking</span><span class="opt-desc">Requires significant infrastructure changes or organizational restructuring</span></span></label>
+        <label><input type="radio" name="ready4" value="0"><span class="opt-text"><span class="opt-label">Requires rebuilding</span><span class="opt-desc">The surrounding system would need fundamental redesign</span></span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>5. Good ice check — does the replacement score well on the five markers?</label>
+      <div class="option-group">
+        <label><input type="radio" name="ready5" value="3"><span class="opt-text"><span class="opt-label">Strong on all markers</span><span class="opt-desc">Deliberately chosen, protective, fail-safe, amendable, and legitimate</span></span></label>
+        <label><input type="radio" name="ready5" value="2"><span class="opt-text"><span class="opt-label">Strong on most</span><span class="opt-desc">Good on 3-4 markers, with acknowledged gaps on the others</span></span></label>
+        <label><input type="radio" name="ready5" value="1"><span class="opt-text"><span class="opt-label">Mixed</span><span class="opt-desc">Improves on some markers, but introduces new concerns on others</span></span></label>
+        <label><input type="radio" name="ready5" value="0"><span class="opt-text"><span class="opt-label">Not assessed</span><span class="opt-desc">Haven't evaluated the replacement's own frozen values</span></span></label>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goTo(6)">Back</button>
+      <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
+    </div>
+  </div>
+
+  <!-- Phase 8: Report -->
+  <div class="phase" id="phase-8">
+    <div class="phase-header">
+      <div class="phase-number">Replacement Design Brief</div>
+      <div class="phase-title" id="reportTitle">Report</div>
+    </div>
+
+    <div id="reportContent"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goTo(7)">Back to Assessment</button>
+      <button class="btn btn-primary" onclick="exportReport()">Copy to Clipboard</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>Replacement Design Workshop &mdash; part of the <a href="https://scout-for-good.github.io/findings/">Frozen Values Project</a></p>
+    <p>Change succeeds when a concrete, validated replacement is ready to implement.</p>
+  </footer>
+</div>
+
+<script>
+const TOTAL_PHASES = 8;
+let currentPhase = 0;
+
+function goTo(phase) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById(`phase-${phase}`).classList.add('active');
+  currentPhase = phase;
+  updateProgress();
+  window.scrollTo(0, 0);
+
+  if (phase === 4) updateClassification();
+}
+
+function updateProgress() {
+  const bar = document.getElementById('progressBar');
+  bar.innerHTML = '';
+  for (let i = 1; i <= 7; i++) {
+    const step = document.createElement('div');
+    step.className = 'progress-step';
+    if (i < currentPhase) step.classList.add('done');
+    if (i === currentPhase) step.classList.add('active');
+    bar.appendChild(step);
+  }
+}
+
+function updateClassification() {
+  const markers = ['marker1', 'marker2', 'marker3', 'marker4', 'marker5'];
+  const scores = markers.map(m => {
+    const el = document.querySelector(`input[name="${m}"]:checked`);
+    return el ? el.value : null;
+  });
+
+  if (scores.some(s => s === null)) {
+    document.getElementById('classificationResult').innerHTML = '';
+    return;
+  }
+
+  const goodCount = scores.filter(s => s === 'good').length;
+  const badCount = scores.filter(s => s === 'bad').length;
+
+  let classification, cssClass, message;
+
+  if (goodCount >= 4) {
+    classification = 'Good Ice';
+    cssClass = 'callout-good';
+    message = 'This frozen value scores well on the markers. It appears to be a deliberately chosen constraint that protects people. <strong>Consider whether replacement is needed</strong> — the issue may lie elsewhere, or this may be a case where freezing is serving its purpose. If you still want to proceed, you\'ll be designing a replacement for something that\'s partially working.';
+  } else if (badCount >= 4) {
+    classification = 'Bad Ice';
+    cssClass = 'callout-bad';
+    message = 'This frozen value scores poorly across the markers. It defaulted into place, protects the powerful, fails dangerously, resists amendment, and lacks legitimacy. <strong>Strong case for replacement.</strong> Proceed to design a concrete alternative.';
+  } else {
+    classification = 'Contested';
+    cssClass = 'callout-warn';
+    message = 'This frozen value has a mixed profile. Some markers suggest it\'s serving a purpose; others suggest it\'s causing harm. <strong>Replacement is warranted but requires care</strong> — you\'ll need to preserve what\'s working while fixing what isn\'t. Pay close attention to the "new freezing" question in the design phase.';
+  }
+
+  document.getElementById('classificationResult').innerHTML = `
+    <div class="callout ${cssClass}">
+      <strong>Classification: ${classification}</strong><br>${message}
+    </div>
+  `;
+}
+
+// Watch for classification changes
+document.querySelectorAll('input[name^="marker"]').forEach(input => {
+  input.addEventListener('change', updateClassification);
+});
+
+function val(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function radio(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : '';
+}
+
+function radioLabel(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  if (!el) return 'Not specified';
+  const label = el.closest('label').querySelector('.opt-label');
+  return label ? label.textContent : el.value;
+}
+
+function generateReport() {
+  const systemName = val('systemName') || 'Unnamed System';
+  document.getElementById('reportTitle').textContent = `Replacement Design Brief: ${systemName}`;
+
+  // Calculate readiness
+  const readyFields = ['ready1', 'ready2', 'ready3', 'ready4', 'ready5'];
+  let readyTotal = 0;
+  let readyMax = 15;
+  let readyAnswered = 0;
+  readyFields.forEach(f => {
+    const v = radio(f);
+    if (v !== '') {
+      readyTotal += parseInt(v);
+      readyAnswered++;
+    }
+  });
+
+  const readyPct = readyAnswered > 0 ? Math.round((readyTotal / readyMax) * 100) : 0;
+  let readyColor, readyLabel;
+  if (readyPct >= 70) { readyColor = 'var(--good)'; readyLabel = 'Ready for Implementation'; }
+  else if (readyPct >= 40) { readyColor = 'var(--warn)'; readyLabel = 'Needs More Work'; }
+  else { readyColor = 'var(--bad)'; readyLabel = 'Early Stage'; }
+
+  // Classification summary
+  const markers = ['marker1', 'marker2', 'marker3', 'marker4', 'marker5'];
+  const markerNames = ['Agency', 'Power Direction', 'Failure Mode', 'Amendment Path', 'Legitimacy'];
+  const markerLabels = { good: 'Good', mixed: 'Mixed', bad: 'Bad' };
+  const markerClasses = { good: 'score-good', mixed: 'score-warn', bad: 'score-bad' };
+
+  let markerRows = '';
+  markers.forEach((m, i) => {
+    const v = radio(m);
+    const label = v ? markerLabels[v] : 'Not assessed';
+    const cls = v ? markerClasses[v] : 'score-warn';
+    markerRows += `<div class="marker-row"><span class="marker-label">${markerNames[i]}</span><span class="marker-score ${cls}">${label}</span></div>`;
+  });
+
+  // Readiness dimensions
+  const readyNames = ['Specificity', 'Validation', 'Endorsement', 'Implementability', 'Good Ice Check'];
+  const readyLabels = {
+    ready1: ['Aspirational', 'Directional', 'Design-complete', 'Implementation-ready'],
+    ready2: ['Unvalidated', 'Theoretically sound', 'Controlled testing', 'Validated in practice'],
+    ready3: ['No endorsement', 'Advocate-backed', 'Expert consensus', 'Institutional endorsement'],
+    ready4: ['Requires rebuilding', 'Major undertaking', 'Manageable transition', 'Drop-in replacement'],
+    ready5: ['Not assessed', 'Mixed', 'Strong on most', 'Strong on all']
+  };
+
+  let readyRows = '';
+  readyFields.forEach((f, i) => {
+    const v = radio(f);
+    const score = v !== '' ? parseInt(v) : -1;
+    const label = score >= 0 ? readyLabels[f][score] : 'Not assessed';
+    const cls = score >= 2 ? 'score-good' : (score >= 1 ? 'score-warn' : 'score-bad');
+    readyRows += `<div class="marker-row"><span class="marker-label">${readyNames[i]}</span><span class="marker-score ${cls}">${label}</span></div>`;
+  });
+
+  // Gaps analysis
+  let gaps = [];
+  if (!val('replacementDesc')) gaps.push('No concrete replacement described — this is a diagnosis, not yet a design');
+  if (!val('validation')) gaps.push('No validation evidence — the replacement hasn\'t been tested');
+  if (!val('transitionPlan')) gaps.push('No transition plan — even a good replacement needs an implementation path');
+  if (!val('newFreezing')) gaps.push('New frozen values not identified — the replacement will introduce its own assumptions');
+  if (!val('successCriteria')) gaps.push('No success criteria — you won\'t know if the replacement is working');
+  if (!val('mustDo')) gaps.push('No positive requirements — unclear what the replacement must accomplish');
+
+  const readyScore = radio('ready1');
+  if (readyScore === '0' || readyScore === '1') {
+    gaps.push('Replacement is not yet specific enough to implement — more design work needed');
+  }
+
+  const validationScore = radio('ready2');
+  if (validationScore === '0') {
+    gaps.push('Replacement is completely unvalidated — testing is needed before deployment');
+  }
+
+  // Next steps
+  let nextSteps = [];
+  if (readyPct < 40) {
+    nextSteps.push('Focus on making the replacement more concrete — move from "what kind of thing" to "which specific thing"');
+    nextSteps.push('Identify domain experts who could help design and validate the replacement');
+  } else if (readyPct < 70) {
+    nextSteps.push('Address the gaps identified above — each one is a risk to successful implementation');
+    nextSteps.push('Seek endorsement from relevant professional bodies or institutional decision-makers');
+    nextSteps.push('Design a pilot or parallel-running test to validate the replacement');
+  } else {
+    nextSteps.push('Identify the specific organization(s) where you will deploy first');
+    nextSteps.push('Build a coalition — the CERCA model shows that institutional authority + ready replacement = change');
+    nextSteps.push('Plan for monitoring: measure whether the replacement is actually producing the outcomes you specified');
+  }
+
+  let gapsHtml = gaps.length > 0
+    ? `<ul>${gaps.map(g => `<li>${g}</li>`).join('')}</ul>`
+    : '<p>No major gaps identified. This replacement design is comprehensive.</p>';
+
+  let nextHtml = `<ul>${nextSteps.map(s => `<li>${s}</li>`).join('')}</ul>`;
+
+  const severity = radioLabel('severity');
+  const visibility = radioLabel('visibility');
+
+  const html = `
+    <div class="report">
+      <h3>System & Frozen Value</h3>
+      <p><strong>System:</strong> ${systemName}</p>
+      <p><strong>Frozen value:</strong> ${val('frozenValue') || 'Not specified'}</p>
+      <p><strong>Origin:</strong> ${val('whenFrozen') || 'Not specified'}</p>
+      <p><strong>Visibility:</strong> ${visibility}</p>
+
+      <h3>Function & Dependencies</h3>
+      <p><strong>Function:</strong> ${val('primaryFunction') || 'Not specified'}</p>
+      <p><strong>Dependencies:</strong> ${val('dependencies') || 'Not specified'}</p>
+      <p><strong>Beneficiaries:</strong> ${val('beneficiaries') || 'Not specified'}</p>
+
+      <h3>Harm</h3>
+      <p><strong>Who:</strong> ${val('whoHarmed') || 'Not specified'}</p>
+      <p><strong>How:</strong> ${val('howHarmed') || 'Not specified'}</p>
+      <p><strong>Severity:</strong> ${severity}</p>
+      <p><strong>Scale:</strong> ${val('scale') || 'Not specified'}</p>
+
+      <h3>Freezing Classification</h3>
+      ${markerRows}
+
+      <h3>Replacement Requirements</h3>
+      <p><strong>Must do:</strong> ${val('mustDo') || 'Not specified'}</p>
+      <p><strong>Must not do:</strong> ${val('mustNotDo') || 'Not specified'}</p>
+      <p><strong>Constraints:</strong> ${val('constraints') || 'Not specified'}</p>
+      <p><strong>Success criteria:</strong> ${val('successCriteria') || 'Not specified'}</p>
+
+      <h3>Proposed Replacement</h3>
+      <p><strong>Description:</strong> ${val('replacementDesc') || 'Not specified'}</p>
+      <p><strong>Evidence:</strong> ${val('validation') || 'Not specified'}</p>
+      <p><strong>Transition plan:</strong> ${val('transitionPlan') || 'Not specified'}</p>
+      <p><strong>New frozen values:</strong> ${val('newFreezing') || 'Not specified'}</p>
+
+      <h3>Replacement Readiness</h3>
+      <div class="readiness-bar">
+        <div class="readiness-fill" style="width:${readyPct}%; background:${readyColor}">
+          ${readyPct}% — ${readyLabel}
+        </div>
+      </div>
+      ${readyRows}
+
+      <h3>Gaps</h3>
+      ${gapsHtml}
+
+      <h3>Recommended Next Steps</h3>
+      ${nextHtml}
+    </div>
+  `;
+
+  document.getElementById('reportContent').innerHTML = html;
+  goTo(8);
+}
+
+function exportReport() {
+  const report = document.getElementById('reportContent');
+  // Build plain text version
+  const systemName = val('systemName') || 'Unnamed System';
+  const lines = [];
+
+  lines.push(`REPLACEMENT DESIGN BRIEF: ${systemName}`);
+  lines.push('='.repeat(50));
+  lines.push('');
+  lines.push('SYSTEM & FROZEN VALUE');
+  lines.push(`System: ${systemName}`);
+  lines.push(`Frozen value: ${val('frozenValue') || 'Not specified'}`);
+  lines.push(`Origin: ${val('whenFrozen') || 'Not specified'}`);
+  lines.push(`Visibility: ${radioLabel('visibility')}`);
+  lines.push('');
+  lines.push('FUNCTION & DEPENDENCIES');
+  lines.push(`Function: ${val('primaryFunction') || 'Not specified'}`);
+  lines.push(`Dependencies: ${val('dependencies') || 'Not specified'}`);
+  lines.push(`Beneficiaries: ${val('beneficiaries') || 'Not specified'}`);
+  lines.push('');
+  lines.push('HARM');
+  lines.push(`Who: ${val('whoHarmed') || 'Not specified'}`);
+  lines.push(`How: ${val('howHarmed') || 'Not specified'}`);
+  lines.push(`Severity: ${radioLabel('severity')}`);
+  lines.push(`Scale: ${val('scale') || 'Not specified'}`);
+  lines.push('');
+  lines.push('FREEZING CLASSIFICATION');
+  const markerNames = ['Agency', 'Power Direction', 'Failure Mode', 'Amendment Path', 'Legitimacy'];
+  ['marker1','marker2','marker3','marker4','marker5'].forEach((m, i) => {
+    lines.push(`${markerNames[i]}: ${radioLabel(m)}`);
+  });
+  lines.push('');
+  lines.push('REPLACEMENT REQUIREMENTS');
+  lines.push(`Must do: ${val('mustDo') || 'Not specified'}`);
+  lines.push(`Must not do: ${val('mustNotDo') || 'Not specified'}`);
+  lines.push(`Constraints: ${val('constraints') || 'Not specified'}`);
+  lines.push(`Success criteria: ${val('successCriteria') || 'Not specified'}`);
+  lines.push('');
+  lines.push('PROPOSED REPLACEMENT');
+  lines.push(`Description: ${val('replacementDesc') || 'Not specified'}`);
+  lines.push(`Evidence: ${val('validation') || 'Not specified'}`);
+  lines.push(`Transition plan: ${val('transitionPlan') || 'Not specified'}`);
+  lines.push(`New frozen values: ${val('newFreezing') || 'Not specified'}`);
+  lines.push('');
+  lines.push('---');
+  lines.push('Generated by the Replacement Design Workshop');
+  lines.push('Part of the Frozen Values Project');
+
+  const text = lines.join('\n');
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('#phase-8 .btn-primary');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 2000);
+  }).catch(() => {
+    // Fallback: select text
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = document.querySelector('#phase-8 .btn-primary');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy to Clipboard', 2000);
+  });
+}
+
+// Initialize
+updateProgress();
+</script>
+</body>
+</html>

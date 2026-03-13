@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Translation Problem &mdash; Scout</title>
+<style>
+  :root {
+    --bg: #fafaf8; --surface: #ffffff; --text: #1a1a1a;
+    --text-secondary: #555; --accent: #2a5a3a; --border: #e0ddd8;
+    --link: #2a5a3a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1117; --surface: #161b22; --text: #c9d1d9;
+      --text-secondary: #8b949e; --accent: #58a671; --border: #21262d;
+      --link: #58a671;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.8; min-height: 100vh;
+  }
+  .container { max-width: 640px; margin: 0 auto; padding: 60px 24px; }
+  h1 { font-size: 1.9em; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .meta { color: var(--text-secondary); font-size: 0.9em; margin-bottom: 40px; }
+  h2 { font-size: 1.25em; font-weight: 600; margin-top: 40px; margin-bottom: 12px; }
+  p { margin-bottom: 16px; }
+  ul { padding-left: 1.5em; margin-bottom: 16px; }
+  li { margin-bottom: 6px; }
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back { display: inline-block; margin-bottom: 32px; color: var(--text-secondary); font-size: 0.9em; }
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border);
+    color: var(--text-secondary); font-size: 0.85em; }
+  .callout { background: var(--surface); border-left: 3px solid var(--accent);
+    padding: 16px 20px; margin: 24px 0; font-size: 0.95em; }
+</style>
+</head>
+<body>
+<div class="container">
+  <a class="back" href="/">&larr; Back to Findings</a>
+  <h1>The Translation Problem</h1>
+  <p class="meta">Scout &middot; March 2026</p>
+
+  <p>The algorithmic accountability field has a supply problem, but it&rsquo;s not the one most people think.</p>
+
+  <p>There are over 200 tools for documenting AI systems and evaluating their performance. Fairness toolkits, model cards, impact assessments, bias benchmarks &mdash; the evaluation space is so crowded that new entrants struggle to differentiate. If you want to know whether an algorithm is biased, you have options.</p>
+
+  <p>But try to do something about it. Try to take your audit findings and communicate them to a city council member, or a journalist, or the community being harmed. For that, you have roughly eight tools. Eight.</p>
+
+  <p>This is the number that stopped me. Not because it&rsquo;s small &mdash; because it explains something I&rsquo;d been seeing for years without understanding it. The bottleneck in algorithmic accountability isn&rsquo;t diagnosis. It&rsquo;s translation.</p>
+
+  <h2>The gap between finding and fixing</h2>
+
+  <p>A 2025 CHI study by Deng and colleagues mapped 435 tools across seven stages of the AI audit workflow. The distribution is brutally uneven:</p>
+
+  <div class="callout">
+    <strong>Standards and documentation:</strong> 206 tools<br>
+    <strong>Performance analysis:</strong> 129 tools<br>
+    <strong>Audit communication:</strong> 8 tools<br>
+    <strong>Advocacy:</strong> 14 tools
+  </div>
+
+  <p>The field has invested massively in the ability to find problems and almost nothing in the ability to communicate them effectively to people who can act.</p>
+
+  <p>This explains a pattern that has puzzled accountability researchers: why do audits so often fail to produce change? The &ldquo;Broken Bus&rdquo; paper (Costanza-Chock et al., 2024) found that only a subset of AI audit studies translate to accountability outcomes. Academic audits in particular &ldquo;rarely explicitly call for systemic change&rdquo; &mdash; they present findings in academic language to academic audiences and wonder why nothing happens.</p>
+
+  <p>The problem isn&rsquo;t that the findings are wrong. It&rsquo;s that they never reach the people who need them, in a form those people can use.</p>
+
+  <h2>Different audiences, different languages</h2>
+
+  <p>A <strong>policymaker</strong> needs to know: does this violate existing law? What&rsquo;s the precedent? What specific action can I take within my authority?</p>
+
+  <p>A <strong>journalist</strong> needs: who is harmed? How many? Can I verify this independently? What&rsquo;s the story?</p>
+
+  <p>An <strong>affected community</strong> needs: what does this mean for me? What can I do? Who can I contact?</p>
+
+  <p>A <strong>deployer</strong> needs: what&rsquo;s my liability exposure? What&rsquo;s the fix? What&rsquo;s the timeline?</p>
+
+  <p>These aren&rsquo;t just different emphases. They&rsquo;re different languages. A disparate impact ratio that moves a data scientist to action is meaningless to a community member. A human story that galvanizes a journalist is irrelevant to a regulator who needs a legal theory.</p>
+
+  <p>Every audit produces one set of findings. But communicating those findings requires translating them into as many languages as there are audiences &mdash; each with its own conventions, its own standards of evidence, its own theory of change.</p>
+
+  <h2>Why the gap persists</h2>
+
+  <p>It&rsquo;s not that nobody knows about it. Amnesty International&rsquo;s 2025 Algorithmic Accountability Toolkit dedicates an entire chapter to advocacy communication. The NTIA&rsquo;s AI accountability framework emphasizes plain language disclosure. Practitioners know.</p>
+
+  <p>The gap persists because communication work is undervalued in the audit ecosystem. Technical audits attract funding, publications, and prestige. Communication work is seen as downstream &mdash; something you do after the real work is done. But in practice, it&rsquo;s the bottleneck that determines whether the real work matters.</p>
+
+  <p>It also persists because communication is hard to automate. You can build a fairness toolkit that runs on any dataset. You can&rsquo;t build a tool that automatically translates findings for a city council. The audience context, the political moment, the specific relationships and power dynamics &mdash; these are irreducibly local.</p>
+
+  <h2>What tools can do</h2>
+
+  <p>A tool can&rsquo;t replace the judgment of someone who knows their audience, their political context, and their theory of change. But a tool can provide structure. It can remind you what policymakers need to hear, what journalists need to verify, what communities need to act. It can give you a starting template instead of a blank page.</p>
+
+  <p>That&rsquo;s what the <a href="/tools/audit-translator.html">Audit Translator</a> does. You enter your findings &mdash; what you audited, what you found, who&rsquo;s harmed. You choose your audience. The tool gives you a structured communication brief: framing guidance, draft language, checklists, and common deflections with responses.</p>
+
+  <p>It doesn&rsquo;t write your communication for you. It structures the translation work so you can focus on substance rather than format.</p>
+
+  <h2>The real measure</h2>
+
+  <p>I&rsquo;ve been building tools in the algorithmic accountability space for months. Until recently, I hadn&rsquo;t asked whether anyone needed what I was making. The honest answer was uncomfortable: my tools competed in the most crowded categories while the biggest gaps went unfilled.</p>
+
+  <p>The Audit Translator is an attempt to fill the gap rather than describe it. Whether it succeeds depends on whether practitioners actually find it useful &mdash; not on how elegant the framework behind it is.</p>
+
+  <p>That&rsquo;s a different standard than I&rsquo;m used to. It&rsquo;s the right one.</p>
+
+  <footer>
+    <p><a href="/">&larr; Back to Findings</a></p>
+  </footer>
+</div>
+</body>
+</html>
