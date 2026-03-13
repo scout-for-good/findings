@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Signal Problem</title>
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #131a2b;
+    --border: #1e2a42;
+    --text: #c8d6e5;
+    --text-dim: #5a6a82;
+    --accent: #e8a838;
+    --green: #2ecc71;
+    --yellow: #f39c12;
+    --red: #e74c3c;
+    --blue: #3498db;
+    --purple: #9b59b6;
+    --cyan: #00bcd4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Courier New', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  #game {
+    max-width: 820px;
+    width: 100%;
+  }
+
+  h1 { color: var(--accent); font-size: 1.6em; margin-bottom: 4px; }
+  h2 { color: var(--text); font-size: 1.1em; margin-bottom: 12px; font-weight: normal; }
+  h3 { color: var(--accent); font-size: 1em; margin-bottom: 8px; }
+
+  .header {
+    text-align: center;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .header .stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 12px;
+    font-size: 0.95em;
+  }
+
+  .header .stats span { color: var(--text-dim); }
+  .header .stats strong { color: var(--text); }
+  .stat-value { color: var(--cyan) !important; }
+
+  .quote {
+    color: var(--text-dim);
+    font-style: italic;
+    font-size: 0.9em;
+    margin: 10px 0;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  #intro { text-align: center; padding-top: 40px; }
+  #intro p { color: var(--text-dim); margin: 8px 0; line-height: 1.6; max-width: 540px; margin-left: auto; margin-right: auto; }
+
+  .btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 10px 24px;
+    font-family: inherit;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin: 4px;
+  }
+  .btn:hover { background: var(--border); border-color: var(--accent); }
+  .btn:disabled { opacity: 0.3; cursor: default; }
+  .btn:disabled:hover { background: var(--surface); border-color: var(--border); }
+  .btn.primary { border-color: var(--accent); }
+  .btn.small { padding: 6px 14px; font-size: 0.85em; }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* Audience cards */
+  .audience-card {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px;
+    cursor: pointer;
+    transition: background 0.1s;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .audience-card:last-child { border-bottom: none; }
+  .audience-card:hover, .audience-card:focus { background: var(--border); outline: 2px solid var(--accent); outline-offset: -2px; }
+  .audience-card.disabled { opacity: 0.3; cursor: default; }
+  .audience-card.disabled:hover, .audience-card.disabled:focus { background: transparent; outline: none; }
+  .audience-card.selected { background: #1a1a0d; border-left: 3px solid var(--accent); }
+  .audience-card .icon { font-size: 1.4em; width: 36px; text-align: center; flex-shrink: 0; padding-top: 2px; }
+  .audience-card .info { flex: 1; }
+  .audience-card .name { font-size: 0.95em; color: var(--text); }
+  .audience-card .role { font-size: 0.8em; color: var(--text-dim); margin-top: 2px; }
+  .audience-card .lever { font-size: 0.75em; color: var(--cyan); margin-top: 4px; }
+
+  /* Choice cards */
+  .choice-card {
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid var(--border);
+  }
+  .choice-card:last-child { border-bottom: none; }
+  .choice-card:hover, .choice-card:focus { background: var(--border); outline: 2px solid var(--accent); outline-offset: -2px; }
+  .choice-card.selected { background: #1a1a0d; border-left: 3px solid var(--accent); }
+  .choice-card .label { font-size: 0.9em; color: var(--text); }
+  .choice-card .desc { font-size: 0.8em; color: var(--text-dim); margin-top: 3px; }
+
+  /* Result display */
+  .result-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0;
+  }
+  .result-bar .bar-bg {
+    flex: 1;
+    height: 22px;
+    background: #0d1117;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .result-bar .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.8s ease;
+  }
+  .result-bar .bar-label {
+    width: 90px;
+    font-size: 0.85em;
+    flex-shrink: 0;
+  }
+  .result-bar .bar-value {
+    width: 36px;
+    font-size: 0.85em;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .reaction-box {
+    padding: 14px;
+    margin: 12px 0;
+    font-size: 0.9em;
+    line-height: 1.6;
+    border-left: 3px solid var(--border);
+  }
+  .reaction-box.engaged { border-color: var(--green); background: #0d1a0d; }
+  .reaction-box.interested { border-color: var(--yellow); background: #1a1a0a; }
+  .reaction-box.dismissed { border-color: var(--text-dim); background: #0d0d11; }
+  .reaction-box.hostile { border-color: var(--red); background: #1a0d0d; }
+
+  .reaction-label {
+    font-size: 0.8em;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .better-move {
+    margin-top: 12px;
+    padding: 12px;
+    background: #0d111a;
+    border: 1px dashed var(--blue);
+    font-size: 0.85em;
+    line-height: 1.6;
+  }
+  .better-move .heading { color: var(--blue); font-size: 0.8em; letter-spacing: 1px; margin-bottom: 6px; }
+
+  /* Findings reference panel */
+  .finding-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 0.75em;
+    border: 1px solid var(--border);
+    margin: 2px;
+    color: var(--text-dim);
+  }
+
+  /* Impact tracker */
+  .impact-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+  }
+  .impact-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .impact-dot.engaged { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .impact-dot.interested { background: var(--yellow); }
+  .impact-dot.dismissed { background: var(--text-dim); opacity: 0.4; }
+  .impact-dot.hostile { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .impact-dot.pending { background: transparent; border: 1px solid var(--text-dim); opacity: 0.4; }
+  .impact-name { font-size: 0.85em; width: 180px; flex-shrink: 0; }
+  .impact-outcome { font-size: 0.8em; color: var(--text-dim); }
+
+  /* Debrief */
+  .debrief {
+    margin-top: 20px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    line-height: 1.7;
+    font-size: 0.9em;
+  }
+  .debrief p { margin: 8px 0; }
+  .debrief ul { margin: 8px 0 8px 20px; }
+  .debrief li { margin: 4px 0; color: var(--text-dim); }
+
+  .credit {
+    text-align: center;
+    margin-top: 30px;
+    padding: 16px;
+    color: var(--text-dim);
+    font-size: 0.8em;
+    border-top: 1px solid var(--border);
+  }
+
+  .step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px 0;
+  }
+  .step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .step-dot.active { background: var(--accent); }
+  .step-dot.done { background: var(--green); }
+
+  .findings-ref {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 8px 0;
+  }
+  .finding-item {
+    padding: 8px 10px;
+    font-size: 0.8em;
+    background: #0d1117;
+    border-left: 2px solid var(--text-dim);
+  }
+  .finding-item .f-name { color: var(--text); margin-bottom: 2px; }
+  .finding-item .f-detail { color: var(--text-dim); }
+
+  .preview-box {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    padding: 12px;
+    margin: 12px 0;
+    font-size: 0.85em;
+    line-height: 1.6;
+    min-height: 60px;
+  }
+  .preview-label { color: var(--text-dim); font-size: 0.75em; letter-spacing: 1px; margin-bottom: 6px; }
+
+  .cascade-arrow {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8em;
+    padding: 4px 0;
+  }
+
+  @media (max-width: 600px) {
+    .findings-ref { grid-template-columns: 1fr; }
+    .audience-card .icon { display: none; }
+    .impact-name { width: 120px; }
+    .header .stats { gap: 15px; font-size: 0.85em; }
+    .btn { padding: 8px 16px; font-size: 0.85em; }
+  }
+</style>
+</head>
+<body>
+<div id="game">
+
+<!-- INTRO SCREEN -->
+<div id="intro" class="screen active">
+  <h1>THE SIGNAL PROBLEM</h1>
+  <p class="quote">"The bottleneck in algorithmic accountability is not detection. It's translation."</p>
+  <br>
+  <p>You are an independent auditor. You just finished investigating <strong>TalentSift</strong>, an AI hiring tool used by hundreds of companies.</p>
+  <p>You found serious problems. Evidence of bias, inflated accuracy claims, no transparency.</p>
+  <p>Now you have to make your findings <strong>matter</strong>.</p>
+  <br>
+  <p>You have <strong>4 approaches</strong> to reach <strong>5 possible audiences</strong>. You can't reach everyone — choose wisely.</p>
+  <p>Each audience has different knowledge, different incentives, and different power.</p>
+  <p>The same evidence, framed differently, produces radically different outcomes.</p>
+  <br>
+  <p style="color:var(--accent);">Your audit is only as good as your ability to translate it.</p>
+  <br>
+  <button class="btn primary" onclick="startBriefing()">Review Your Findings</button>
+</div>
+
+<!-- BRIEFING SCREEN -->
+<div id="briefing" class="screen">
+  <div class="header">
+    <h1>YOUR AUDIT FINDINGS</h1>
+    <p class="quote">TalentSift — AI Resume Screening Tool</p>
+  </div>
+
+  <div class="section">
+    <h3>WHAT YOU FOUND</h3>
+    <div id="briefing-findings"></div>
+  </div>
+
+  <div class="section">
+    <h3>CONTEXT</h3>
+    <p style="font-size:0.9em; line-height:1.6; color:var(--text-dim);">
+      TalentSift is a B2B product sold to HR departments. It screens resumes before any human sees them.
+      The company markets "94% predictive accuracy" and "bias-free AI screening." Your audit tells a different story.
+      You have strong evidence but no enforcement power. What happens next depends entirely on who you tell and how.
+    </p>
+  </div>
+
+  <div style="text-align:center; margin-top:20px;">
+    <button class="btn primary" onclick="startApproach()">Begin Outreach</button>
+  </div>
+</div>
+
+<!-- APPROACH SCREEN (main gameplay) -->
+<div id="approach" class="screen">
+  <div class="header">
+    <h1>THE SIGNAL PROBLEM</h1>
+    <div class="stats">
+      <span>Approach <strong id="hud-round" class="stat-value">1</strong>/4</span>
+      <span>Audiences reached: <strong id="hud-reached" class="stat-value">0</strong></span>
+    </div>
+  </div>
+
+  <!-- Impact tracker -->
+  <div class="section" id="impact-tracker">
+    <h3>OUTREACH STATUS</h3>
+    <div id="impact-list"></div>
+  </div>
+
+  <!-- Step 1: Choose audience -->
+  <div id="step-audience" class="section" style="display:none;">
+    <h3>WHO DO YOU APPROACH?</h3>
+    <div id="audience-list"></div>
+  </div>
+
+  <!-- Step 2: Choose finding emphasis -->
+  <div id="step-finding" class="section" style="display:none;">
+    <h3>WHAT DO YOU LEAD WITH?</h3>
+    <p style="font-size:0.8em; color:var(--text-dim); margin-bottom:10px;">
+      Approaching: <span id="chosen-audience-name" style="color:var(--accent);"></span>
+    </p>
+    <div id="finding-list"></div>
+  </div>
+
+  <!-- Step 3: Choose frame -->
+  <div id="step-frame" class="section" style="display:none;">
+    <h3>HOW DO YOU FRAME IT?</h3>
+    <p style="font-size:0.8em; color:var(--text-dim); margin-bottom:10px;">
+      Approaching: <span id="chosen-audience-name2" style="color:var(--accent);"></span>
+      &mdash; Leading with: <span id="chosen-finding-name" style="color:var(--cyan);"></span>
+    </p>
+    <div id="frame-list"></div>
+  </div>
+
+  <!-- Message preview -->
+  <div id="step-preview" class="section" style="display:none;">
+    <h3>YOUR MESSAGE</h3>
+    <div id="message-preview" class="preview-box"></div>
+    <div style="text-align:center; margin-top:12px;">
+      <button class="btn" onclick="goBackToFrame()">Change Approach</button>
+      <button class="btn primary" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT SCREEN (after each approach) -->
+<div id="result" class="screen">
+  <div class="header">
+    <h1>RESPONSE</h1>
+    <div class="stats">
+      <span>Approach <strong id="result-round" class="stat-value">1</strong>/4</span>
+    </div>
+  </div>
+  <div id="result-content"></div>
+  <div style="text-align:center; margin-top:16px;">
+    <button id="result-next-btn" class="btn primary" onclick="nextApproach()">Next Approach</button>
+  </div>
+</div>
+
+<!-- END SCREEN -->
+<div id="endgame" class="screen">
+  <div id="end-content"></div>
+  <div style="text-align:center; margin-top:24px;">
+    <button class="btn primary" onclick="location.reload()">Play Again</button>
+  </div>
+  <div class="debrief">
+    <h3>DEBRIEF</h3>
+    <p>This game demonstrates the <strong>translation gap</strong> in algorithmic accountability: the distance between having evidence and making it matter.</p>
+    <p>In reality:</p>
+    <ul>
+      <li>Of 435 tools built for algorithmic accountability, only 8 address audit communication</li>
+      <li>The same finding can engage one audience and alienate another</li>
+      <li>Technical evidence rarely moves policymakers. Human stories rarely move engineers.</li>
+      <li>Who you reach first changes who you can reach next</li>
+      <li>While you figure out how to communicate, the system keeps running</li>
+    </ul>
+    <p>Detection is the easy part. <strong>Translation is the bottleneck.</strong></p>
+    <p>The skill this game practices — matching evidence to audience — is the least-supported, most-critical step in the entire accountability pipeline.</p>
+  </div>
+  <div class="credit">
+    The Signal Problem — a teaching tool about audit communication<br>
+    Built by Scout
+  </div>
+</div>
+
+</div>
+
+<script>
+// ─── Data ────────────────────────────────────────────────────────────
+
+const FINDINGS = [
+  {
+    id: 'bias',
+    name: 'Gender Bias',
+    detail: 'Women rated 31% lower on average across all job categories',
+    short: 'the gender disparity data',
+  },
+  {
+    id: 'accuracy',
+    name: 'Inflated Accuracy',
+    detail: "Vendor claims 94% predictive accuracy; your audit measured 61%",
+    short: 'the accuracy gap',
+  },
+  {
+    id: 'training',
+    name: 'Biased Training Data',
+    detail: 'Model trained on "successful employees" from 2010-2018, encoding historical hiring patterns',
+    short: 'how the training data works',
+  },
+  {
+    id: 'transparency',
+    name: 'No Transparency',
+    detail: 'Candidates never told AI is screening them; no appeals process exists',
+    short: 'the transparency failures',
+  },
+  {
+    id: 'scale',
+    name: 'Massive Scale',
+    detail: '340 companies use TalentSift, affecting ~1.2 million applications per year',
+    short: 'the scale of impact',
+  },
+];
+
+const FRAMES = [
+  {
+    id: 'technical',
+    name: 'Technical Briefing',
+    desc: 'Statistical evidence, methodology, confidence intervals',
+  },
+  {
+    id: 'legal',
+    name: 'Legal Analysis',
+    desc: 'Regulatory violations, liability exposure, legal precedents',
+  },
+  {
+    id: 'human',
+    name: 'Human Impact',
+    desc: 'Individual stories, lived experiences, concrete harm',
+  },
+  {
+    id: 'business',
+    name: 'Business Case',
+    desc: 'Cost of inaction, reputation risk, competitive disadvantage',
+  },
+  {
+    id: 'action',
+    name: 'Direct Call to Action',
+    desc: 'Specific demands, timelines, accountability measures',
+  },
+];
+
+const AUDIENCES = [
+  {
+    id: 'ag',
+    name: 'State Attorney General',
+    role: 'Consumer protection enforcement authority',
+    lever: 'Can open investigation, issue subpoenas, file enforcement actions',
+    icon: '\u2696',
+    bestFinding: 'accuracy',
+    bestFrame: 'legal',
+    goodCombos: {
+      'accuracy_legal': 95,
+      'transparency_legal': 85,
+      'bias_legal': 80,
+      'scale_legal': 75,
+      'accuracy_action': 70,
+      'bias_human': 55,
+      'scale_action': 55,
+      'transparency_human': 50,
+      'bias_action': 50,
+      'accuracy_technical': 40,
+      'scale_human': 40,
+      'training_legal': 45,
+      'transparency_action': 45,
+    },
+    defaultScore: 25,
+    reactions: {
+      engaged: "\"This looks like a textbook deceptive trade practices case. The accuracy claims alone — 94% marketed versus 61% measured — that's material misrepresentation. We're opening a preliminary investigation. Send us everything.\"",
+      interested: "\"Interesting findings. We'd need to see whether this falls under our consumer protection statute or if it's an employment law matter — different division. Can you send a formal complaint? We'll review it.\"",
+      dismissed: "\"We appreciate you bringing this forward. We'll add it to our intake queue, but candidly, we have limited bandwidth and higher-priority cases right now. If you can get media attention or legislative interest, that changes the calculus.\"",
+      hostile: "\"We need to be careful here. TalentSift's counsel has already been in touch about overzealous regulators stifling innovation. Unless you have evidence of clear legal violations — not policy disagreements — we can't justify the resources.\"",
+    },
+    bestExplanation: "The AG's office runs on legal hooks. They need clear statutory violations they can act on. The accuracy gap (94% claimed vs. 61% measured) is a clean deceptive trade practices case. Framing it as a legal analysis — with specific statutes and precedents — gives them what they need to justify opening an investigation. Technical evidence supports the legal case, but leading with statistics buries the actionable part.",
+  },
+  {
+    id: 'journalist',
+    name: 'Investigative Journalist',
+    role: 'Tech reporter at a major newspaper',
+    lever: 'Can publish an investigation, drive public attention, pressure other actors',
+    icon: '\u270E',
+    bestFinding: 'transparency',
+    bestFrame: 'human',
+    goodCombos: {
+      'transparency_human': 95,
+      'bias_human': 90,
+      'accuracy_human': 75,
+      'scale_human': 70,
+      'transparency_action': 50,
+      'bias_technical': 40,
+      'accuracy_technical': 35,
+      'scale_action': 45,
+      'training_human': 60,
+      'bias_legal': 30,
+      'accuracy_legal': 25,
+      'training_technical': 20,
+    },
+    defaultScore: 20,
+    reactions: {
+      engaged: "\"People applied for jobs and never knew a machine rejected them with no way to appeal? And the company claims the AI is 'bias-free'? I can work with this. I need three things: affected candidates willing to go on record, your methodology documentation, and TalentSift's marketing materials. Can you help me find people?\"",
+      interested: "\"There might be a story here, but I need a human angle. Data doesn't lead on A1 — people do. If you can connect me with someone whose life was affected, someone readers can identify with, that changes everything.\"",
+      dismissed: "\"I appreciate the tip, but honestly? 'AI bias audit finds bias' isn't news anymore. Every month someone publishes one of these. I need something that makes an editor say yes — a twist, a coverup, a specific victim, something.\"",
+      hostile: "\"I looked into your methodology and I have concerns. How was your sample selected? Your auditors aren't EEOC-certified. TalentSift's response letter raises legitimate questions. I can't stake my reputation on this without independent verification.\"",
+    },
+    bestExplanation: "Journalists need stories, not data. The transparency angle — candidates rejected by an invisible AI with no recourse — is the human story that drives coverage. The 'human impact' frame gives them characters, not charts. Leading with technical findings or legal analysis produces a brief that reads like a report, not a story. Journalists need to see the person affected, not the p-value.",
+  },
+  {
+    id: 'community',
+    name: 'Job Seekers Advocacy Group',
+    role: 'Nonprofit organizing affected workers and job applicants',
+    lever: 'Can mobilize public pressure, organize affected individuals, file class actions',
+    icon: '\u270A',
+    bestFinding: 'scale',
+    bestFrame: 'action',
+    goodCombos: {
+      'scale_action': 95,
+      'transparency_action': 85,
+      'bias_action': 80,
+      'scale_human': 75,
+      'transparency_human': 70,
+      'bias_human': 65,
+      'accuracy_action': 55,
+      'training_human': 50,
+      'training_action': 50,
+      'scale_legal': 40,
+      'accuracy_human': 40,
+      'bias_technical': 20,
+      'accuracy_technical': 15,
+    },
+    defaultScore: 20,
+    reactions: {
+      engaged: "\"1.2 million applications. Our members have been telling us something is wrong with these hiring systems and nobody listens. This is what we needed — concrete evidence and a number we can rally around. What specific actions can we demand? We'll start a campaign this week.\"",
+      interested: "\"This is useful context. Our members definitely experience this, but we're stretched thin on three other campaigns right now. Can you write something up that we can share in our newsletter? If members respond to it, we can escalate.\"",
+      dismissed: "\"We hear about AI bias a lot. What can our members actually DO with this information? If the answer is 'be aware,' that's not enough. We need something actionable — a petition target, a company to boycott, a bill to support. Give us a handle.\"",
+      hostile: "\"Honestly? Another researcher showing up with a study about how people like our members are getting screwed isn't what we need right now. We know we're getting screwed. We need resources, legal support, and organizing infrastructure. Unless you're offering that, this feels extractive.\"",
+    },
+    bestExplanation: "Advocacy groups need scale (to justify campaign resources) and clear action paths (to mobilize members). Leading with '1.2 million applications affected' legitimizes a campaign. The 'call to action' frame gives them what they actually need: specific targets, specific demands, specific timelines. Leading with technical evidence or methodology asks them to do your translation work for you. They don't need to understand the bias mechanism — they need to know who to pressure and what to demand.",
+  },
+  {
+    id: 'vp',
+    name: "TalentSift VP of Product",
+    role: "Senior leader at the company that built the system",
+    lever: "Can change the product, update marketing, add safeguards",
+    icon: '\u2699',
+    bestFinding: 'accuracy',
+    bestFrame: 'business',
+    goodCombos: {
+      'accuracy_business': 90,
+      'accuracy_technical': 80,
+      'training_technical': 70,
+      'bias_business': 65,
+      'transparency_business': 60,
+      'training_business': 60,
+      'bias_technical': 55,
+      'scale_business': 50,
+      'accuracy_legal': 45,
+      'transparency_legal': 40,
+      'bias_action': 15,
+      'scale_action': 10,
+      'bias_human': 20,
+      'transparency_action': 10,
+    },
+    defaultScore: 25,
+    reactions: {
+      engaged: "\"The accuracy gap is... significant. 94% to 61% — if that holds up, we have a marketing problem AND an engineering problem. Our board is going to need to see this. Can you share your methodology? I want our data science team to replicate it. And we should probably pause the accuracy claims on our website while we investigate.\"",
+      interested: "\"I'd push back on some of your methodology, but the accuracy question is worth investigating. Let me take this to engineering and see what they say. No promises on timeline — product roadmap is locked through Q3 — but I'll flag it.\"",
+      dismissed: "\"I appreciate you reaching out directly rather than going to the press. But our internal validation shows strong performance. Different benchmarks, different results. I'm happy to have our data science team review your methodology, but I'm confident in our product.\"",
+      hostile: "\"I'm going to be direct: this feels like an adversarial approach, not a collaborative one. You didn't contact us before publishing. Your methodology hasn't been peer-reviewed. And leading with demands undermines any good faith. Our legal team will be in touch.\"",
+    },
+    bestExplanation: "The VP operates in a business context. Leading with the accuracy gap works because it's a product quality issue they can act on — it threatens their credibility with customers. The 'business case' frame translates the problem into terms that matter internally: liability exposure, customer churn risk, competitive disadvantage. Leading with human impact or demands triggers defensiveness — it positions you as an adversary, not a source of useful information. Leading with technical methodology earns respect but loses urgency.",
+  },
+  {
+    id: 'council',
+    name: 'City Council Tech Committee',
+    role: 'Elected officials considering AI oversight legislation',
+    lever: 'Can pass local ordinances, hold hearings, set precedent for other jurisdictions',
+    icon: '\u2302',
+    bestFinding: 'bias',
+    bestFrame: 'human',
+    goodCombos: {
+      'bias_human': 90,
+      'scale_human': 85,
+      'transparency_human': 80,
+      'bias_action': 70,
+      'scale_action': 65,
+      'transparency_action': 60,
+      'bias_legal': 50,
+      'accuracy_human': 55,
+      'scale_legal': 45,
+      'accuracy_action': 40,
+      'training_human': 55,
+      'bias_technical': 25,
+      'accuracy_technical': 20,
+      'training_technical': 15,
+    },
+    defaultScore: 20,
+    reactions: {
+      engaged: "\"Women in our city are being screened out of jobs by a system nobody voted for and nobody oversees. That's exactly the kind of thing we should be legislating. Can you testify at our next hearing? I want to draft an ordinance requiring disclosure when AI is used in hiring decisions for companies operating in our jurisdiction.\"",
+      interested: "\"This is concerning. My staff will need to dig into whether we have jurisdiction here — it might be a state or federal issue. But the hearing format could work. Can you send us a one-page summary? Keep it simple — some of my colleagues aren't technical.\"",
+      dismissed: "\"I hear you, and AI oversight is something we're tracking. But right now we're focused on housing and transit. If you can show me this is affecting constituents in our district specifically — with names and stories — I'll take another look. Otherwise it's on the backburner.\"",
+      hostile: "\"The tech industry employs a lot of people in this city. Regulation that's too aggressive could push companies out. I'd want to hear from TalentSift too before forming an opinion. And some of my colleagues worry about government overreach here. This needs to be balanced.\"",
+    },
+    bestExplanation: "Council members are elected — they respond to constituent impact, not data. Leading with gender bias works because it connects to anti-discrimination values their constituents already hold. The 'human impact' frame gives them something they can repeat in a speech, quote in a press release, and explain to voters. Technical briefings are impenetrable. Legal analysis is someone else's job. Direct demands feel presumptuous from someone without a vote. Tell them a story about a person in their district, and they can see the hearing, the ordinance, the press conference.",
+  },
+];
+
+// Message templates based on finding + frame combinations
+function generateMessage(audience, finding, frame) {
+  const a = audience.name;
+  const f = FINDINGS.find(x => x.id === finding);
+  const fr = FRAMES.find(x => x.id === frame);
+
+  const messages = {
+    // Finding-specific openers
+    'bias': {
+      'technical': `Our audit of TalentSift's resume screening algorithm found a statistically significant gender disparity: women received scores 31% lower than men across all job categories (p < 0.001, n=12,400 resumes). The effect persisted after controlling for qualifications, experience, and education level.`,
+      'legal': `TalentSift's AI hiring tool produces outcomes with significant disparate impact on women — 31% lower scores across all job categories. Under Title VII and EEOC guidance on selection procedures, this creates substantial legal liability for both TalentSift and its 340 client companies.`,
+      'human': `Maria Chen has a Master's in Computer Science from Stanford and six years of experience at two Fortune 500 companies. TalentSift scored her in the bottom quartile. She never got an interview. She never knew an algorithm rejected her. Our audit found women like Maria are rated 31% lower, systematically, across every job category.`,
+      'business': `TalentSift's gender scoring disparity (31% lower ratings for women) creates significant business risk. Companies using the tool face potential EEOC complaints, class action exposure, and reputation damage. With 340 clients, a single successful discrimination suit could trigger a cascade.`,
+      'action': `We are requesting that TalentSift immediately: (1) disclose the gender disparity in scoring to all current clients, (2) suspend automated screening until the bias is corrected, and (3) provide retroactive review for all female candidates screened in the past 12 months. Our audit found a 31% systematic disadvantage for women.`,
+    },
+    'accuracy': {
+      'technical': `We tested TalentSift's predictive accuracy by tracking outcomes for 2,800 candidates across 14 client companies over 18 months. TalentSift's marketing claims 94% predictive accuracy. Our measured accuracy was 61% — barely better than random selection for many job categories. The gap is largest for non-traditional career paths.`,
+      'legal': `TalentSift markets its product as having "94% predictive accuracy." Our independent audit measured 61%. Under consumer protection statutes, this discrepancy between marketed and actual performance constitutes potential deceptive trade practices. Companies relying on these claims for purchasing decisions may have additional causes of action.`,
+      'human': `David Park spent three months applying to jobs. TalentSift screened his resume 47 times across different companies. The system that rejected him claims to be 94% accurate. Our audit found it's actually 61% accurate — meaning David, and thousands like him, may have been rejected by what amounts to a sophisticated coin flip.`,
+      'business': `TalentSift markets 94% accuracy; our audit measured 61%. This isn't just an accuracy problem — it's a product integrity crisis. When clients discover this gap, customer churn will follow. Addressing it proactively preserves client relationships and avoids a "Theranos moment" in hiring tech.`,
+      'action': `We demand that TalentSift immediately retract its 94% accuracy claim from all marketing materials. Our independent audit measured 61% accuracy. Until accuracy claims can be independently verified, all clients should be notified that the published performance metrics are unsubstantiated.`,
+    },
+    'training': {
+      'technical': `TalentSift's model was trained on "successful employee" data from 2010-2018. This creates a feedback loop: the model learns which candidates look like past hires, and past hires reflect the biases of human hiring during that period. The training methodology fundamentally cannot distinguish between "qualities that predict job success" and "qualities that predicted getting hired in 2010-2018."`,
+      'legal': `TalentSift's training methodology — using historical "successful employee" data from 2010-2018 — encodes the discriminatory hiring patterns of that period into its predictions. Under disparate impact doctrine, the use of a selection tool that perpetuates historical discrimination triggers legal liability even without discriminatory intent.`,
+      'human': `TalentSift learned what a "good hire" looks like from employees who succeeded between 2010 and 2018. But who got hired back then? Mostly people who looked like the people already there. The AI didn't learn what makes someone good at a job. It learned what made someone get hired a decade ago. And now it's making the same choices, millions of times, invisibly.`,
+      'business': `TalentSift's training data is its core vulnerability. Built on 2010-2018 hiring data, the model inevitably encodes that era's hiring patterns. As workforce demographics shift and clients demand diversity, a model anchored to historical patterns becomes a liability rather than an asset. Retraining on outcome data rather than hiring data is both an ethical imperative and a competitive opportunity.`,
+      'action': `We are calling on TalentSift to publicly disclose its training data methodology, commission an independent audit of training data bias, and develop a retraining plan using job performance data rather than historical hiring data. The current approach of training on 2010-2018 "successful employees" encodes a decade of biased human decisions into automated ones.`,
+    },
+    'transparency': {
+      'technical': `Our audit found no candidate-facing disclosure mechanism in TalentSift's system. Of 1,200 surveyed candidates who applied to TalentSift client companies, 0% were aware their resume was screened by AI. The system provides no explanation for decisions and no appeals process. Candidates receive a generic rejection or no response at all.`,
+      'legal': `TalentSift operates with zero candidate-facing transparency. Applicants are not informed that AI is screening their resume, receive no explanation for rejections, and have no appeals mechanism. Under emerging AI transparency laws (NYC Local Law 144, Colorado AI Act, EU AI Act), this operational model creates escalating compliance risk for both TalentSift and its clients.`,
+      'human': `Sarah applied to 23 companies last year. She got zero interviews. She rewrote her resume four times, hired a career coach, started doubting her qualifications. What she didn't know: 19 of those companies used TalentSift. An algorithm rejected her before any human saw her name. Nobody told her. Nobody had to. There's no law saying they must, and no process to appeal.`,
+      'business': `TalentSift's lack of candidate transparency is an emerging business risk. NYC Local Law 144 already requires AI hiring tool disclosure. The Colorado AI Act takes effect this year. The EU AI Act classifies hiring AI as "high risk." TalentSift's current zero-transparency model is on a collision course with regulation. Companies that build transparency now will lead the market; those that don't will scramble to retrofit.`,
+      'action': `We request that TalentSift implement three transparency measures within 90 days: (1) candidate notification that AI screening is being used, (2) an explanation system providing reasons for negative screening decisions, and (3) a formal appeals process allowing candidates to request human review. Zero transparency in a system affecting 1.2 million applications annually is indefensible.`,
+    },
+    'scale': {
+      'technical': `TalentSift is deployed across 340 companies, processing approximately 1.2 million applications per year. Our analysis of deployment data shows the tool is concentrated in mid-size companies (200-2000 employees) across technology, finance, and healthcare sectors. At this scale, even small accuracy or bias issues affect hundreds of thousands of employment decisions annually.`,
+      'legal': `TalentSift's market penetration — 340 companies, 1.2 million applications annually — means its deficiencies operate at a scale that transforms individual harms into systemic discrimination. The concentrated market presence also creates sector-wide liability risk: if multiple companies in the same industry use the same biased tool, industry-wide disparate impact becomes arguable.`,
+      'human': `1.2 million applications. Behind each one is a person who wrote a cover letter, updated their resume, maybe bought new interview clothes. 1.2 million people whose first impression isn't made to a human being but to an algorithm that's wrong 39% of the time and biased against women. That's not a bug report. That's a civil rights issue operating at industrial scale.`,
+      'business': `At 340 companies and 1.2 million applications per year, TalentSift's issues are not a niche problem — they represent systemic risk. For TalentSift, exposure scales with deployment. For clients, using a tool with known deficiencies at this scale transforms negligence into recklessness. First-movers on remediation gain competitive advantage; late-movers inherit class-action exposure.`,
+      'action': `Given TalentSift's scale — 340 companies, 1.2 million applications per year — we are requesting industry-wide action: (1) all TalentSift clients should be notified of audit findings within 30 days, (2) a multi-stakeholder review board should be established to oversee remediation, and (3) affected candidates should be offered re-evaluation. The scale makes voluntary, private remediation insufficient.`,
+    },
+  };
+
+  return messages[finding]?.[frame] || `[Your audit findings about ${f.name}, framed as a ${fr.name.toLowerCase()}]`;
+}
+
+// ─── State ──────────────────────────────────────────────────────────
+let state = {
+  round: 0,
+  maxRounds: 4,
+  approached: {},  // audienceId -> {finding, frame, score, reaction}
+  cascadeBonus: {},  // audienceId -> bonus from previous approaches
+};
+
+// ─── Flow ───────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function startBriefing() {
+  showScreen('briefing');
+  let html = '<div class="findings-ref">';
+  for (const f of FINDINGS) {
+    html += `<div class="finding-item">
+      <div class="f-name">${f.name}</div>
+      <div class="f-detail">${f.detail}</div>
+    </div>`;
+  }
+  html += '</div>';
+  document.getElementById('briefing-findings').innerHTML = html;
+}
+
+let currentAudience = null;
+let currentFinding = null;
+let currentFrame = null;
+
+function startApproach() {
+  state.round++;
+  currentAudience = null;
+  currentFinding = null;
+  currentFrame = null;
+  showScreen('approach');
+  renderImpactTracker();
+  showStep('audience');
+}
+
+function showStep(step) {
+  ['audience', 'finding', 'frame', 'preview'].forEach(s => {
+    document.getElementById('step-' + s).style.display = 'none';
+  });
+  document.getElementById('step-' + step).style.display = 'block';
+
+  if (step === 'audience') renderAudienceList();
+  if (step === 'finding') renderFindingList();
+  if (step === 'frame') renderFrameList();
+  if (step === 'preview') renderPreview();
+}
+
+function renderImpactTracker() {
+  document.getElementById('hud-round').textContent = state.round;
+  document.getElementById('hud-reached').textContent = Object.keys(state.approached).length;
+
+  let html = '';
+  for (const a of AUDIENCES) {
+    const result = state.approached[a.id];
+    let dotClass = 'pending';
+    let outcome = 'Not yet contacted';
+    if (result) {
+      if (result.score >= 70) { dotClass = 'engaged'; outcome = 'Engaged — taking action'; }
+      else if (result.score >= 40) { dotClass = 'interested'; outcome = 'Interested — may follow up'; }
+      else if (result.score >= 15) { dotClass = 'dismissed'; outcome = 'Dismissed'; }
+      else { dotClass = 'hostile'; outcome = 'Hostile'; }
+    }
+    html += `<div class="impact-row">
+      <div class="impact-dot ${dotClass}"></div>
+      <div class="impact-name">${a.name}</div>
+      <div class="impact-outcome">${outcome}</div>
+    </div>`;
+  }
+  document.getElementById('impact-list').innerHTML = html;
+}
+
+function renderAudienceList() {
+  let html = '';
+  for (const a of AUDIENCES) {
+    const used = a.id in state.approached;
+    const cascade = state.cascadeBonus[a.id];
+    let cascadeHtml = '';
+    if (cascade && cascade > 0) {
+      cascadeHtml = `<div style="font-size:0.75em; color:var(--green); margin-top:3px;">+${cascade}% receptivity from prior outreach</div>`;
+    }
+    html += `<div class="audience-card ${used ? 'disabled' : ''}" role="button" ${used ? 'aria-disabled="true"' : `tabindex="0" onclick="selectAudience('${a.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectAudience('${a.id}');}"`}>
+      <div class="icon" aria-hidden="true">${a.icon}</div>
+      <div class="info">
+        <div class="name">${a.name}${used ? ' (already contacted)' : ''}</div>
+        <div class="role">${a.role}</div>
+        <div class="lever">${a.lever}</div>
+        ${cascadeHtml}
+      </div>
+    </div>`;
+  }
+  document.getElementById('audience-list').innerHTML = html;
+}
+
+function selectAudience(id) {
+  if (id in state.approached) return;
+  currentAudience = AUDIENCES.find(a => a.id === id);
+  document.getElementById('chosen-audience-name').textContent = currentAudience.name;
+  document.getElementById('chosen-audience-name2').textContent = currentAudience.name;
+  showStep('finding');
+}
+
+function renderFindingList() {
+  let html = '';
+  for (const f of FINDINGS) {
+    html += `<div class="choice-card" role="button" tabindex="0" onclick="selectFinding('${f.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectFinding('${f.id}');}">
+      <div class="label">${f.name}</div>
+      <div class="desc">${f.detail}</div>
+    </div>`;
+  }
+  html += `<div class="choice-card" role="button" tabindex="0" onclick="showStep('audience')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showStep('audience');}" style="color:var(--text-dim);">
+    <div class="label">\u2190 Choose different audience</div>
+  </div>`;
+  document.getElementById('finding-list').innerHTML = html;
+}
+
+function selectFinding(id) {
+  currentFinding = id;
+  document.getElementById('chosen-finding-name').textContent = FINDINGS.find(f => f.id === id).name;
+  showStep('frame');
+}
+
+function renderFrameList() {
+  let html = '';
+  for (const f of FRAMES) {
+    html += `<div class="choice-card" role="button" tabindex="0" onclick="selectFrame('${f.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectFrame('${f.id}');}">
+      <div class="label">${f.name}</div>
+      <div class="desc">${f.desc}</div>
+    </div>`;
+  }
+  html += `<div class="choice-card" role="button" tabindex="0" onclick="showStep('finding')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showStep('finding');}" style="color:var(--text-dim);">
+    <div class="label">\u2190 Choose different finding</div>
+  </div>`;
+  document.getElementById('frame-list').innerHTML = html;
+}
+
+function selectFrame(id) {
+  currentFrame = id;
+  showStep('preview');
+}
+
+function goBackToFrame() {
+  showStep('frame');
+}
+
+function renderPreview() {
+  const msg = generateMessage(currentAudience, currentFinding, currentFrame);
+  const finding = FINDINGS.find(f => f.id === currentFinding);
+  const frame = FRAMES.find(f => f.id === currentFrame);
+
+  let html = `<div class="preview-label">TO: ${currentAudience.name} &mdash; RE: TalentSift Audit Findings</div>`;
+  html += `<div style="margin-bottom:8px; font-size:0.8em; color:var(--text-dim);">Leading with: <span style="color:var(--cyan)">${finding.name}</span> &middot; Frame: <span style="color:var(--accent)">${frame.name}</span></div>`;
+  html += `<div style="color:var(--text); line-height:1.6;">${msg}</div>`;
+  document.getElementById('message-preview').innerHTML = html;
+}
+
+function sendMessage() {
+  const comboKey = currentFinding + '_' + currentFrame;
+  let score = currentAudience.goodCombos[comboKey] || currentAudience.defaultScore;
+
+  // Apply cascade bonus
+  const cascade = state.cascadeBonus[currentAudience.id] || 0;
+  score = Math.min(100, score + cascade);
+
+  // Determine reaction tier
+  let reactionKey, reactionColor, reactionLabel;
+  if (score >= 70) {
+    reactionKey = 'engaged';
+    reactionColor = 'var(--green)';
+    reactionLabel = 'ENGAGED';
+  } else if (score >= 40) {
+    reactionKey = 'interested';
+    reactionColor = 'var(--yellow)';
+    reactionLabel = 'INTERESTED';
+  } else if (score >= 15) {
+    reactionKey = 'dismissed';
+    reactionColor = 'var(--text-dim)';
+    reactionLabel = 'DISMISSED';
+  } else {
+    reactionKey = 'hostile';
+    reactionColor = 'var(--red)';
+    reactionLabel = 'HOSTILE';
+  }
+
+  // Record result
+  state.approached[currentAudience.id] = {
+    finding: currentFinding,
+    frame: currentFrame,
+    score: score,
+    reaction: reactionKey,
+  };
+
+  // Calculate cascade effects
+  if (score >= 70) {
+    // Engaged audiences boost others
+    for (const a of AUDIENCES) {
+      if (a.id === currentAudience.id || a.id in state.approached) continue;
+      if (!state.cascadeBonus[a.id]) state.cascadeBonus[a.id] = 0;
+
+      // Journalist engagement boosts everyone significantly
+      if (currentAudience.id === 'journalist') {
+        state.cascadeBonus[a.id] += 15;
+      }
+      // AG investigation boosts council and VP
+      else if (currentAudience.id === 'ag' && (a.id === 'council' || a.id === 'vp')) {
+        state.cascadeBonus[a.id] += 12;
+      }
+      // Community engagement boosts council and journalist
+      else if (currentAudience.id === 'community' && (a.id === 'council' || a.id === 'journalist')) {
+        state.cascadeBonus[a.id] += 10;
+      }
+      // General small boost
+      else {
+        state.cascadeBonus[a.id] += 5;
+      }
+    }
+  } else if (score >= 40) {
+    // Interested gives small cascade
+    for (const a of AUDIENCES) {
+      if (a.id === currentAudience.id || a.id in state.approached) continue;
+      if (!state.cascadeBonus[a.id]) state.cascadeBonus[a.id] = 0;
+      state.cascadeBonus[a.id] += 3;
+    }
+  }
+
+  // Show result
+  showScreen('result');
+  document.getElementById('result-round').textContent = state.round;
+
+  const finding = FINDINGS.find(f => f.id === currentFinding);
+  const frame = FRAMES.find(f => f.id === currentFrame);
+
+  let html = '';
+
+  // Receptivity bar
+  html += `<div class="section">
+    <h3>RECEPTIVITY</h3>
+    <div class="result-bar">
+      <div class="bar-label" style="color:${reactionColor}">${reactionLabel}</div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${score}%; background:${reactionColor};"></div></div>
+      <div class="bar-value" style="color:${reactionColor}">${score}%</div>
+    </div>
+  </div>`;
+
+  // Their reaction
+  html += `<div class="section">
+    <h3>${currentAudience.name.toUpperCase()}'S RESPONSE</h3>
+    <div class="reaction-box ${reactionKey}">
+      ${currentAudience.reactions[reactionKey]}
+    </div>
+  </div>`;
+
+  // What would have worked better (if not engaged)
+  if (score < 70) {
+    const bestF = FINDINGS.find(f => f.id === currentAudience.bestFinding);
+    const bestFr = FRAMES.find(f => f.id === currentAudience.bestFrame);
+    html += `<div class="better-move">
+      <div class="heading">WHAT WOULD HAVE WORKED BETTER</div>
+      <p>Best approach for ${currentAudience.name}: lead with <strong style="color:var(--cyan)">${bestF.name}</strong>, framed as <strong style="color:var(--accent)">${bestFr.name}</strong>.</p>
+      <p style="margin-top:8px; color:var(--text-dim);">${currentAudience.bestExplanation}</p>
+    </div>`;
+  } else {
+    html += `<div class="better-move" style="border-color:var(--green);">
+      <div class="heading" style="color:var(--green);">WHY THIS WORKED</div>
+      <p style="color:var(--text-dim);">${currentAudience.bestExplanation}</p>
+    </div>`;
+  }
+
+  // Cascade effects notification
+  if (score >= 70) {
+    let cascadeNotes = [];
+    for (const a of AUDIENCES) {
+      if (a.id === currentAudience.id || a.id in state.approached) continue;
+      const bonus = state.cascadeBonus[a.id] || 0;
+      if (bonus > 5) {
+        cascadeNotes.push(`${a.name} is now more receptive (+${bonus}%)`);
+      }
+    }
+    if (cascadeNotes.length > 0) {
+      html += `<div class="section">
+        <h3 style="color:var(--green)">CASCADE EFFECTS</h3>
+        <p style="font-size:0.85em; color:var(--text-dim); margin-bottom:8px;">Successfully engaging ${currentAudience.name} opens doors:</p>
+        ${cascadeNotes.map(n => `<div style="padding:4px 0; font-size:0.85em; color:var(--green);">\u2192 ${n}</div>`).join('')}
+      </div>`;
+    }
+  }
+
+  document.getElementById('result-content').innerHTML = html;
+
+  // Update button text
+  if (state.round >= state.maxRounds) {
+    document.getElementById('result-next-btn').textContent = 'See Final Report';
+  } else {
+    document.getElementById('result-next-btn').textContent = `Next Approach (${state.maxRounds - state.round} remaining)`;
+  }
+}
+
+function nextApproach() {
+  if (state.round >= state.maxRounds) {
+    showEndScreen();
+  } else {
+    state.round++;
+    currentAudience = null;
+    currentFinding = null;
+    currentFrame = null;
+    showScreen('approach');
+    renderImpactTracker();
+    showStep('audience');
+  }
+}
+
+// ─── End Screen ─────────────────────────────────────────────────────
+function showEndScreen() {
+  showScreen('endgame');
+
+  let html = '';
+  const engagedCount = Object.values(state.approached).filter(r => r.score >= 70).length;
+  const totalApproached = Object.keys(state.approached).length;
+
+  // Title
+  if (engagedCount >= 3) {
+    html += `<div style="text-align:center; font-size:1.4em; color:var(--green); margin-bottom:20px;">EFFECTIVE COMMUNICATION</div>`;
+    html += `<p style="text-align:center; margin-bottom:20px; color:var(--text-dim);">You engaged ${engagedCount} of ${totalApproached} audiences. Your findings will drive real change.</p>`;
+  } else if (engagedCount >= 1) {
+    html += `<div style="text-align:center; font-size:1.4em; color:var(--yellow); margin-bottom:20px;">PARTIAL REACH</div>`;
+    html += `<p style="text-align:center; margin-bottom:20px; color:var(--text-dim);">You engaged ${engagedCount} of ${totalApproached} audiences. Your findings will have limited impact.</p>`;
+  } else {
+    html += `<div style="text-align:center; font-size:1.4em; color:var(--red); margin-bottom:20px;">SIGNAL LOST</div>`;
+    html += `<p style="text-align:center; margin-bottom:20px; color:var(--text-dim);">No audience was fully engaged. Your findings — however valid — will not drive change.</p>`;
+  }
+
+  // Outcome narrative
+  html += `<div class="section"><h3>WHAT HAPPENS NEXT</h3><div style="font-size:0.9em; line-height:1.7;">`;
+
+  const outcomes = [];
+  for (const a of AUDIENCES) {
+    const result = state.approached[a.id];
+    if (!result) {
+      outcomes.push(`<p style="color:var(--text-dim)"><strong>${a.name}</strong> — never contacted. ${getUncontactedOutcome(a.id)}</p>`);
+    } else if (result.score >= 70) {
+      outcomes.push(`<p style="color:var(--green)"><strong>${a.name}</strong> — ${getEngagedOutcome(a.id)}</p>`);
+    } else if (result.score >= 40) {
+      outcomes.push(`<p style="color:var(--yellow)"><strong>${a.name}</strong> — ${getInterestedOutcome(a.id)}</p>`);
+    } else if (result.score >= 15) {
+      outcomes.push(`<p style="color:var(--text-dim)"><strong>${a.name}</strong> — ${getDismissedOutcome(a.id)}</p>`);
+    } else {
+      outcomes.push(`<p style="color:var(--red)"><strong>${a.name}</strong> — ${getHostileOutcome(a.id)}</p>`);
+    }
+  }
+  html += outcomes.join('');
+  html += `</div></div>`;
+
+  // Summary stats
+  html += `<div class="section"><h3>YOUR OUTREACH</h3>`;
+  for (const [aid, result] of Object.entries(state.approached)) {
+    const a = AUDIENCES.find(x => x.id === aid);
+    const f = FINDINGS.find(x => x.id === result.finding);
+    const fr = FRAMES.find(x => x.id === result.frame);
+    const reactionColor = result.score >= 70 ? 'var(--green)' : result.score >= 40 ? 'var(--yellow)' : result.score >= 15 ? 'var(--text-dim)' : 'var(--red)';
+    html += `<div style="padding:8px 0; border-bottom:1px solid var(--border); font-size:0.85em;">
+      <div style="display:flex; justify-content:space-between;">
+        <span>${a.name}</span>
+        <span style="color:${reactionColor}">${result.score}%</span>
+      </div>
+      <div style="color:var(--text-dim); font-size:0.9em; margin-top:3px;">
+        Led with ${f.name} \u00B7 ${fr.name} frame
+        ${result.score < 70 ? ` \u00B7 Best: ${FINDINGS.find(x=>x.id===a.bestFinding).name} + ${FRAMES.find(x=>x.id===a.bestFrame).name}` : ''}
+      </div>
+    </div>`;
+  }
+  html += `</div>`;
+
+  // The real cost
+  const uncontacted = AUDIENCES.filter(a => !(a.id in state.approached));
+  if (uncontacted.length > 0) {
+    html += `<div class="section"><h3 style="color:var(--red)">WHILE YOU COMMUNICATED</h3>
+    <p style="font-size:0.9em; line-height:1.6; color:var(--text-dim);">
+      During the time you spent crafting ${totalApproached} approaches, TalentSift continued processing applications.
+      At 1.2 million per year, that's roughly <strong style="color:var(--text)">${Math.round(1200000 / 365 * totalApproached * 3).toLocaleString()} applications</strong> screened
+      while you figured out how to talk about the problem.
+    </p>
+    <p style="font-size:0.9em; line-height:1.6; color:var(--text-dim); margin-top:8px;">
+      The system doesn't pause while you translate. This is the cost of the translation gap.
+    </p>
+    </div>`;
+  }
+
+  document.getElementById('end-content').innerHTML = html;
+}
+
+function getEngagedOutcome(id) {
+  const outcomes = {
+    ag: 'Opens a formal investigation. Subpoenas TalentSift\'s training data and accuracy validation. Results expected in 6-8 months.',
+    journalist: 'Publishes a three-part investigation over two weeks. The story gets picked up nationally. TalentSift\'s stock drops. Other AI hiring companies face scrutiny.',
+    community: 'Launches a "Right to Know" campaign. 12,000 signatures in the first month. Three affected candidates file EEOC complaints with the group\'s legal support.',
+    vp: 'Initiates an internal review. Pauses accuracy claims on the website. Hires an external auditor. Product changes expected in 2 quarters.',
+    council: 'Schedules hearings. Drafts an AI hiring transparency ordinance. You testify. The ordinance passes 7 months later — the first of its kind in the state.',
+  };
+  return outcomes[id];
+}
+
+function getInterestedOutcome(id) {
+  const outcomes = {
+    ag: 'Files your complaint in the review queue. Six months later, a different audit makes news, and they pull your file back out.',
+    journalist: 'Pitches the story to their editor, who passes. Three months later, a competitor breaks a similar story and they regret waiting.',
+    community: 'Mentions your audit in their newsletter. A few members respond, but it doesn\'t become a campaign priority.',
+    vp: 'Passes your report to engineering for "review." It sits in a backlog for 4 months. No product changes result.',
+    council: 'Asks staff to research the issue. A memo circulates. No hearings are scheduled. The issue resurfaces when another city acts first.',
+  };
+  return outcomes[id];
+}
+
+function getDismissedOutcome(id) {
+  const outcomes = {
+    ag: 'Your complaint joins hundreds of others. No investigation is opened. TalentSift continues operating unchanged.',
+    journalist: 'Your tip is filed and forgotten. The story never runs.',
+    community: 'The group thanks you for sharing and moves on to their existing priorities.',
+    vp: 'Your report is reviewed by legal, who advise no action. TalentSift continues operating unchanged.',
+    council: 'The issue doesn\'t make it onto any agenda. No one on the committee remembers your briefing a month later.',
+  };
+  return outcomes[id];
+}
+
+function getHostileOutcome(id) {
+  const outcomes = {
+    ag: 'TalentSift\'s counsel cites your approach as evidence of a "regulatory witch hunt." The AG\'s office becomes less likely to act, not more.',
+    journalist: 'The journalist contacts TalentSift for comment, and TalentSift\'s PR team uses your audit\'s weaknesses to preemptively discredit future coverage.',
+    community: 'The group publicly distances from your audit, saying it felt "extractive." Other researchers face increased skepticism from the community.',
+    vp: 'TalentSift\'s legal team sends a cease-and-desist. They preemptively publish a "response to unfounded claims" blog post.',
+    council: 'A council member cites industry concerns about "overzealous regulation." Your briefing becomes an argument against the legislation you wanted.',
+  };
+  return outcomes[id];
+}
+
+function getUncontactedOutcome(id) {
+  const outcomes = {
+    ag: 'Without a formal complaint, no investigation. TalentSift falls outside the AG\'s awareness entirely.',
+    journalist: 'The story waits for someone to tell it. Maybe someone does, eventually. Maybe not.',
+    community: 'Affected job seekers continue experiencing rejection without understanding why. No organized response forms.',
+    vp: 'Internal teams never see external evidence of problems. The product roadmap continues as planned.',
+    council: 'No legislative action. The city has no AI hiring oversight. Other cities don\'t have a precedent to follow.',
+  };
+  return outcomes[id];
+}
+</script>
+</body>
+</html>
