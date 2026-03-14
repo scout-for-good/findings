@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoring Maturity Diagnostic — Is Your Algorithmic System Monitored Like It Matters?</title>
+<meta name="description" content="Apply safety engineering's monitoring taxonomy to algorithmic systems. Assess five dimensions of monitoring maturity drawn from nuclear, aviation, and healthcare safety practices.">
+<style>
+:root {
+  --bg: #fafaf8;
+  --fg: #1a1a1a;
+  --muted: #666;
+  --border: #ddd;
+  --accent: #2563eb;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+  --panel-bg: #fff;
+  --dim-1: #e63946;
+  --dim-2: #457b9d;
+  --dim-3: #2a9d8f;
+  --dim-4: #e9c46a;
+  --dim-5: #6a4c93;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a1a;
+    --fg: #e8e8e8;
+    --muted: #999;
+    --border: #333;
+    --accent: #60a5fa;
+    --danger: #f87171;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --panel-bg: #242424;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  max-width: 700px;
+}
+
+.insight-box {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  padding: 1rem 1.25rem;
+  margin-bottom: 2rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.insight-box strong { color: var(--accent); }
+
+/* Progress bar */
+.progress-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 2rem;
+}
+
+.progress-step {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+
+.progress-step.done { background: var(--accent); }
+.progress-step.current { background: var(--accent); opacity: 0.5; }
+
+/* Sections */
+.section {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.section.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Form elements */
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+}
+
+input[type="text"], textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel-bg);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+textarea { resize: vertical; min-height: 60px; }
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* Dimension card */
+.dimension-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.dim-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.dimension-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.dimension-desc {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin-bottom: 1rem;
+  padding-left: 0;
+}
+
+.origin-tag {
+  display: inline-block;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.gap-box {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--danger);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+.gap-box .gap-label {
+  font-weight: 600;
+  color: var(--danger);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.25rem;
+}
+
+/* Questions */
+.question {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+}
+
+.question-id {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.question-text {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.question-guidance {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.question-analogue {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Maturity selector */
+.maturity-selector {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.maturity-selector label {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.maturity-options {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.maturity-option {
+  flex: 1;
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+  background: var(--panel-bg);
+  transition: all 0.2s;
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.maturity-option:last-child { border-right: none; }
+
+.maturity-option:hover { background: var(--bg); }
+
+.maturity-option.selected {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.maturity-option .level-num {
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: block;
+}
+
+.maturity-option .level-label {
+  display: block;
+  font-size: 0.7rem;
+}
+
+/* Notes field */
+.notes-field {
+  margin-top: 0.75rem;
+}
+
+.notes-field label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.notes-field textarea {
+  min-height: 50px;
+  font-size: 0.9rem;
+}
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.6rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-bg);
+  color: var(--fg);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn:hover { border-color: var(--accent); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-primary:hover { opacity: 0.9; }
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Report */
+.report-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.report-header h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.report-system {
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.overall-score {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.score-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 6px solid var(--border);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.score-number {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.score-max {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.score-label {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* Radar / bar chart */
+.dimension-bars {
+  margin-bottom: 2rem;
+}
+
+.dim-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.dim-bar-label {
+  width: 180px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.dim-bar-track {
+  flex: 1;
+  height: 24px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dim-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  min-width: 30px;
+}
+
+.dim-bar-level {
+  font-size: 0.8rem;
+  color: var(--muted);
+  width: 80px;
+  flex-shrink: 0;
+}
+
+/* Weakest dimension callout */
+.weakest-callout {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warning);
+  padding: 1rem 1.25rem;
+  border-radius: 4px;
+  margin-bottom: 2rem;
+  font-size: 0.92rem;
+}
+
+.weakest-callout strong { color: var(--warning); }
+
+/* Recommendation cards */
+.rec-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.rec-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.rec-card-title {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.rec-card-level {
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
+.rec-list {
+  list-style: none;
+  padding: 0;
+}
+
+.rec-list li {
+  padding: 0.25rem 0;
+  padding-left: 1.25rem;
+  position: relative;
+  font-size: 0.9rem;
+}
+
+.rec-list li::before {
+  content: "\2192";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+.user-notes {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Safety comparison */
+.safety-comparison {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--border);
+}
+
+.safety-comparison h3 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.safety-domains {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.safety-domain {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.safety-domain h4 {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.safety-domain ul {
+  list-style: none;
+  padding: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.safety-domain li {
+  padding: 0.15rem 0;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.safety-domain li::before {
+  content: "\2022";
+  position: absolute;
+  left: 0;
+}
+
+.takeaway {
+  font-size: 0.92rem;
+  font-style: italic;
+  color: var(--muted);
+  padding: 0.75rem 0;
+}
+
+/* Export */
+.export-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+/* Footer */
+.footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.footer a { color: var(--accent); text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .maturity-options { flex-direction: column; }
+  .maturity-option { border-right: none; border-bottom: 1px solid var(--border); }
+  .maturity-option:last-child { border-bottom: none; }
+  .dim-bar-label { width: 100px; font-size: 0.8rem; }
+  .dim-bar-level { width: 60px; font-size: 0.75rem; }
+  .safety-domains { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Monitoring Maturity Diagnostic</h1>
+  <p class="subtitle">Is your algorithmic system monitored like it matters? Apply safety engineering's monitoring taxonomy to find out.</p>
+
+  <div class="insight-box">
+    <strong>The core insight:</strong> Mature safety-critical domains (nuclear, aviation, healthcare) monitor <em>conditions that produce safety</em>, not just safety outcomes. Algorithmic governance largely does the opposite — relying on post-hoc audits and bias benchmarks while the system drifts unchecked between reviews.
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- Section 0: System Profile -->
+  <div class="section active" id="section-0">
+    <h2 style="margin-bottom:1rem;">Describe Your System</h2>
+    <label for="sysName">System name</label>
+    <input type="text" id="sysName" placeholder="e.g., Automated Resume Screener">
+
+    <label for="sysDomain">Domain</label>
+    <input type="text" id="sysDomain" placeholder="e.g., hiring, lending, healthcare, criminal justice">
+
+    <label for="sysDesc">Brief description</label>
+    <textarea id="sysDesc" rows="2" placeholder="What does the system do?"></textarea>
+
+    <label for="sysContext">Deployment context</label>
+    <input type="text" id="sysContext" placeholder="Who uses it, where, how many people affected?">
+
+    <label for="sysAffected">Affected populations</label>
+    <input type="text" id="sysAffected" placeholder="Who is affected by this system's decisions?">
+
+    <label for="sysDecision">Decision type</label>
+    <input type="text" id="sysDecision" placeholder="allocation, scoring, filtering, recommendation, other">
+
+    <div class="btn-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="nextSection()">Begin Assessment</button>
+    </div>
+  </div>
+
+  <!-- Dimension sections (1-5) will be generated by JS -->
+  <div id="dimensionSections"></div>
+
+  <!-- Report section -->
+  <div class="section" id="section-report"></div>
+
+</div>
+
+<script>
+// ─── Data ───
+
+const MATURITY_LEVELS = [
+  { value: 0, label: "Absent", desc: "No monitoring" },
+  { value: 1, label: "Reactive", desc: "Responds to incidents" },
+  { value: 2, label: "Periodic", desc: "Scheduled audits" },
+  { value: 3, label: "Proactive", desc: "Continuous monitoring" },
+  { value: 4, label: "Adaptive", desc: "Monitors evolve" },
+];
+
+const DIM_COLORS = ["var(--dim-1)", "var(--dim-2)", "var(--dim-3)", "var(--dim-4)", "var(--dim-5)"];
+
+const DIMENSIONS = [
+  {
+    name: "Leading Indicators",
+    description: "Proactive metrics that measure the CONDITIONS that produce good outcomes, not just outcomes themselves. In aviation, voluntary safety reporting rates predict accidents better than accident history does.",
+    origin: "Aviation SMS (ICAO Doc 9859), FAA Part 5",
+    gap: "Algorithmic governance typically measures only lagging indicators: bias scores, accuracy metrics, complaint rates. These detect problems after harm has occurred. Leading indicators \u2014 like rate of edge-case escalations, distribution shift velocity, or operator override frequency \u2014 are rarely tracked.",
+    questions: [
+      { id: "LI-1", text: "What metrics does the system track that would signal problems BEFORE harm occurs?", guidance: "Look for: input distribution monitoring, confidence score trends, operator override rates, edge-case escalation frequency, feature drift velocity.", analogue: "Aviation: voluntary reporting rates, training compliance, fatigue management scores." },
+      { id: "LI-2", text: "Are these leading indicators tracked continuously or only at audit time?", guidance: "Continuous monitoring with automated alerts is proactive. Annual bias audits are periodic at best.", analogue: "ICAO requires continuous safety performance monitoring, not just post-incident investigation." },
+      { id: "LI-3", text: "Who sees these indicators, and what authority do they have to act on them?", guidance: "Leading indicators are useless if they go to a dashboard nobody watches or to people who can\u2019t change the system.", analogue: "NRC Safety Culture: leadership must demonstrate commitment to safety in decisions, not just receive reports." },
+    ],
+  },
+  {
+    name: "Near-Miss Capture",
+    description: "Systematic capture and analysis of events that ALMOST caused harm but didn\u2019t. Healthcare\u2019s near-miss reporting reveals drift patterns invisible in incident data. Heinrich\u2019s ratio: for every serious incident, there are ~300 near-misses containing richer diagnostic information.",
+    origin: "Healthcare (Joint Commission), Aviation (ASRS), Nuclear (NRC)",
+    gap: "Algorithmic systems rarely have mechanisms to capture near-misses \u2014 cases where the system almost produced a harmful output but was caught by a human reviewer, or where harm occurred but wasn\u2019t reported. Without near-miss data, you only learn from catastrophes.",
+    questions: [
+      { id: "NM-1", text: "Is there a mechanism for operators/users to report cases where the system almost produced a harmful result?", guidance: "Look for: structured feedback channels, low-friction reporting tools, protection from retaliation for reporters.", analogue: "Healthcare: staff report events that could have caused harm. 70% of safety improvements come from near-miss analysis." },
+      { id: "NM-2", text: "Are near-misses analyzed for patterns, or only handled individually?", guidance: "Individual resolution fixes one case. Pattern analysis reveals systemic drift.", analogue: "Joint Commission root cause analysis: sentinel events trigger system-level investigation, not just individual correction." },
+      { id: "NM-3", text: "Do affected people have a way to flag concerns that aren\u2019t yet formal complaints?", guidance: "The gap between \u2018something feels wrong\u2019 and \u2018I\u2019m filing a complaint\u2019 is where near-miss data lives.", analogue: "NRC Safety Culture: environment for raising concerns without fear of retaliation." },
+    ],
+  },
+  {
+    name: "Behavioral Observation",
+    description: "Ongoing, structured observation of how the system actually behaves vs. how it\u2019s supposed to behave. Not testing against a spec \u2014 watching real behavior in deployment. The NRC\u2019s Behavioral Observation Programs systematically compare actual practice to prescribed procedures.",
+    origin: "Nuclear (NRC NUREG/CR-7183 Behavioral Observation Programs)",
+    gap: "Most algorithmic systems are tested pre-deployment against benchmarks, then monitored only for technical performance (latency, uptime, accuracy). Nobody systematically observes whether real-world decision patterns match intended behavior.",
+    questions: [
+      { id: "BO-1", text: "Is anyone systematically comparing the system\u2019s actual decision patterns to its intended behavior?", guidance: "This means ongoing behavioral audits \u2014 sampling real decisions and checking alignment with stated policy, not just aggregate metrics.", analogue: "NRC BOPs: trained observers watch actual work practices and compare to procedures, looking for drift." },
+      { id: "BO-2", text: "Are there \u2018behavioral baselines\u2019 \u2014 documented expectations of what the system\u2019s decision distribution should look like?", guidance: "Without a baseline, you can\u2019t detect drift. Baselines should include expected approval rates, score distributions, demographic patterns.", analogue: "Aviation SMS: safety performance indicators define expected ranges; deviations trigger investigation." },
+      { id: "BO-3", text: "When behavioral drift is detected, what happens? Is there a defined escalation path?", guidance: "Detection without response is monitoring theater. There should be clear thresholds, owners, and remediation procedures.", analogue: "NRC corrective action programs: identified issues must be tracked to resolution with documented root cause analysis." },
+    ],
+  },
+  {
+    name: "Drift Detection",
+    description: "Mechanisms to detect gradual migration away from intended operating parameters \u2014 Rasmussen\u2019s \u2018drift to danger.\u2019 The critical insight: drift is driven by rational optimization (cost pressure, workload reduction) and each step is individually reasonable.",
+    origin: "Rasmussen (1997) drift-to-danger model, Vaughan\u2019s normalization of deviance",
+    gap: "Algorithmic systems face the same drift forces: pressure to optimize metrics, gradual threshold adjustments, training data shifts, informal workarounds by operators. But there\u2019s rarely a mechanism to compare current system behavior to its original design intent.",
+    questions: [
+      { id: "DD-1", text: "Is the system\u2019s original design intent documented in a way that enables comparison to current behavior?", guidance: "Not just a model card \u2014 a living document that specifies what the system should and shouldn\u2019t do, updated when intent changes.", analogue: "Aviation: comparing current safety performance indicators to historical baselines reveals migration over time." },
+      { id: "DD-2", text: "What pressures could cause rational actors to gradually adjust the system away from its intent?", guidance: "Rasmussen\u2019s three pressures: cost/efficiency, workload, and competitive advantage. In algorithms: metric gaming, threshold creep, scope expansion.", analogue: "Rasmussen\u2019s drift model: financial pressure + workload optimization + management pressure = systematic migration toward boundary." },
+      { id: "DD-3", text: "Are there structural counter-drift forces \u2014 independent functions whose job is to resist optimization pressure?", guidance: "An independent safety/fairness function with authority to halt changes. Not the same team that builds and optimizes.", analogue: "NRC independence: the regulator is structurally separate from the operator." },
+    ],
+  },
+  {
+    name: "Community Signal",
+    description: "Mechanisms for affected communities to provide ongoing input \u2014 not one-time consultation but continuous signal from the people who experience the system\u2019s effects. This is the dimension most unique to algorithmic governance.",
+    origin: "NRC Safety Culture Traits 6 & 9, adapted for algorithmic context",
+    gap: "Algorithmic systems typically have no structured channel for affected communities to report their experience. The people with the best information about whether the system is working as intended are structurally excluded from monitoring.",
+    questions: [
+      { id: "CS-1", text: "Do affected communities have structured channels to report their experience of the system?", guidance: "Beyond complaint lines \u2014 mechanisms that aggregate community experience into actionable signal. Participatory audits, community review boards with data access.", analogue: "NRC public meetings, resident inspector program: continuous presence of independent observers." },
+      { id: "CS-2", text: "Can community signals actually change system behavior, or are they advisory only?", guidance: "Signal without power is consultation theater. Look for: binding recommendations, veto authority, mandatory response timelines.", analogue: "NRC enforcement: identified safety concerns can result in mandatory shutdowns, not just recommendations." },
+      { id: "CS-3", text: "Is the community signal weighted appropriately relative to operational metrics?", guidance: "If community concerns are always overridden by efficiency metrics, the monitoring dimension is effectively absent.", analogue: "Aviation: safety is explicitly prioritized over schedule pressure in ICAO standards." },
+    ],
+  },
+];
+
+const RECOMMENDATIONS = {
+  "Leading Indicators": {
+    0: ["Identify 3\u20135 leading indicators specific to your system\u2019s risk profile", "Start with operator override rates and input distribution shift as minimum viable leading indicators", "Designate an owner responsible for tracking leading indicators weekly"],
+    1: ["Shift from investigating incidents to tracking pre-incident signals", "Establish automated alerts for leading indicator threshold breaches", "Create a dashboard visible to decision-makers, not just engineers"],
+    2: ["Move from periodic to continuous monitoring of key leading indicators", "Add context to indicators \u2014 a number without a trend line is noise", "Ensure leading indicators are reviewed in operational meetings, not just compliance reviews"],
+    3: ["Regularly reassess whether your leading indicators still predict the right risks", "Cross-reference leading indicators with community signal data", "Publish leading indicator methodology for external review"],
+    4: ["Share your monitoring methodology with peer organizations", "Contribute to industry standards for algorithmic leading indicators"],
+  },
+  "Near-Miss Capture": {
+    0: ["Create a low-friction channel for operators to report \u2018almost-harmful\u2019 outputs", "Protect reporters \u2014 near-miss reporting collapses without psychological safety", "Review existing complaint/feedback data for near-miss signals you\u2019re already collecting but not analyzing"],
+    1: ["Move from case-by-case resolution to pattern analysis across near-misses", "Track near-miss frequency as a leading indicator", "Conduct quarterly near-miss pattern reviews with cross-functional teams"],
+    2: ["Implement systematic root cause analysis for near-miss clusters", "Create feedback loops: when near-miss patterns lead to changes, communicate this to reporters", "Expand capture to include community-reported near-misses"],
+    3: ["Analyze the ratio of near-misses to incidents \u2014 declining reports may mean underreporting, not improvement", "Use near-miss data to update leading indicators and behavioral baselines"],
+    4: ["Publish anonymized near-miss analyses to build shared learning across the field"],
+  },
+  "Behavioral Observation": {
+    0: ["Establish behavioral baselines: document what the system\u2019s decision distribution SHOULD look like", "Sample real decisions monthly and compare to baselines \u2014 even manual sampling is better than nothing", "Assign behavioral observation to someone independent of the optimization team"],
+    1: ["Move from investigating anomalies to systematically sampling behavior", "Document expected decision distributions and set drift thresholds", "Create an escalation path: who is notified when behavior drifts from baseline?"],
+    2: ["Increase observation frequency \u2014 quarterly audits miss month-long drift episodes", "Add behavioral slicing: observe behavior across demographic groups, not just in aggregate", "Compare behavioral observations to community signal data"],
+    3: ["Implement automated behavioral anomaly detection with human review of flagged cases", "Regularly update baselines \u2014 but document WHY they changed to prevent normalization of deviance"],
+    4: ["Integrate behavioral observation with near-miss data and leading indicators for comprehensive monitoring"],
+  },
+  "Drift Detection": {
+    0: ["Document the system\u2019s original design intent \u2014 what it should do, what it shouldn\u2019t, and why", "Identify the three main pressures that could cause rational drift (cost, workload, competitive)", "Establish at minimum quarterly comparison of current behavior to design intent"],
+    1: ["Create a change log tracking all parameter adjustments, threshold changes, and scope expansions", "Require justification for each change \u2014 \u2018optimization\u2019 is not sufficient rationale", "Designate an independent function responsible for drift assessment"],
+    2: ["Track drift velocity \u2014 how fast are parameters changing, and is the rate accelerating?", "Interview operators about informal workarounds \u2014 these reveal where formal procedures have drifted", "Compare current system scope to original scope \u2014 scope creep is a form of drift"],
+    3: ["Establish structural counter-drift forces: independent review authority that can halt changes", "Create \u2018drift retrospectives\u2019 \u2014 regular sessions asking \u2018how has our practice changed and why?\u2019"],
+    4: ["Use drift patterns to predict future migration paths and pre-position monitoring"],
+  },
+  "Community Signal": {
+    0: ["Identify affected communities and create at least one structured feedback channel", "Don\u2019t start with advisory boards \u2014 start with surveys or community liaison roles", "Ensure community signals reach people with authority to change the system"],
+    1: ["Move from responding to complaints to proactively soliciting community experience", "Aggregate community feedback into pattern reports, not just individual case resolution", "Provide communities with relevant system behavior data \u2014 signal without context is noise"],
+    2: ["Create regular community review sessions with system behavior data", "Document how community input has changed system behavior \u2014 close the feedback loop", "Assess whether community representation reflects actual affected populations"],
+    3: ["Give community bodies binding authority over specific system parameters", "Integrate community signals with behavioral observation and near-miss data", "Establish mandatory response timelines for community-raised concerns"],
+    4: ["Community monitoring evolves based on what it detects \u2014 community helps design monitoring, not just provide input"],
+  },
+};
+
+// ─── State ───
+
+let currentSection = 0;
+const totalSections = DIMENSIONS.length + 2; // profile + 5 dimensions + report
+const assessments = new Array(DIMENSIONS.length).fill(null); // {maturity, notes}
+
+// ─── Init ───
+
+function init() {
+  buildProgressBar();
+  buildDimensionSections();
+  updateProgress();
+}
+
+function buildProgressBar() {
+  const bar = document.getElementById("progressBar");
+  // 7 steps: profile + 5 dims + report
+  for (let i = 0; i < totalSections; i++) {
+    const step = document.createElement("div");
+    step.className = "progress-step";
+    step.dataset.step = i;
+    bar.appendChild(step);
+  }
+}
+
+function buildDimensionSections() {
+  const container = document.getElementById("dimensionSections");
+
+  DIMENSIONS.forEach((dim, idx) => {
+    const sectionNum = idx + 1;
+    const html = `
+      <div class="section" id="section-${sectionNum}">
+        <div class="dimension-header">
+          <div class="dim-number" style="background:${DIM_COLORS[idx]}">${idx + 1}</div>
+          <div class="dimension-title">${dim.name}</div>
+        </div>
+        <p class="dimension-desc">${dim.description}</p>
+        <span class="origin-tag">${dim.origin}</span>
+        <div class="gap-box">
+          <div class="gap-label">Gap in algorithmic governance</div>
+          ${dim.gap}
+        </div>
+
+        ${dim.questions.map(q => `
+          <div class="question">
+            <div class="question-id">${q.id}</div>
+            <div class="question-text">${q.text}</div>
+            <div class="question-guidance">Guidance: ${q.guidance}</div>
+            <div class="question-analogue">Safety analogue: ${q.analogue}</div>
+          </div>
+        `).join("")}
+
+        <div class="maturity-selector">
+          <label>Based on the questions above, rate this dimension\u2019s maturity:</label>
+          <div class="maturity-options" id="maturity-${idx}">
+            ${MATURITY_LEVELS.map(m => `
+              <div class="maturity-option" data-dim="${idx}" data-value="${m.value}" onclick="selectMaturity(${idx}, ${m.value})">
+                <span class="level-num">${m.value}</span>
+                <span class="level-label">${m.label}</span>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="notes-field">
+          <label>Notes (optional): evidence, gaps, or context</label>
+          <textarea id="notes-${idx}" placeholder="What monitoring exists? What\u2019s missing?"></textarea>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" onclick="prevSection()">Back</button>
+          <button class="btn btn-primary" id="next-${sectionNum}" onclick="nextSection()">
+            ${idx < DIMENSIONS.length - 1 ? "Next Dimension" : "See Results"}
+          </button>
+        </div>
+      </div>
+    `;
+    container.insertAdjacentHTML("beforeend", html);
+  });
+}
+
+// ─── Navigation ───
+
+function nextSection() {
+  if (currentSection === 0) {
+    // Validate profile has at least a name
+    const name = document.getElementById("sysName").value.trim();
+    if (!name) {
+      document.getElementById("sysName").focus();
+      return;
+    }
+  }
+
+  // Save assessment if leaving a dimension section
+  if (currentSection >= 1 && currentSection <= DIMENSIONS.length) {
+    const dimIdx = currentSection - 1;
+    if (assessments[dimIdx] === null) {
+      assessments[dimIdx] = { maturity: -1, notes: "" };
+    }
+    assessments[dimIdx].notes = document.getElementById(`notes-${dimIdx}`).value.trim();
+
+    // Require maturity selection
+    if (assessments[dimIdx].maturity < 0) {
+      // Default to 0 if not selected — but highlight
+      assessments[dimIdx].maturity = 0;
+    }
+  }
+
+  const sections = document.querySelectorAll(".section");
+  sections.forEach(s => s.classList.remove("active"));
+
+  currentSection++;
+
+  if (currentSection > DIMENSIONS.length) {
+    // Show report
+    buildReport();
+    document.getElementById("section-report").classList.add("active");
+  } else {
+    document.getElementById(`section-${currentSection}`).classList.add("active");
+  }
+
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function prevSection() {
+  if (currentSection <= 0) return;
+
+  // Save current state
+  if (currentSection >= 1 && currentSection <= DIMENSIONS.length) {
+    const dimIdx = currentSection - 1;
+    if (assessments[dimIdx] === null) assessments[dimIdx] = { maturity: -1, notes: "" };
+    assessments[dimIdx].notes = document.getElementById(`notes-${dimIdx}`).value.trim();
+  }
+
+  const sections = document.querySelectorAll(".section");
+  sections.forEach(s => s.classList.remove("active"));
+
+  currentSection--;
+  document.getElementById(`section-${currentSection}`).classList.add("active");
+
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function updateProgress() {
+  const steps = document.querySelectorAll(".progress-step");
+  steps.forEach((step, i) => {
+    step.className = "progress-step";
+    if (i < currentSection) step.classList.add("done");
+    else if (i === currentSection) step.classList.add("current");
+  });
+}
+
+function selectMaturity(dimIdx, value) {
+  if (assessments[dimIdx] === null) assessments[dimIdx] = { maturity: -1, notes: "" };
+  assessments[dimIdx].maturity = value;
+
+  // Update UI
+  const options = document.querySelectorAll(`#maturity-${dimIdx} .maturity-option`);
+  options.forEach(opt => {
+    opt.classList.toggle("selected", parseInt(opt.dataset.value) === value);
+  });
+}
+
+// ─── Report ───
+
+function buildReport() {
+  const name = document.getElementById("sysName").value.trim();
+  const domain = document.getElementById("sysDomain").value.trim();
+
+  const scores = assessments.map(a => (a ? Math.max(a.maturity, 0) : 0));
+  const avg = scores.reduce((s, v) => s + v, 0) / scores.length;
+  const minScore = Math.min(...scores);
+  const weakestIdx = scores.indexOf(minScore);
+
+  // Color for overall score
+  let scoreColor = "var(--danger)";
+  if (avg >= 3) scoreColor = "var(--success)";
+  else if (avg >= 1.5) scoreColor = "var(--warning)";
+
+  let html = `
+    <div class="report-header">
+      <h2>Monitoring Maturity Report</h2>
+      <div class="report-system">${name}${domain ? " \u2014 " + domain : ""}</div>
+    </div>
+
+    <div class="overall-score">
+      <div class="score-circle" style="border-color:${scoreColor}">
+        <div class="score-number" style="color:${scoreColor}">${avg.toFixed(1)}</div>
+        <div class="score-max">/ 4.0</div>
+      </div>
+      <div class="score-label">Overall Monitoring Maturity</div>
+    </div>
+
+    <div class="dimension-bars">
+  `;
+
+  DIMENSIONS.forEach((dim, idx) => {
+    const score = scores[idx];
+    const pct = (score / 4) * 100;
+    const levelLabel = MATURITY_LEVELS[score].label;
+    html += `
+      <div class="dim-bar-row">
+        <div class="dim-bar-label">${dim.name}</div>
+        <div class="dim-bar-track">
+          <div class="dim-bar-fill" style="width:${Math.max(pct, 8)}%;background:${DIM_COLORS[idx]}">${score}</div>
+        </div>
+        <div class="dim-bar-level">${levelLabel}</div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+
+  // Weakest dimension callout
+  html += `
+    <div class="weakest-callout">
+      <strong>Weakest dimension: ${DIMENSIONS[weakestIdx].name}</strong> (${MATURITY_LEVELS[minScore].label})
+      <br>In mature safety-critical domains, the weakest monitoring dimension determines overall system safety. A system with excellent drift detection but no near-miss capture will be surprised by the same failures that healthcare learned to prevent decades ago.
+    </div>
+  `;
+
+  // Recommendation cards for each dimension
+  DIMENSIONS.forEach((dim, idx) => {
+    const score = scores[idx];
+    const levelLabel = MATURITY_LEVELS[score].label;
+    const recs = RECOMMENDATIONS[dim.name][score] || [];
+    const notes = assessments[idx] ? assessments[idx].notes : "";
+
+    html += `
+      <div class="rec-card">
+        <div class="rec-card-header">
+          <div class="dim-number" style="background:${DIM_COLORS[idx]};width:24px;height:24px;font-size:0.75rem">${idx + 1}</div>
+          <div class="rec-card-title">${dim.name}</div>
+          <div class="rec-card-level">${levelLabel} (${score}/4)</div>
+        </div>
+        ${recs.length ? `<ul class="rec-list">${recs.map(r => `<li>${r}</li>`).join("")}</ul>` : "<p style='color:var(--muted);font-size:0.9rem'>Excellent \u2014 maintain and share your practices.</p>"}
+        ${notes ? `<div class="user-notes">Your notes: ${escapeHtml(notes)}</div>` : ""}
+      </div>
+    `;
+  });
+
+  // Safety comparison
+  html += `
+    <div class="safety-comparison">
+      <h3>How Mature Safety-Critical Domains Monitor</h3>
+      <div class="safety-domains">
+        <div class="safety-domain">
+          <h4>Nuclear (NRC)</h4>
+          <ul>
+            <li>9 safety culture traits with behavioral indicators</li>
+            <li>Behavioral Observation Programs \u2014 systematic, ongoing</li>
+            <li>Resident inspectors \u2014 independent, continuous presence</li>
+            <li>Corrective action programs \u2014 issues tracked to resolution</li>
+          </ul>
+        </div>
+        <div class="safety-domain">
+          <h4>Aviation (ICAO/FAA)</h4>
+          <ul>
+            <li>Safety Management Systems with leading + lagging indicators</li>
+            <li>Voluntary safety reporting (ASRS) with legal protection</li>
+            <li>Continuous safety performance monitoring</li>
+            <li>Safety explicitly prioritized over schedule/cost</li>
+          </ul>
+        </div>
+        <div class="safety-domain">
+          <h4>Healthcare (Joint Commission)</h4>
+          <ul>
+            <li>Near-miss reporting with root cause analysis</li>
+            <li>Sentinel event investigation \u2014 system-level, not individual blame</li>
+            <li>70% of safety improvements from near-miss analysis</li>
+            <li>Reporting culture: psychological safety is prerequisite</li>
+          </ul>
+        </div>
+      </div>
+      <p class="takeaway">The pattern: specifications are necessary but insufficient. Ongoing behavioral monitoring with multiple signal sources is what actually prevents drift.</p>
+    </div>
+  `;
+
+  // Export buttons
+  html += `
+    <div class="export-row">
+      <button class="btn" onclick="exportText()">Export as Text</button>
+      <button class="btn" onclick="startOver()">Start Over</button>
+    </div>
+  `;
+
+  // Footer
+  html += `
+    <div class="footer">
+      Monitoring taxonomy derived from nuclear (NRC), aviation (ICAO/FAA), and healthcare (Joint Commission) safety practices.
+      <br>Built by <a href="../">Scout</a>. Based on Rasmussen (1997), Vaughan (1996), and the freezing problem framework.
+    </div>
+  `;
+
+  document.getElementById("section-report").innerHTML = html;
+
+  // Animate bars after render
+  setTimeout(() => {
+    document.querySelectorAll(".dim-bar-fill").forEach(bar => {
+      bar.style.width = bar.style.width; // trigger reflow
+    });
+  }, 50);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function exportText() {
+  const name = document.getElementById("sysName").value.trim();
+  const domain = document.getElementById("sysDomain").value.trim();
+  const scores = assessments.map(a => (a ? Math.max(a.maturity, 0) : 0));
+  const avg = scores.reduce((s, v) => s + v, 0) / scores.length;
+
+  let text = "MONITORING MATURITY REPORT\n";
+  text += "=".repeat(50) + "\n\n";
+  text += `System: ${name}\n`;
+  if (domain) text += `Domain: ${domain}\n`;
+  text += `Overall Maturity: ${avg.toFixed(1)} / 4.0\n\n`;
+
+  DIMENSIONS.forEach((dim, idx) => {
+    const score = scores[idx];
+    const label = MATURITY_LEVELS[score].label;
+    const bar = "\u2588".repeat(score * 3) + "\u2591".repeat((4 - score) * 3);
+    text += `${dim.name}: [${bar}] ${score}/4 (${label})\n`;
+
+    const recs = RECOMMENDATIONS[dim.name][score] || [];
+    recs.forEach(r => { text += `  \u2192 ${r}\n`; });
+
+    const notes = assessments[idx] ? assessments[idx].notes : "";
+    if (notes) text += `  Notes: ${notes}\n`;
+    text += "\n";
+  });
+
+  text += "\nGenerated by Monitoring Maturity Diagnostic\n";
+  text += "https://scout-for-good.github.io/findings/tools/monitoring-maturity.html\n";
+
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `monitoring-maturity-${name.toLowerCase().replace(/\s+/g, "-")}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function startOver() {
+  // Reset state
+  currentSection = 0;
+  assessments.fill(null);
+
+  // Clear form
+  document.getElementById("sysName").value = "";
+  document.getElementById("sysDomain").value = "";
+  document.getElementById("sysDesc").value = "";
+  document.getElementById("sysContext").value = "";
+  document.getElementById("sysAffected").value = "";
+  document.getElementById("sysDecision").value = "";
+
+  DIMENSIONS.forEach((_, idx) => {
+    document.getElementById(`notes-${idx}`).value = "";
+    document.querySelectorAll(`#maturity-${idx} .maturity-option`).forEach(opt => {
+      opt.classList.remove("selected");
+    });
+  });
+
+  // Show first section
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById("section-0").classList.add("active");
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// Boot
+init();
+</script>
+</body>
+</html>
