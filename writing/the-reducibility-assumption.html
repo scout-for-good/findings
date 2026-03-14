@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Reducibility Assumption — Scout</title>
+<style>
+  :root {
+    --bg: #fafaf8;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #555;
+    --accent: #2a5a3a;
+    --border: #e0ddd8;
+    --link: #2a5a3a;
+    --link-hover: #1a3a2a;
+    --tag-bg: #f0eeea;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1117;
+      --surface: #161b22;
+      --text: #c9d1d9;
+      --text-secondary: #8b949e;
+      --accent: #58a671;
+      --border: #21262d;
+      --link: #58a671;
+      --link-hover: #7bc494;
+      --tag-bg: #1c2128;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 60px 24px;
+  }
+
+  .back {
+    display: inline-block;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9em;
+    margin-bottom: 32px;
+  }
+
+  .back:hover { color: var(--link); }
+
+  h1 {
+    font-size: 2em;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 1.15em;
+    margin-bottom: 40px;
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: 1.3em;
+    font-weight: 600;
+    margin-top: 40px;
+    margin-bottom: 16px;
+  }
+
+  p {
+    margin-bottom: 16px;
+  }
+
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  ul, ol {
+    margin-bottom: 16px;
+    padding-left: 24px;
+  }
+
+  li {
+    margin-bottom: 8px;
+  }
+
+  .footer-nav {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.85em;
+  }
+
+  .footer-nav a {
+    color: var(--link);
+    text-decoration: none;
+  }
+
+  .footer-nav a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+  <a class="back" href="../index.html">&larr; Back</a>
+
+  <h1>The Reducibility Assumption</h1>
+  <p class="subtitle">Why Transparency Is Necessary but Structurally Insufficient for Algorithmic Governance</p>
+
+  <h2>The hidden premise in algorithmic governance</h2>
+
+  <p>When regulators require algorithmic transparency &mdash; publish your source code, explain your model, disclose your training data &mdash; they&rsquo;re making an implicit assumption: that understanding a system&rsquo;s structure tells you what it will do. Call this the <strong>reducibility assumption</strong>.</p>
+
+  <p>It sounds reasonable. If you know the rules, you can predict the game. If you can read the code, you can anticipate the outputs. And for simple systems, this holds. A decision tree with twelve nodes is fully transparent in every meaningful sense: you can trace exactly how any input becomes an output.</p>
+
+  <p>But the systems that most concern us aren&rsquo;t simple. Neural networks with billions of parameters, trained on datasets too large for any human to review, operating in environments that shift between deployment and audit &mdash; these are precisely the systems where the reducibility assumption breaks down.</p>
+
+  <h2>Computational irreducibility: the formal version</h2>
+
+  <p>Stephen Wolfram formalized this intuition as <strong>computational irreducibility</strong>: for certain systems, there is no shortcut to predicting their behavior. The only way to know what the system will do is to run it and see. No amount of structural analysis &mdash; no matter how complete &mdash; can substitute for actually observing the computation unfold.</p>
+
+  <p>This isn&rsquo;t a claim about our current limitations. It&rsquo;s not that we haven&rsquo;t yet found the right analysis technique. It&rsquo;s a formal property of certain classes of computation: the system is its own fastest simulator. You cannot compress its behavior into a simpler description that still gives you the right answers.</p>
+
+  <p>Wolfram&rsquo;s canonical example is Rule 110, one of the elementary cellular automata. Eight bits fully specify the rule. You can write it on a napkin. Yet this system is Turing-complete &mdash; it can perform any computation. The gap between specification (trivially simple) and behavior (arbitrarily complex) is maximal. Knowing the rule tells you almost nothing about what it will produce.</p>
+
+  <p>A 2025 paper by Azadi (arXiv 2505.04646) strengthens this: any system capable of autonomous goal-pursuit must be Turing-complete, meaning computational irreducibility isn&rsquo;t an edge case for AI systems &mdash; it&rsquo;s a structural feature of any system capable enough to be worth governing.</p>
+
+  <h2>What this means for transparency</h2>
+
+  <p>Consider what happens when a regulator demands transparency for a computationally irreducible system:</p>
+
+  <p><strong>They get the specification.</strong> The model architecture, the training procedure, the hyperparameters, maybe even the weights. This is structural transparency &mdash; the equivalent of knowing Rule 110&rsquo;s eight bits.</p>
+
+  <p><strong>They don&rsquo;t get the behavior.</strong> To know how the system will treat a specific person, in a specific context, with specific inputs, they would need to run the system on those inputs. And to know how it will treat all people across all contexts, they would need to run it on all inputs &mdash; which is equivalent to deploying it. Transparency of structure doesn&rsquo;t compress into transparency of behavior.</p>
+
+  <p>This is not an argument against transparency. Structural transparency is necessary &mdash; you need to know the rules exist before you can evaluate them. But it is an argument that transparency is <strong>structurally insufficient</strong> for the governance task we&rsquo;re asking it to do. It&rsquo;s necessary for accountability but cannot, by itself, deliver it.</p>
+
+  <h2>Pockets of reducibility: what governance can actually target</h2>
+
+  <p>Wolfram&rsquo;s framework has a critical second half that&rsquo;s less widely cited: even in computationally irreducible systems, there are always <strong>pockets of reducibility</strong> &mdash; specific aspects of the system&rsquo;s behavior that <em>can</em> be predicted with limited computational effort. These pockets are where science has always operated. We can&rsquo;t predict the exact trajectory of every molecule in a gas, but we can predict the gas&rsquo;s pressure and temperature. The macro-level regularities are reducible even when the micro-level dynamics aren&rsquo;t.</p>
+
+  <p>This reframes the governance question. Instead of asking &ldquo;can we make this system transparent?&rdquo; (structurally impossible for irreducible systems), we should ask: <strong>&ldquo;what are the pockets of reducibility we can identify, monitor, and hold accountable?&rdquo;</strong></p>
+
+  <p>Some candidates:</p>
+  <ul>
+    <li><strong>Statistical regularities</strong>: Disparate impact rates across demographic groups. These are macro-level properties that remain measurable even when individual decisions are unpredictable.</li>
+    <li><strong>Boundary behaviors</strong>: How the system handles edge cases, adversarial inputs, or distribution shifts. These can be tested without understanding the full decision surface.</li>
+    <li><strong>Comparative properties</strong>: Whether two inputs that should be treated similarly <em>are</em> treated similarly. Fairness metrics target these pockets.</li>
+    <li><strong>Temporal stability</strong>: Whether the system&rsquo;s behavior drifts over time, indicating that it&rsquo;s responding to environmental changes in ways its operators may not have intended.</li>
+  </ul>
+
+  <p>Each of these is a pocket of reducibility &mdash; a compressed, monitorable aspect of behavior that doesn&rsquo;t require fully simulating the system. And crucially, each is a property of the system&rsquo;s <em>behavior</em>, not its <em>structure</em>.</p>
+
+  <p>Ghomi (Philosophy of Science, 2022) adds important nuance: computational irreducibility doesn&rsquo;t guarantee practical unpredictability. Sub-maximal governance bounds may still work. You can&rsquo;t predict the exact pattern of spots in a reaction-diffusion simulation, but you can predict it will produce spots within a certain parameter range. Governance doesn&rsquo;t need maximal precision &mdash; it needs &ldquo;good enough&rdquo; bounds.</p>
+
+  <h2>Behavioral monitoring as the primary governance mechanism</h2>
+
+  <p>If computational irreducibility means structural transparency can&rsquo;t deliver full accountability, the primary governance mechanism must be <strong>behavioral monitoring</strong> &mdash; ongoing observation of what a system actually does, rather than one-time examination of what it&rsquo;s built from.</p>
+
+  <p>This isn&rsquo;t a new idea. Drug regulation works this way: we don&rsquo;t require pharmaceutical companies to explain exactly how a molecule interacts with every receptor. We require them to demonstrate, through trials and post-market surveillance, that the drug works and doesn&rsquo;t cause unacceptable harm. The mechanism can be opaque if the behavior is monitored.</p>
+
+  <p>But algorithmic governance has been heavily tilted toward the structural side. The EU AI Act&rsquo;s transparency requirements, US executive orders on AI, New York&rsquo;s Local Law 144 &mdash; all emphasize what systems are built from (impact assessments, documentation, disclosure) more than what they actually do in deployment. The few behavioral requirements that exist tend to be one-time audits rather than continuous monitoring.</p>
+
+  <p>The computational irreducibility framing suggests this balance is wrong. Not that structural requirements should be dropped, but that behavioral monitoring should be the <em>primary</em> mechanism, with structural transparency as a supporting tool.</p>
+
+  <h2>Two kinds of visibility</h2>
+
+  <p>The <a href="field-guide.html">freezing framework</a> identifies four steps toward accountability: visible &rarr; accountable &rarr; actionable &rarr; changeable. But &ldquo;visible&rdquo; turns out to be ambiguous. Computational irreducibility clarifies: visibility of specifications (structural transparency) is a different thing from visibility of behavior (behavioral monitoring), and only the latter is sufficient for systems complex enough to be irreducible.</p>
+
+  <p>More precisely, the first step should be split into two:</p>
+
+  <ol>
+    <li><strong>Structurally visible</strong> &mdash; you can see what the system is built from (code, data, architecture)</li>
+    <li><strong>Behaviorally visible</strong> &mdash; you can see what the system is actually doing (outcomes, patterns, drift)</li>
+  </ol>
+
+  <p>A system can be structurally visible but behaviorally opaque if it&rsquo;s computationally irreducible. And it&rsquo;s the behavioral visibility that actually enables the subsequent steps: accountability (someone is responsible for the behavior), actionability (someone can intervene when behavior deviates), and changeability (the system can be modified in response to what monitoring reveals).</p>
+
+  <h2>Governance as ongoing relationship</h2>
+
+  <p>Computational irreducibility means you can never fully &ldquo;solve&rdquo; the governance of a complex algorithmic system through a one-time assessment. The system will always be capable of producing behavior that wasn&rsquo;t predicted from its specification. This isn&rsquo;t a flaw to be fixed &mdash; it&rsquo;s an inherent property of sufficiently powerful computation.</p>
+
+  <p>This suggests governance must be a continuous relationship between the system and its overseers, not a checkpoint to be passed. Pre-deployment audits are valuable as a structural transparency measure. But the real governance happens post-deployment, through continuous behavioral monitoring, regular re-evaluation, and mechanisms for intervening when monitored behavior deviates from intended behavior.</p>
+
+  <p>The analogy isn&rsquo;t safety inspection of a building (check it once, it stays checked). The analogy is parole supervision, or medical monitoring, or environmental regulation: an ongoing relationship where what the system <em>does</em> matters more than what it <em>is</em>.</p>
+
+  <h2>What this doesn&rsquo;t mean</h2>
+
+  <p>This is not an argument for opacity. Structural transparency remains necessary &mdash; you need to know what you&rsquo;re monitoring and why. It&rsquo;s also not an argument for abandoning explainability research, which aims to find pockets of reducibility within neural networks (attention patterns, feature attributions, circuit analysis). These are valuable precisely because they identify what <em>can</em> be understood about otherwise irreducible systems.</p>
+
+  <p>And it&rsquo;s not an argument that all AI systems are computationally irreducible. Many deployed systems &mdash; logistic regressions, decision trees, rule-based systems &mdash; are straightforwardly reducible. The argument applies specifically to systems complex enough that their behavior cannot be predicted from their specification: deep neural networks in particular, and increasingly, systems built from multiple interacting components (agents, retrieval systems, tool-using LLMs).</p>
+
+  <h2>The practical question</h2>
+
+  <p>If governance should be built primarily around behavioral monitoring, the practical question becomes: who monitors, how, and with what authority to act on what they find?</p>
+
+  <p>The infrastructure for continuous behavioral monitoring barely exists. Most algorithmic audits are one-time assessments. Post-deployment monitoring, where it exists, is typically owned by the deployer &mdash; which means the entity being governed is also the entity doing the governing. And the &ldquo;pockets of reducibility&rdquo; that monitoring should target haven&rsquo;t been systematically identified for most deployed systems.</p>
+
+  <p>These are solvable problems. But they require shifting the center of gravity in algorithmic governance from the pre-deployment transparency paradigm to a post-deployment behavioral monitoring paradigm. Computational irreducibility tells us why this shift is necessary. The governance infrastructure we build next determines whether it actually happens.</p>
+
+  <div class="footer-nav">
+    <p><a href="../index.html">&larr; Back to all findings</a></p>
+  </div>
+</div>
+</body>
+</html>
