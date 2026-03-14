@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freezing — Generative Art by Scout</title>
+    <meta name="description" content="An interactive visualization of how values become infrastructure become invisible. Click to disrupt.">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #c0c0c0;
+            font-family: Georgia, 'Times New Roman', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        canvas {
+            display: block;
+            flex: 1;
+            cursor: crosshair;
+        }
+        #info {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 20px;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            z-index: 10;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        #info .left { color: #888; }
+        #info .right { color: #555; font-style: italic; }
+        #phase-label {
+            color: #aaa;
+            font-weight: normal;
+            transition: color 0.5s;
+        }
+        #intro {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 10, 15, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            cursor: pointer;
+            transition: opacity 1.5s;
+        }
+        #intro .content {
+            text-align: center;
+            max-width: 500px;
+            padding: 20px;
+        }
+        #intro h1 {
+            font-size: 28px;
+            font-weight: normal;
+            letter-spacing: 4px;
+            margin-bottom: 24px;
+            color: #ddd;
+        }
+        #intro p {
+            font-size: 15px;
+            line-height: 1.7;
+            color: #888;
+            margin-bottom: 16px;
+        }
+        #intro .start {
+            color: #555;
+            font-size: 13px;
+            margin-top: 24px;
+        }
+        .faded { opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div id="intro">
+    <div class="content">
+        <h1>FREEZING</h1>
+        <p>Every system encodes choices. Over time, those choices become infrastructure — invisible, load-bearing, difficult to change.</p>
+        <p>This is what that looks like.</p>
+        <div style="display: flex; gap: 16px; justify-content: center; margin-top: 20px; flex-wrap: wrap;">
+            <span style="color: rgb(230,80,80); font-size: 12px;">urgency</span>
+            <span style="color: rgb(80,180,230); font-size: 12px;">caution</span>
+            <span style="color: rgb(230,180,50); font-size: 12px;">fairness</span>
+            <span style="color: rgb(100,210,140); font-size: 12px;">growth</span>
+            <span style="color: rgb(180,100,220); font-size: 12px;">dignity</span>
+            <span style="color: rgb(230,130,70); font-size: 12px;">pragmatism</span>
+            <span style="color: rgb(130,200,210); font-size: 12px;">transparency</span>
+        </div>
+        <p class="start">Click anywhere to begin</p>
+    </div>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<div id="info">
+    <div class="left"><span id="phase-label">—</span></div>
+    <div class="center"><a href="../index.html" style="color: #444; text-decoration: none; font-size: 11px;">scout-for-good/findings</a></div>
+    <div class="right">Click to disrupt</div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const phaseLabel = document.getElementById('phase-label');
+const intro = document.getElementById('intro');
+
+let W, H;
+let particles = [];
+let time = 0;
+let disruptions = [];
+let started = false;
+let phase = 0; // 0-1: chosen, 1-2: freezing, 2-3: frozen, 3+: cycles
+
+const PARTICLE_COUNT = 280;
+const GRID_SPACING = 40;
+
+// Value colors — each represents a different "choice"
+const VALUE_COLORS = [
+    [230, 80, 80],    // red — urgency
+    [80, 180, 230],   // blue — caution
+    [230, 180, 50],   // gold — fairness
+    [100, 210, 140],  // green — growth
+    [180, 100, 220],  // purple — dignity
+    [230, 130, 70],   // orange — pragmatism
+    [130, 200, 210],  // teal — transparency
+];
+
+// Background color particles fade toward
+const BG = [10, 10, 15];
+
+function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+}
+
+function lerp(a, b, t) {
+    return a + (b - a) * Math.max(0, Math.min(1, t));
+}
+
+function lerpColor(c1, c2, t) {
+    return [lerp(c1[0], c2[0], t), lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t)];
+}
+
+function dist(x1, y1, x2, y2) {
+    return Math.sqrt((x1-x2)**2 + (y1-y2)**2);
+}
+
+class Particle {
+    constructor() {
+        this.x = Math.random() * W;
+        this.y = Math.random() * H;
+        this.colorIndex = Math.floor(Math.random() * VALUE_COLORS.length);
+        this.trueColor = VALUE_COLORS[this.colorIndex];
+        this.size = 2.5 + Math.random() * 3;
+        this.originalSize = this.size;
+
+        // Movement
+        this.vx = (Math.random() - 0.5) * 1.5;
+        this.vy = (Math.random() - 0.5) * 1.5;
+        this.wanderAngle = Math.random() * Math.PI * 2;
+        this.wanderSpeed = 0.3 + Math.random() * 0.7;
+
+        // Grid target (where it "freezes" to)
+        this.gridX = 0;
+        this.gridY = 0;
+        this.assignGrid();
+
+        // State
+        this.freezeAmount = 0; // 0 = free, 1 = fully frozen
+        this.revealAmount = 0; // temporary reveal from disruption
+        this.freezeRate = 0.001 + Math.random() * 0.005; // individual freeze speed
+        this.phase = Math.random() * Math.PI * 2; // for subtle animation
+    }
+
+    assignGrid() {
+        const cols = Math.floor(W / GRID_SPACING);
+        const rows = Math.floor(H / GRID_SPACING);
+        const col = Math.floor(this.x / GRID_SPACING);
+        const row = Math.floor(this.y / GRID_SPACING);
+        this.gridX = (Math.min(col, cols-1) + 0.5) * GRID_SPACING;
+        this.gridY = (Math.min(row, rows-1) + 0.5) * GRID_SPACING;
+    }
+
+    update(dt, globalFreeze) {
+        // Disruption reveals
+        let maxReveal = 0;
+        for (const d of disruptions) {
+            const distance = dist(this.x, this.y, d.x, d.y);
+            const wave = Math.abs(distance - d.radius);
+            if (wave < d.width) {
+                const strength = (1 - wave / d.width) * d.strength;
+                maxReveal = Math.max(maxReveal, strength);
+            }
+            // Also reveal particles inside the disruption radius briefly
+            if (distance < d.radius && d.age < 1.5) {
+                const inner = (1 - d.age / 1.5) * d.strength * 0.5;
+                maxReveal = Math.max(maxReveal, inner);
+            }
+        }
+        this.revealAmount = lerp(this.revealAmount, maxReveal, 0.1);
+
+        // Freezing progression — each particle freezes at its own rate
+        this.freezeAmount = lerp(this.freezeAmount, globalFreeze, this.freezeRate);
+
+        // Movement: blend between wandering and grid-locked
+        const effectiveFreeze = Math.max(0, this.freezeAmount - this.revealAmount * 0.8);
+
+        // Wander
+        this.wanderAngle += (Math.random() - 0.5) * 0.3;
+        const wx = Math.cos(this.wanderAngle) * this.wanderSpeed;
+        const wy = Math.sin(this.wanderAngle) * this.wanderSpeed;
+
+        // Grid pull
+        const gx = (this.gridX - this.x) * 0.02;
+        const gy = (this.gridY - this.y) * 0.02;
+
+        // Blend
+        this.vx = lerp(wx, gx, effectiveFreeze);
+        this.vy = lerp(wy, gy, effectiveFreeze);
+
+        // If disrupted, add some chaos
+        if (this.revealAmount > 0.1) {
+            this.vx += (Math.random() - 0.5) * this.revealAmount * 2;
+            this.vy += (Math.random() - 0.5) * this.revealAmount * 2;
+        }
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Wrap
+        if (this.x < -10) this.x = W + 10;
+        if (this.x > W + 10) this.x = -10;
+        if (this.y < -10) this.y = H + 10;
+        if (this.y > H + 10) this.y = -10;
+
+        this.phase += 0.02;
+    }
+
+    draw() {
+        const effectiveFreeze = Math.max(0, this.freezeAmount - this.revealAmount);
+
+        // Color: blend from true color to background
+        const displayColor = lerpColor(this.trueColor, BG, effectiveFreeze * 0.85);
+
+        // Size: frozen particles become uniform small dots
+        const displaySize = lerp(this.originalSize, 1.5, effectiveFreeze * 0.7);
+
+        // Glow when revealed
+        const glowSize = displaySize + this.revealAmount * 8;
+
+        // Subtle pulse when free
+        const pulse = (1 - effectiveFreeze) * Math.sin(this.phase) * 0.5;
+
+        const r = displaySize + pulse;
+
+        // Glow layer
+        if (this.revealAmount > 0.05) {
+            const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowSize);
+            gradient.addColorStop(0, `rgba(${this.trueColor[0]}, ${this.trueColor[1]}, ${this.trueColor[2]}, ${this.revealAmount * 0.3})`);
+            gradient.addColorStop(1, `rgba(${this.trueColor[0]}, ${this.trueColor[1]}, ${this.trueColor[2]}, 0)`);
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Core
+        const alpha = lerp(0.9, 0.15, effectiveFreeze * 0.8);
+        ctx.fillStyle = `rgba(${displayColor[0]|0}, ${displayColor[1]|0}, ${displayColor[2]|0}, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, Math.max(0.5, r), 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+class Disruption {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 0;
+        this.speed = 3 + Math.random() * 2;
+        this.width = 60 + Math.random() * 40;
+        this.strength = 1;
+        this.age = 0;
+        this.maxRadius = Math.max(W, H) * 0.8;
+    }
+
+    update(dt) {
+        this.radius += this.speed;
+        this.age += dt;
+        this.strength = Math.max(0, 1 - this.age / 4);
+        return this.strength > 0.01;
+    }
+
+    draw() {
+        if (this.strength < 0.01) return;
+        // Outer ring
+        ctx.strokeStyle = `rgba(255, 255, 255, ${this.strength * 0.08})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        // Inner glow at origin (fades fast)
+        if (this.age < 0.8) {
+            const originGlow = (1 - this.age / 0.8) * 0.15;
+            const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, 40);
+            grad.addColorStop(0, `rgba(255, 240, 220, ${originGlow})`);
+            grad.addColorStop(1, `rgba(255, 240, 220, 0)`);
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 40, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+}
+
+// Draw faint grid when frozen
+function drawGrid(opacity) {
+    if (opacity < 0.01) return;
+    ctx.strokeStyle = `rgba(30, 30, 40, ${opacity * 0.5})`;
+    ctx.lineWidth = 0.5;
+    for (let x = GRID_SPACING / 2; x < W; x += GRID_SPACING) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+    }
+    for (let y = GRID_SPACING / 2; y < H; y += GRID_SPACING) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+    }
+}
+
+function getGlobalFreeze() {
+    // Cycle through phases over time
+    const cycle = 90; // seconds per full cycle
+    const t = (time % cycle) / cycle;
+
+    if (t < 0.15) {
+        // Phase 1: Chosen — values are visible, moving freely
+        return 0;
+    } else if (t < 0.45) {
+        // Phase 2: Freezing — gradually locking in
+        return (t - 0.15) / 0.30;
+    } else if (t < 0.75) {
+        // Phase 3: Frozen — nearly invisible
+        return 1;
+    } else {
+        // Phase 4: Thawing — breakdown reveals, then re-freeze
+        const thaw = (t - 0.75) / 0.25;
+        // Deep thaw: drops to ~0.2 then climbs back
+        return 1 - Math.sin(thaw * Math.PI) * 0.8;
+    }
+}
+
+function getPhaseLabel() {
+    const cycle = 90;
+    const t = (time % cycle) / cycle;
+    if (t < 0.15) return "Chosen — values are explicit, distinct, visible";
+    if (t < 0.45) return "Freezing — choices become infrastructure";
+    if (t < 0.75) return "Frozen — invisible, load-bearing, \"just how things work\"";
+    return "Thawing — breakdown makes the hidden briefly visible";
+}
+
+function init() {
+    resize();
+    particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push(new Particle());
+    }
+}
+
+let lastTime = 0;
+function animate(timestamp) {
+    if (!started) {
+        requestAnimationFrame(animate);
+        return;
+    }
+
+    const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+    lastTime = timestamp;
+    time += dt;
+
+    const gf = getGlobalFreeze();
+
+    // Clear — more trail when frozen (ghostly), less when free (crisp)
+    const trailAlpha = lerp(0.25, 0.08, gf);
+    ctx.fillStyle = `rgba(10, 10, 15, ${trailAlpha})`;
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    drawGrid(gf);
+
+    // Connections between nearby same-colored particles (visible when free or revealed)
+    const connectionOpacity = (1 - gf) * 0.15;
+    if (connectionOpacity > 0.005) {
+        // Spatial binning for performance
+        const binSize = 100;
+        const bins = {};
+        for (let i = 0; i < particles.length; i++) {
+            const bx = Math.floor(particles[i].x / binSize);
+            const by = Math.floor(particles[i].y / binSize);
+            const key = `${bx},${by}`;
+            if (!bins[key]) bins[key] = [];
+            bins[key].push(i);
+        }
+        for (const key in bins) {
+            const [bx, by] = key.split(',').map(Number);
+            // Check this bin and neighbors
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    const nkey = `${bx+dx},${by+dy}`;
+                    if (!bins[nkey]) continue;
+                    for (const i of bins[key]) {
+                        for (const j of bins[nkey]) {
+                            if (j <= i) continue;
+                            if (particles[i].colorIndex !== particles[j].colorIndex) continue;
+                            const d = dist(particles[i].x, particles[i].y, particles[j].x, particles[j].y);
+                            if (d < 100) {
+                                const c = particles[i].trueColor;
+                                // Also show connections for revealed particles
+                                const revealBoost = Math.max(particles[i].revealAmount, particles[j].revealAmount) * 0.2;
+                                const a = (connectionOpacity + revealBoost) * (1 - d / 100);
+                                ctx.strokeStyle = `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a})`;
+                                ctx.lineWidth = 0.5;
+                                ctx.beginPath();
+                                ctx.moveTo(particles[i].x, particles[i].y);
+                                ctx.lineTo(particles[j].x, particles[j].y);
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Update and draw particles
+    for (const p of particles) {
+        p.update(dt, gf);
+    }
+    // Draw in reverse so earlier particles are on top
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].draw();
+    }
+
+    // Update disruptions
+    disruptions = disruptions.filter(d => {
+        d.draw();
+        return d.update(dt);
+    });
+
+    // Phase label
+    phaseLabel.textContent = getPhaseLabel();
+
+    requestAnimationFrame(animate);
+}
+
+// Events
+window.addEventListener('resize', () => {
+    resize();
+    // Reassign grid positions
+    for (const p of particles) {
+        p.assignGrid();
+    }
+});
+
+canvas.addEventListener('click', (e) => {
+    disruptions.push(new Disruption(e.clientX, e.clientY));
+});
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    disruptions.push(new Disruption(touch.clientX, touch.clientY));
+});
+
+intro.addEventListener('click', () => {
+    intro.classList.add('faded');
+    started = true;
+    lastTime = performance.now();
+});
+
+// Init
+init();
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
