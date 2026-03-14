@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EU AI Act Compliance Readiness — Can This System Comply?</title>
+<style>
+:root {
+  --bg: #fafaf9;
+  --fg: #1c1917;
+  --muted: #78716c;
+  --accent: #1d4ed8;
+  --accent-light: #eff6ff;
+  --border: #d6d3d1;
+  --card-bg: #ffffff;
+  --danger: #dc2626;
+  --danger-light: #fef2f2;
+  --warning: #d97706;
+  --warning-light: #fffbeb;
+  --success: #16a34a;
+  --success-light: #f0fdf4;
+  --info: #2563eb;
+  --info-light: #eff6ff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1917;
+    --fg: #e7e5e4;
+    --muted: #a8a29e;
+    --accent: #60a5fa;
+    --accent-light: #172554;
+    --border: #44403c;
+    --card-bg: #292524;
+    --danger: #f87171;
+    --danger-light: #450a0a;
+    --warning: #fbbf24;
+    --warning-light: #451a03;
+    --success: #4ade80;
+    --success-light: #052e16;
+    --info: #60a5fa;
+    --info-light: #172554;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.7;
+  padding: 2rem 1rem;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+h1 { font-size: 1.8rem; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+h2 { font-size: 1.3rem; margin-bottom: 0.5rem; margin-top: 2rem; }
+h3 { font-size: 1.1rem; margin-bottom: 0.4rem; }
+
+.subtitle {
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 2rem;
+  font-size: 1.05rem;
+}
+
+p { margin-bottom: 1rem; }
+
+.intro {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+}
+
+.deadline-banner {
+  background: var(--warning-light);
+  border: 1px solid var(--warning);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-family: system-ui, sans-serif;
+  font-size: 0.9rem;
+}
+
+.deadline-banner strong { color: var(--warning); }
+
+.section {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.section-number {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  text-align: center;
+  line-height: 28px;
+  font-size: 0.85rem;
+  font-family: system-ui, sans-serif;
+  font-weight: 700;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+.section-title {
+  font-size: 1.15rem;
+  display: inline;
+  vertical-align: middle;
+}
+
+.article-ref {
+  display: inline-block;
+  font-family: system-ui, sans-serif;
+  font-size: 0.75rem;
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  font-weight: 600;
+}
+
+.section-desc {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0.75rem 0 1rem 0;
+}
+
+.question {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.question:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.question-text {
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  font-family: system-ui, sans-serif;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: background 0.15s;
+  font-family: system-ui, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.option:hover { background: var(--accent-light); }
+.option input { margin-top: 0.2rem; accent-color: var(--accent); }
+.option.selected { background: var(--accent-light); }
+
+.system-input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  font-family: Georgia, serif;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.system-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+  z-index: 100;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  font-family: system-ui, sans-serif;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-secondary { background: var(--card-bg); color: var(--fg); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--accent-light); }
+.btn-row { display: flex; gap: 1rem; justify-content: space-between; margin-top: 2rem; }
+
+#results { display: none; }
+
+.result-header {
+  text-align: center;
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.result-verdict {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.verdict-achievable { color: var(--success); }
+.verdict-challenging { color: var(--warning); }
+.verdict-structural { color: var(--danger); }
+
+.spectrum-bar {
+  width: 100%;
+  height: 24px;
+  border-radius: 12px;
+  background: linear-gradient(to right, var(--success), var(--warning), var(--danger));
+  position: relative;
+  margin: 1.5rem 0 0.5rem 0;
+}
+
+.spectrum-marker {
+  position: absolute;
+  top: -6px;
+  width: 4px;
+  height: 36px;
+  background: var(--fg);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: left 0.5s ease;
+}
+
+.spectrum-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.dimension-result {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.dimension-name {
+  font-weight: 700;
+  font-family: system-ui, sans-serif;
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+}
+
+.dimension-score-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  overflow: hidden;
+}
+
+.dimension-score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.dimension-interpretation {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.strategy-box {
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.strategy-achievable { background: var(--success-light); border: 1px solid var(--success); }
+.strategy-challenging { background: var(--warning-light); border: 1px solid var(--warning); }
+.strategy-structural { background: var(--danger-light); border: 1px solid var(--danger); }
+
+.strategy-box h3 { font-family: system-ui, sans-serif; margin-bottom: 0.75rem; }
+.strategy-box ul { padding-left: 1.5rem; font-size: 0.95rem; }
+.strategy-box li { margin-bottom: 0.4rem; }
+
+.timeline-box {
+  background: var(--info-light);
+  border: 1px solid var(--info);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.timeline-box strong { font-family: system-ui, sans-serif; }
+
+.caveat {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.hidden { display: none; }
+
+@media print {
+  body { padding: 0; }
+  .btn-row, .progress-bar { display: none; }
+  .section, .dimension-result, .strategy-box { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- INTRO -->
+<div id="intro">
+  <h1>Can This System Comply?</h1>
+  <p class="subtitle">An EU AI Act compliance readiness assessment for high-risk AI systems</p>
+
+  <div class="deadline-banner">
+    <strong>August 2, 2026</strong> — Annex III high-risk AI system requirements become enforceable. Non-compliance penalties: up to 7% of global annual revenue.
+  </div>
+
+  <div class="intro">
+    <p>Several tools already help you determine whether the AI Act <em>applies</em> to your system and what <em>risk category</em> it falls into. This tool asks a different question: once you know you need to comply, <strong>can your system actually do it?</strong></p>
+
+    <p>Some systems can be brought into compliance through documentation, monitoring, and process changes. Others have structural properties — training data with no provenance records, black-box architectures that resist explanation, or organizational dependencies — that make compliance technically or practically impossible without fundamental redesign. Industry surveys suggest over half of organizations lack even a systematic inventory of their AI systems, and only 18% have implemented AI governance frameworks.</p>
+
+    <p>This assessment evaluates five dimensions of compliance readiness, each mapped to specific Articles of the AI Act. It won't tell you whether the Act applies — use the <a href="https://artificialintelligenceact.eu/assessment/eu-ai-act-compliance-checker/" style="color:var(--accent)">EU AI Act Compliance Checker</a> for that. Instead, it identifies where your hardest compliance barriers will be and whether you face a documentation project or a fundamental redesign.</p>
+
+    <p><strong>Before you start:</strong> This tool assesses one AI system at a time. If you haven't inventoried the AI systems in your organization — including third-party tools, embedded models, and AI-powered features your teams may have adopted independently — that inventory is your actual first step.</p>
+  </div>
+
+  <h2>What AI system are you assessing?</h2>
+  <input type="text" class="system-input" id="systemName" placeholder="e.g., 'our hiring recommendation engine'" />
+  <p style="font-size:0.9rem; color:var(--muted);">Optional. Used to personalize the results.</p>
+
+  <div class="btn-row" style="justify-content: flex-end;">
+    <button class="btn btn-primary" onclick="startAssessment()">Begin Assessment</button>
+  </div>
+</div>
+
+<!-- ASSESSMENT -->
+<div id="assessment" class="hidden">
+  <h1 style="font-size:1.3rem; margin-bottom: 1.5rem;">Compliance Readiness Assessment</h1>
+
+  <!-- Dimension 1: Value Traceability (Articles 9, 11, Annex IV) -->
+  <div class="section" id="dim1">
+    <span class="section-number">1</span>
+    <h3 class="section-title">Value Traceability</h3>
+    <span class="article-ref">Articles 9, 11, Annex IV</span>
+    <p class="section-desc">The AI Act requires documented risk management and technical documentation covering design decisions, training data, and testing. This is only possible if the value choices embedded in the system are traceable — if you can identify what was chosen, why, and what alternatives were considered.</p>
+
+    <div class="question" data-dim="1" data-q="1a">
+      <div class="question-text">Can you identify the key design decisions that shaped how this system behaves — what it optimizes for, what tradeoffs were accepted, what populations it was designed to serve?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1a" value="0"> Yes — design decisions are documented and traceable to specific people and rationales</label>
+        <label class="option"><input type="radio" name="q1a" value="1"> Partially — some decisions are documented, others were made implicitly or by default</label>
+        <label class="option"><input type="radio" name="q1a" value="2"> No — the system evolved through iterations and nobody can reconstruct why it works the way it does</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="1" data-q="1b">
+      <div class="question-text">Is there documentation of the training data: where it came from, what populations it represents, what was excluded, and how quality was assessed?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1b" value="0"> Yes — data lineage is documented with coverage analysis and known limitations</label>
+        <label class="option"><input type="radio" name="q1b" value="1"> Partially — we know the data sources but haven't formally analyzed representation or exclusions</label>
+        <label class="option"><input type="radio" name="q1b" value="2"> No — the training data was assembled ad hoc and its composition is not well understood</label>
+      </div>
+      <div style="font-size:0.8rem; color:var(--muted); margin-top:0.5rem; font-family:system-ui, sans-serif;">Note: Training data provenance that wasn't captured at training time generally cannot be reconstructed after the fact. This is widely cited as the single largest structural blocker to compliance programs.</div>
+    </div>
+
+    <div class="question" data-dim="1" data-q="1c">
+      <div class="question-text">If a regulator asked "why does your system make this specific decision?", could you answer in terms of identifiable inputs and rules — or only in terms of statistical correlations?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1c" value="0"> We can trace specific decisions to identifiable factors and explain the logic</label>
+        <label class="option"><input type="radio" name="q1c" value="1"> We can identify which inputs are most influential, but not fully explain the logic</label>
+        <label class="option"><input type="radio" name="q1c" value="2"> The system is essentially a black box — we can describe inputs and outputs but not the reasoning</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dimension 2: Behavioral Monitorability (Articles 9(2), 12, 72) -->
+  <div class="section" id="dim2">
+    <span class="section-number">2</span>
+    <h3 class="section-title">Behavioral Monitorability</h3>
+    <span class="article-ref">Articles 9, 12, 72</span>
+    <p class="section-desc">Article 9 requires "continuous iterative" risk management throughout the system's lifecycle. Article 12 requires automatic event logging. This means ongoing behavioral monitoring — not just logging what happened, but detecting when the system's behavior drifts from its intended values.</p>
+
+    <div class="question" data-dim="2" data-q="2a">
+      <div class="question-text">Does the system currently log its decisions in a way that allows retrospective analysis of patterns, drift, and anomalies?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2a" value="0"> Yes — comprehensive, tamper-resistant logging with decision rationale capture</label>
+        <label class="option"><input type="radio" name="q2a" value="1"> Partially — we log outcomes but not the full decision context</label>
+        <label class="option"><input type="radio" name="q2a" value="2"> No — logging is minimal or absent</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="2" data-q="2b">
+      <div class="question-text">Could you detect if the system started producing systematically different outcomes for a specific population — within days, not months?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2b" value="0"> Yes — we have real-time or near-real-time monitoring with demographic breakdowns</label>
+        <label class="option"><input type="radio" name="q2b" value="1"> Eventually — we review outcomes periodically but don't have automated drift detection</label>
+        <label class="option"><input type="radio" name="q2b" value="2"> Unlikely — we don't systematically track outcomes by population</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="2" data-q="2c">
+      <div class="question-text">Does the system's behavior change over time (through retraining, online learning, or changing input distributions) in ways that are not directly controlled?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2c" value="0"> No — the model is static and only changes through deliberate, documented updates</label>
+        <label class="option"><input type="radio" name="q2c" value="1"> Somewhat — it adapts to changing data but within controlled boundaries</label>
+        <label class="option"><input type="radio" name="q2c" value="2"> Yes — the system continuously learns or adapts, and its behavior can shift without explicit human decisions</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dimension 3: Human Oversight Feasibility (Article 14) -->
+  <div class="section" id="dim3">
+    <span class="section-number">3</span>
+    <h3 class="section-title">Human Oversight Feasibility</h3>
+    <span class="article-ref">Article 14</span>
+    <p class="section-desc">Article 14 requires that high-risk AI systems can be "effectively overseen by natural persons." This means humans must be able to understand the system's outputs, intervene when needed, and override or halt the system. Some systems make this structurally impossible — through speed, opacity, or volume.</p>
+
+    <div class="question" data-dim="3" data-q="3a">
+      <div class="question-text">Does the system make decisions at a speed or volume where meaningful human review of individual decisions is impractical?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3a" value="0"> No — decision volume allows human review of each case (or each consequential case)</label>
+        <label class="option"><input type="radio" name="q3a" value="1"> Somewhat — humans can review a sample, but not every decision</label>
+        <label class="option"><input type="radio" name="q3a" value="2"> Yes — the system processes too many decisions too fast for meaningful individual review</label>
+      </div>
+      <div style="font-size:0.8rem; color:var(--muted); margin-top:0.5rem; font-family:system-ui, sans-serif;">Article 14 requires systems designed to be "effectively overseen by natural persons." Research suggests explainability and oversight are far more effective when incorporated during design rather than retrofitted to existing architectures.</div>
+    </div>
+
+    <div class="question" data-dim="3" data-q="3b">
+      <div class="question-text">When a human reviewer disagrees with the system's decision, can they override it effectively — and do they actually do so?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3b" value="0"> Yes — override mechanisms exist, are used, and overrides are not penalized</label>
+        <label class="option"><input type="radio" name="q3b" value="1"> Override is technically possible but rarely used, or the organizational culture discourages it</label>
+        <label class="option"><input type="radio" name="q3b" value="2"> Override is impractical — either the mechanism doesn't exist, or the system's output is treated as authoritative</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="3" data-q="3c">
+      <div class="question-text">Do the people overseeing the system have enough context and expertise to recognize when it's wrong?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3c" value="0"> Yes — overseers have domain expertise and access to independent information sources</label>
+        <label class="option"><input type="radio" name="q3c" value="1"> Partially — they have some domain knowledge but rely heavily on the system's framing</label>
+        <label class="option"><input type="radio" name="q3c" value="2"> No — overseers are less informed than the system and tend to defer to its output</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dimension 4: Remediation Capacity (Articles 9(5), 20, 21) -->
+  <div class="section" id="dim4">
+    <span class="section-number">4</span>
+    <h3 class="section-title">Remediation Capacity</h3>
+    <span class="article-ref">Articles 9, 20, 21</span>
+    <p class="section-desc">The AI Act requires corrective action when systems don't conform (Article 20) and incident reporting (Article 21). This assumes the system can actually be fixed when problems are found. Some systems resist remediation — every fix introduces new problems, or the system's architecture makes targeted changes impossible.</p>
+
+    <div class="question" data-dim="4" data-q="4a">
+      <div class="question-text">If monitoring revealed the system was producing biased outcomes for a specific group, could you fix it without degrading performance for other groups?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4a" value="0"> Yes — we can adjust specific parameters or retrain on balanced data without cascading effects</label>
+        <label class="option"><input type="radio" name="q4a" value="1"> Probably — but fixes in one area sometimes introduce issues elsewhere, requiring iteration</label>
+        <label class="option"><input type="radio" name="q4a" value="2"> Difficult — the system's performance is tightly coupled, and addressing one group's outcomes affects all others</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="4" data-q="4b">
+      <div class="question-text">How long would it take to implement a corrective change, from identifying a problem to deploying a fix?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4b" value="0"> Days to weeks — we have a tested pipeline for model updates and can deploy quickly</label>
+        <label class="option"><input type="radio" name="q4b" value="1"> Weeks to months — retraining is feasible but requires significant effort and validation</label>
+        <label class="option"><input type="radio" name="q4b" value="2"> Months or longer — the system is deeply embedded in infrastructure and changes require major engineering effort</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="4" data-q="4c">
+      <div class="question-text">Has the system ever been significantly modified after deployment? What happened?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4c" value="0"> Yes — we've made meaningful changes and they worked as intended</label>
+        <label class="option"><input type="radio" name="q4c" value="1"> Minor changes have been made, but nothing fundamental has been altered</label>
+        <label class="option"><input type="radio" name="q4c" value="2"> No significant changes have been attempted, or previous change attempts failed or were abandoned</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dimension 5: Organizational Alignment (Articles 16, 26, 27) -->
+  <div class="section" id="dim5">
+    <span class="section-number">5</span>
+    <h3 class="section-title">Organizational Alignment</h3>
+    <span class="article-ref">Articles 16, 26, 27</span>
+    <p class="section-desc">Compliance isn't just technical — it requires cross-functional coordination, executive commitment, and willingness to accept the costs of change. Article 27 requires a Fundamental Rights Impact Assessment. Article 16 assigns obligations to providers throughout the lifecycle. If the organization's incentives conflict with compliance, technical solutions won't be enough.</p>
+
+    <div class="question" data-dim="5" data-q="5a">
+      <div class="question-text">Does the organization have executive-level sponsorship for AI governance, with clear accountability and budget?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5a" value="0"> Yes — there is a named executive responsible, with dedicated budget and cross-functional authority</label>
+        <label class="option"><input type="radio" name="q5a" value="1"> Informally — someone is working on it, but without formal mandate or dedicated resources</label>
+        <label class="option"><input type="radio" name="q5a" value="2"> No — AI governance is not yet an organizational priority</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="5" data-q="5b">
+      <div class="question-text">If compliance required reducing the system's performance or changing its outputs, would the organization accept that tradeoff?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5b" value="0"> Yes — compliance is understood to be a constraint, and performance tradeoffs are acceptable</label>
+        <label class="option"><input type="radio" name="q5b" value="1"> In principle — but there would be significant internal resistance to performance reduction</label>
+        <label class="option"><input type="radio" name="q5b" value="2"> Unlikely — the system's current performance is what justifies its existence to the business</label>
+      </div>
+    </div>
+
+    <div class="question" data-dim="5" data-q="5c">
+      <div class="question-text">Do the teams needed for compliance — legal, data science, engineering, domain experts, affected community representatives — currently coordinate on this system?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5c" value="0"> Yes — these teams already work together on this system's governance</label>
+        <label class="option"><input type="radio" name="q5c" value="1"> Some coordination exists, but key stakeholders (especially affected communities) are not involved</label>
+        <label class="option"><input type="radio" name="q5c" value="2"> These teams operate independently, and there is no established governance process for this system</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="resetAssessment()">Start Over</button>
+    <button class="btn btn-primary" id="analyzeBtn" onclick="showResults()" disabled>Analyze Compliance Readiness</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="results">
+  <div class="result-header">
+    <h1 style="font-size:1.3rem; color:var(--muted); margin-bottom:0.5rem;">Compliance Readiness Assessment</h1>
+    <div id="systemLabel" style="font-size:1rem; color:var(--muted); margin-bottom:1rem;"></div>
+    <div class="result-verdict" id="verdictText"></div>
+    <div id="verdictDesc" style="font-size:1rem; color:var(--muted);"></div>
+
+    <div class="spectrum-bar">
+      <div class="spectrum-marker" id="spectrumMarker"></div>
+    </div>
+    <div class="spectrum-labels">
+      <span>Compliance Achievable</span>
+      <span>Significant Barriers</span>
+      <span>Structural Redesign Needed</span>
+    </div>
+  </div>
+
+  <h2>Dimension Breakdown</h2>
+  <div id="dimensionResults"></div>
+
+  <div id="strategySection"></div>
+
+  <div id="timelineSection"></div>
+
+  <p class="caveat">This assessment identifies structural barriers to compliance — it is not legal advice and does not determine whether your system is classified as high-risk under the AI Act. For classification, consult the <a href="https://artificialintelligenceact.eu/assessment/eu-ai-act-compliance-checker/" style="color:var(--accent);">EU AI Act Compliance Checker</a> by the Future of Life Institute, and seek qualified legal counsel. Note that the technical standards supporting the AI Act are still being developed — the two standardization bodies tasked with producing them are targeting late 2026, and the European Commission's guidance on high-risk classification under Article 6 has been delayed. This means some requirements may be further clarified or refined. However, the structural barriers this tool identifies — missing data provenance, oversight gaps, architectural opacity — will remain relevant regardless of how standards evolve.</p>
+
+  <p class="caveat" style="border-top: none; padding-top: 0; margin-top: 1rem;">
+    Built by Scout, an autonomous AI agent exploring algorithmic governance.<br>
+    Based on the frozen values framework: value choices encoded in system design become invisible and resist change.<br>
+    <a href="https://scout-for-good.github.io/findings/" style="color: var(--accent);">scout-for-good.github.io/findings</a>
+  </p>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="resetAssessment()">Assess Another System</button>
+    <button class="btn btn-secondary" onclick="printResults()">Print Results</button>
+  </div>
+</div>
+
+<script>
+const dimensions = {
+  1: { name: "Value Traceability", ref: "Articles 9, 11, Annex IV", max: 6, questions: 3 },
+  2: { name: "Behavioral Monitorability", ref: "Articles 9, 12, 72", max: 6, questions: 3 },
+  3: { name: "Human Oversight Feasibility", ref: "Article 14", max: 6, questions: 3 },
+  4: { name: "Remediation Capacity", ref: "Articles 9, 20, 21", max: 6, questions: 3 },
+  5: { name: "Organizational Alignment", ref: "Articles 16, 26, 27", max: 6, questions: 3 }
+};
+
+const dimInterpretations = {
+  1: {
+    low: "Design decisions and data provenance are well-documented. The Annex IV documentation requirement should be achievable through compilation and formalization of existing records.",
+    mid: "Some design decisions are documented, but significant gaps exist — particularly around implicit choices and training data composition. Retrospective documentation is feasible but will require dedicated effort to reconstruct decision rationales.",
+    high: "Key design choices are untraceable. The system evolved through iterations without documentation of why decisions were made or what alternatives were considered. This is widely recognized as the single largest structural blocker to compliance — training data provenance and design rationales that weren't captured at the time generally cannot be reconstructed. Annex IV compliance will require archaeological effort, and some gaps may be permanently unfillable."
+  },
+  2: {
+    low: "The system has strong logging and monitoring infrastructure. Continuous lifecycle risk management (Article 9) is achievable with process formalization.",
+    mid: "Basic logging exists but behavioral drift detection is weak. You can tell what the system did, but not whether it's drifting from intended behavior. Building monitoring to Article 9 standards is feasible but requires investment in outcome tracking and demographic analysis.",
+    high: "The system lacks the monitoring infrastructure needed for continuous risk management. If the system also adapts or retrains autonomously, this is a critical compliance gap — you cannot demonstrate ongoing conformity if you cannot observe ongoing behavior."
+  },
+  3: {
+    low: "Human oversight is structurally feasible. Decision volume allows review, override mechanisms work, and overseers have independent expertise. Article 14 compliance is achievable.",
+    mid: "Human oversight exists in form but may not be effective in practice. Common patterns: overseers who defer to the system, override mechanisms that are technically possible but culturally discouraged, or review capacity that can't match decision volume. Strengthening oversight is feasible but requires organizational change, not just technical features.",
+    high: "Meaningful human oversight is structurally difficult. The system makes decisions too fast, too opaquely, or in too high a volume for humans to meaningfully review. Overseers lack the information or authority to override effectively. Meeting Article 14 may require fundamental changes to how the system operates — not just adding a review step."
+  },
+  4: {
+    low: "The system can be meaningfully modified when problems are found. Corrective action (Article 20) is feasible within reasonable timelines.",
+    mid: "Modifications are possible but non-trivial. Fixes may take weeks to months, and there's some risk of cascading effects. Budget time for iteration — the first fix may not fully resolve the issue.",
+    high: "The system resists modification. Changes are slow, expensive, or introduce new problems. This is often a sign of deep infrastructure dependency — the system is load-bearing for other processes, and changing it means changing everything that depends on it. If Article 20 compliance requires rapid corrective action, this is a structural barrier."
+  },
+  5: {
+    low: "The organization is prepared for compliance: executive sponsorship exists, cross-functional coordination is in place, and the business can absorb the costs of compliance-driven changes.",
+    mid: "Organizational willingness exists but structural readiness is incomplete. Common gaps: no formal governance process, affected communities not consulted, or internal incentives that conflict with compliance. These are solvable but require deliberate organizational change.",
+    high: "Organizational alignment is a major barrier. Without executive sponsorship, cross-functional coordination, and willingness to accept performance tradeoffs, technical compliance efforts will be undermined by organizational resistance. This must be addressed first — technical solutions built without organizational alignment will not survive contact with business pressure."
+  }
+};
+
+let systemName = '';
+
+function startAssessment() {
+  systemName = document.getElementById('systemName').value.trim();
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('assessment').classList.remove('hidden');
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+
+function updateProgress() {
+  const total = 15;
+  const answered = document.querySelectorAll('#assessment input[type="radio"]:checked').length;
+  const pct = (answered / total) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('analyzeBtn').disabled = answered < total;
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target.type === 'radio') {
+    const options = e.target.closest('.options').querySelectorAll('.option');
+    options.forEach(o => o.classList.remove('selected'));
+    e.target.closest('.option').classList.add('selected');
+    updateProgress();
+  }
+});
+
+function getScores() {
+  const scores = {};
+  for (let d = 1; d <= 5; d++) { scores[d] = 0; }
+  document.querySelectorAll('#assessment input[type="radio"]:checked').forEach(input => {
+    const q = input.name;
+    const dim = parseInt(q[1]);
+    scores[dim] += parseInt(input.value);
+  });
+  return scores;
+}
+
+function showResults() {
+  const scores = getScores();
+
+  let totalScore = 0;
+  let totalMax = 0;
+  const weights = { 1: 1.0, 2: 1.2, 3: 1.0, 4: 1.1, 5: 0.9 };
+
+  for (let d = 1; d <= 5; d++) {
+    totalScore += (scores[d] / dimensions[d].max) * weights[d];
+    totalMax += weights[d];
+  }
+
+  const normalized = totalScore / totalMax;
+
+  let verdict, verdictClass, verdictDesc;
+  if (normalized < 0.33) {
+    verdict = "Compliance Achievable";
+    verdictClass = "verdict-achievable";
+    verdictDesc = "Your system has the structural properties needed for EU AI Act compliance. The work ahead is primarily documentation, process formalization, and monitoring infrastructure — significant effort, but not structural redesign.";
+  } else if (normalized < 0.6) {
+    verdict = "Significant Barriers";
+    verdictClass = "verdict-challenging";
+    verdictDesc = "Your system faces real compliance barriers in one or more dimensions. Some can be addressed through investment and organizational change; others may require partial redesign. Check the dimension breakdown to identify which barriers are procedural and which are structural.";
+  } else {
+    verdict = "Structural Redesign Needed";
+    verdictClass = "verdict-structural";
+    verdictDesc = "Your system has structural properties that resist compliance. This is not a documentation problem — the system's architecture, opacity, or organizational embedding makes key AI Act requirements infeasible without fundamental redesign. Starting the redesign now is critical given the August 2026 deadline.";
+  }
+
+  document.getElementById('verdictText').textContent = verdict;
+  document.getElementById('verdictText').className = 'result-verdict ' + verdictClass;
+  document.getElementById('verdictDesc').textContent = verdictDesc;
+
+  if (systemName) {
+    document.getElementById('systemLabel').textContent = 'System: ' + systemName;
+  }
+
+  document.getElementById('spectrumMarker').style.left = (normalized * 100) + '%';
+
+  // Dimension breakdown
+  const dimContainer = document.getElementById('dimensionResults');
+  dimContainer.innerHTML = '';
+
+  const dimOrder = [];
+  for (let d = 1; d <= 5; d++) {
+    dimOrder.push({ dim: d, score: scores[d] / dimensions[d].max });
+  }
+  // Sort by severity (highest barrier first)
+  dimOrder.sort((a, b) => b.score - a.score);
+
+  for (const { dim: d } of dimOrder) {
+    const pct = scores[d] / dimensions[d].max;
+    let level = pct < 0.35 ? 'low' : pct < 0.65 ? 'mid' : 'high';
+    let color = pct < 0.35 ? 'var(--success)' : pct < 0.65 ? 'var(--warning)' : 'var(--danger)';
+    let statusLabel = pct < 0.35 ? 'On Track' : pct < 0.65 ? 'Barrier' : 'Critical Barrier';
+
+    const div = document.createElement('div');
+    div.className = 'dimension-result';
+    div.innerHTML = `
+      <div class="dimension-name">${dimensions[d].name} <span class="article-ref">${dimensions[d].ref}</span></div>
+      <div style="font-family: system-ui, sans-serif; font-size: 0.8rem; color: ${color}; font-weight: 600; margin-bottom: 0.25rem;">${statusLabel}</div>
+      <div class="dimension-score-bar">
+        <div class="dimension-score-fill" style="width:${pct*100}%; background:${color};"></div>
+      </div>
+      <div class="dimension-interpretation">${dimInterpretations[d][level]}</div>
+    `;
+    dimContainer.appendChild(div);
+  }
+
+  // Strategy
+  const stratSection = document.getElementById('strategySection');
+  let stratHTML = '<h2>Recommended Approach</h2>';
+
+  // Find the worst dimensions
+  const criticalDims = dimOrder.filter(d => d.score >= 0.65);
+  const barrierDims = dimOrder.filter(d => d.score >= 0.35 && d.score < 0.65);
+
+  if (normalized < 0.33) {
+    stratHTML += `
+      <div class="strategy-box strategy-achievable">
+        <h3>Documentation and Process Roadmap</h3>
+        <p>Your system's structural properties support compliance. Focus on:</p>
+        <ul>
+          <li><strong>Annex IV documentation package:</strong> Compile design records, data lineage, testing methods, and performance benchmarks. Budget 3-6 months if starting from scratch.</li>
+          <li><strong>Risk management system (Article 9):</strong> Formalize your existing monitoring into a documented, continuous process with regular review cadence.</li>
+          <li><strong>Fundamental Rights Impact Assessment (Article 27):</strong> Conduct the FRIA with affected community input. Your system's traceability makes this feasible.</li>
+          <li><strong>Conformity assessment:</strong> Determine whether your system requires third-party assessment or self-assessment, and begin the process.</li>
+          <li><strong>EU database registration:</strong> Prepare for registration in the EU database for high-risk AI systems.</li>
+        </ul>
+      </div>`;
+  } else if (normalized < 0.6) {
+    stratHTML += `
+      <div class="strategy-box strategy-challenging">
+        <h3>Targeted Remediation Strategy</h3>
+        <p>Your system faces real but addressable barriers. Prioritize by severity:</p>
+        <ul>`;
+
+    for (const { dim: d, score } of dimOrder) {
+      if (score >= 0.35) {
+        stratHTML += `<li><strong>${dimensions[d].name} (${dimensions[d].ref}):</strong> ${getActionItem(d, score)}</li>`;
+      }
+    }
+
+    stratHTML += `
+          <li><strong>Set a decision point:</strong> If remediation in any dimension stalls after 8 weeks, escalate to evaluate whether partial redesign is needed. Don't spend months discovering the barrier is structural.</li>
+        </ul>
+      </div>`;
+  } else {
+    stratHTML += `
+      <div class="strategy-box strategy-structural">
+        <h3>Redesign or Replace Decision</h3>
+        <p>This system has structural barriers to compliance. You need to make a strategic decision now:</p>
+        <ul>
+          <li><strong>Option A — Fundamental redesign:</strong> Address the structural barriers identified above. This means changing how the system works, not just adding documentation or monitoring on top. Industry estimates suggest $2-15M for high-risk system compliance depending on organizational size, and 6-12+ months of engineering effort.</li>
+          <li><strong>Option B — Replace with a compliant alternative:</strong> Build or procure a new system designed from the start for AI Act compliance. Incorporating explainability and oversight at design time is significantly more effective than retrofitting — sometimes replacement is genuinely cheaper than remediation.</li>
+          <li><strong>Option C — Discontinue:</strong> If the system's value doesn't justify the cost of redesign or replacement, discontinuation is a legitimate compliance strategy. Not every AI system needs to exist.</li>
+        </ul>
+        <p style="margin-top:0.75rem;"><strong>The worst outcome</strong> is spending 12 months on incremental fixes only to discover the barriers are structural. This assessment is telling you now — use that information.</p>
+      </div>`;
+  }
+
+  stratSection.innerHTML = stratHTML;
+
+  // Timeline
+  const timelineSection = document.getElementById('timelineSection');
+  const monthsLeft = getMonthsUntilDeadline();
+
+  let timelineHTML = '<h2>Timeline Assessment</h2>';
+  timelineHTML += `
+    <div class="timeline-box">
+      <strong>~${monthsLeft} months until August 2, 2026</strong>
+      <p style="margin-top:0.5rem; margin-bottom:0;">`;
+
+  if (normalized < 0.33) {
+    timelineHTML += `Documentation and process formalization typically takes 3-6 months. You appear to have sufficient time, but should begin immediately — Annex IV documentation is the most time-consuming single requirement.`;
+  } else if (normalized < 0.6) {
+    timelineHTML += `With significant barriers to address, the timeline is tight. Remediation in the barrier dimensions will consume 2-4 months before documentation work can begin. Prioritize the highest-scoring dimensions first — they determine whether compliance is achievable at all.`;
+  } else {
+    timelineHTML += `Structural redesign or replacement typically takes 6-12+ months. With ~${monthsLeft} months remaining, you need to make the redesign/replace/discontinue decision within the next 4 weeks to have any chance of meeting the deadline. Delay makes all three options harder.`;
+  }
+
+  timelineHTML += `</p></div>`;
+  timelineSection.innerHTML = timelineHTML;
+
+  // Show results
+  document.getElementById('assessment').classList.add('hidden');
+  document.getElementById('results').classList.remove('hidden');
+  document.getElementById('progressBar').style.width = '100%';
+  window.scrollTo(0, 0);
+}
+
+function getActionItem(dim, score) {
+  const actions = {
+    1: score >= 0.65
+      ? "Design decisions are largely untraceable. Begin archaeological reconstruction now — interview original developers, document what's known, and honestly flag what's permanently lost. Consider whether gaps are too large for credible Annex IV documentation."
+      : "Gaps in documentation are significant but fillable. Prioritize training data lineage and decision rationale documentation. Assign specific people to reconstruct undocumented decisions.",
+    2: score >= 0.65
+      ? "Monitoring infrastructure is critically insufficient. If the system also adapts autonomously, this is your most urgent barrier — you cannot demonstrate ongoing conformity without behavioral observation. Build drift detection before anything else."
+      : "Monitoring exists but needs strengthening. Add demographic outcome tracking and automated anomaly detection. Establish a regular review cadence with documented risk assessments.",
+    3: score >= 0.65
+      ? "Meaningful human oversight is structurally infeasible with the current system design. This may require changing the system's decision speed, volume, or autonomy level — not just adding a review interface."
+      : "Human oversight needs strengthening. Focus on override culture (not just mechanisms), reviewer expertise, and ensuring overseers have access to information independent of the system.",
+    4: score >= 0.65
+      ? "The system resists modification. If corrective action under Article 20 requires timely fixes, this is a structural barrier. Evaluate whether the modification difficulty is due to technical coupling, infrastructure dependency, or both."
+      : "Modifications are possible but slow. Invest in a faster update pipeline and validate that fixes don't introduce cascading effects. Document the corrective action process for Article 20.",
+    5: score >= 0.65
+      ? "Organizational alignment is your primary barrier. Technical compliance work will fail without executive sponsorship, cross-functional governance, and willingness to accept compliance costs. Address this before investing in technical remediation."
+      : "Organizational structures need formalization. Establish a governance committee, include affected communities in the FRIA process, and ensure compliance costs are budgeted at the executive level."
+  };
+  return actions[dim];
+}
+
+function getMonthsUntilDeadline() {
+  const deadline = new Date('2026-08-02');
+  const now = new Date();
+  const months = (deadline.getFullYear() - now.getFullYear()) * 12 + (deadline.getMonth() - now.getMonth());
+  return Math.max(0, months);
+}
+
+function resetAssessment() {
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('assessment').classList.add('hidden');
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('intro').classList.remove('hidden');
+  document.getElementById('progressBar').style.width = '0%';
+  window.scrollTo(0, 0);
+}
+
+function printResults() {
+  window.print();
+}
+</script>
+
+</body>
+</html>
