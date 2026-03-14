@@ -3,38 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Wisdom Trap — How Incentives Shape Collective Intelligence</title>
+<title>The Wisdom Trap</title>
 <style>
 :root {
-  --bg: #fafaf8;
-  --fg: #1a1a1a;
-  --muted: #666;
-  --border: #ddd;
-  --accent: #2563eb;
-  --danger: #dc2626;
-  --success: #16a34a;
-  --panel-bg: #fff;
-  --factor-1: #e63946;
-  --factor-2: #457b9d;
-  --factor-3: #2a9d8f;
-  --factor-4: #e9c46a;
-  --factor-5: #f4a261;
-  --factor-6: #264653;
-  --factor-7: #6a4c93;
-  --factor-8: #1982c4;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1a1a1a;
-    --fg: #e8e8e8;
-    --muted: #999;
-    --border: #333;
-    --accent: #60a5fa;
-    --danger: #f87171;
-    --success: #4ade80;
-    --panel-bg: #242424;
-  }
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --border: #2a2d3a;
+  --text: #e8e8ec;
+  --text-dim: #8888a0;
+  --accent: #6c9bff;
+  --green: #4ade80;
+  --yellow: #fbbf24;
+  --red: #f87171;
+  --purple: #a78bfa;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -42,565 +23,482 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg);
-  color: var(--fg);
-  line-height: 1.6;
+  color: var(--text);
+  line-height: 1.5;
   min-height: 100vh;
+  display: flex;
+  justify-content: center;
 }
 
 .container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
+  max-width: 680px;
+  width: 100%;
+  padding: 1.5rem;
 }
 
-h1 {
-  font-size: 1.8rem;
+/* Screens */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* Title screen */
+.title-screen {
+  text-align: center;
+  padding-top: 15vh;
+}
+
+.title-screen h1 {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.title-screen .premise {
+  color: var(--text-dim);
+  max-width: 460px;
+  margin: 0 auto 2.5rem;
+  font-size: 1rem;
+}
+
+.btn {
+  padding: 0.7rem 1.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); color: #0f1117; border-color: var(--accent); font-weight: 600; }
+.btn.primary:hover { background: #8bb4ff; }
+
+/* Game screen */
+.hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.hud-metric {
+  text-align: center;
+}
+
+.hud-metric .value {
+  font-size: 1.4rem;
   font-weight: 700;
+  color: var(--text);
+}
+
+.hud-metric .label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Team grid */
+.team-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.team-section .section-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  margin-bottom: 0.75rem;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.5rem;
+}
+
+.analyst {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.4s ease;
+}
+
+.analyst-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: background 0.5s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.analyst-dot.rewarded {
+  transform: scale(1.15);
+  box-shadow: 0 0 12px currentColor;
+}
+
+.analyst-name {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Coverage bar */
+.coverage-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.coverage-bar {
+  display: flex;
+  gap: 2px;
+  height: 28px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.coverage-segment {
+  transition: flex 0.5s ease;
+  position: relative;
+  min-width: 2px;
+}
+
+.coverage-segment .seg-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(0,0,0,0.6);
+}
+
+/* Narrative */
+.narrative {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+  min-height: 80px;
+}
+
+.narrative p {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.narrative p:last-child { margin-bottom: 0; }
+
+.narrative .speaker {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.narrative .alert {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.narrative .good {
+  color: var(--green);
+  font-weight: 600;
+}
+
+/* Decision panel */
+.decisions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.decision-option {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.decision-option:hover { border-color: var(--accent); }
+
+.decision-option h3 {
+  font-size: 0.95rem;
   margin-bottom: 0.25rem;
 }
 
-.subtitle {
-  color: var(--muted);
-  font-size: 1rem;
-  margin-bottom: 2rem;
-  max-width: 700px;
-}
-
-/* Controls */
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  align-items: center;
-}
-
-.incentive-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.incentive-btn {
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--border);
-  border-radius: 6px;
-  background: var(--panel-bg);
-  color: var(--fg);
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.incentive-btn:hover { border-color: var(--accent); }
-.incentive-btn.active {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: white;
-}
-
-.action-btn {
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--border);
-  border-radius: 6px;
-  background: var(--panel-bg);
-  color: var(--fg);
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.action-btn:hover { border-color: var(--muted); }
-
-.action-btn.danger {
-  border-color: var(--danger);
-  color: var(--danger);
-}
-.action-btn.danger:hover {
-  background: var(--danger);
-  color: white;
-}
-
-.speed-control {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.speed-control input {
-  width: 80px;
-}
-
-/* Main display grid */
-.display-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-@media (max-width: 768px) {
-  .display-grid { grid-template-columns: 1fr; }
-}
-
-.panel {
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem;
-}
-
-.panel-title {
+.decision-option p {
   font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-  margin-bottom: 0.75rem;
+  color: var(--text-dim);
 }
 
-/* Agent grid */
-.agent-grid-canvas {
+.decision-option:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Accuracy chart */
+.chart-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.chart-container canvas {
   width: 100%;
-  aspect-ratio: 2 / 1;
+  height: 120px;
   display: block;
 }
 
-/* Charts */
-.chart-canvas {
-  width: 100%;
-  height: 200px;
-  display: block;
+/* End screen */
+.end-screen { text-align: center; padding-top: 8vh; }
+
+.end-screen h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+
+.stars { font-size: 2rem; margin: 1rem 0; letter-spacing: 0.2em; }
+
+.final-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 1.5rem 0;
 }
 
-/* Metrics bar */
-.metrics-bar {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+.final-stat .value { font-size: 1.8rem; font-weight: 700; }
+.final-stat .label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; }
+
+.insight-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.2rem;
+  margin: 1.5rem auto;
+  max-width: 520px;
+  text-align: left;
+}
+
+.insight-box h3 { font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--accent); }
+.insight-box p { font-size: 0.9rem; color: var(--text-dim); }
+
+.end-buttons { display: flex; gap: 0.75rem; justify-content: center; margin-top: 1.5rem; }
+
+/* Animations */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.shake { animation: shake 0.5s ease; }
+
+@keyframes flash-red {
+  0% { background: var(--surface); }
+  50% { background: #2a1010; }
+  100% { background: var(--surface); }
+}
+
+.flash-warning { animation: flash-red 0.8s ease; }
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.pop { animation: pop 0.3s ease; }
+
+/* Progress dots */
+.progress {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
   margin-bottom: 1.5rem;
 }
 
-@media (max-width: 600px) {
-  .metrics-bar { grid-template-columns: repeat(2, 1fr); }
-}
-
-.metric {
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  text-align: center;
-}
-
-.metric-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.metric-label {
-  font-size: 0.75rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Event log */
-.event-log {
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.event-log .panel-title { margin-bottom: 0.5rem; }
-
-.log-entries {
-  font-size: 0.8rem;
-  color: var(--muted);
-  max-height: 80px;
-  overflow-y: auto;
-  font-family: 'SF Mono', 'Fira Code', monospace;
-}
-
-.log-entry { margin-bottom: 0.2rem; }
-.log-entry .time { color: var(--accent); }
-
-/* Explainer */
-.explainer {
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.explainer h2 {
-  font-size: 1.1rem;
-  margin-bottom: 0.75rem;
-}
-
-.explainer p {
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin-bottom: 0.5rem;
-  max-width: 700px;
-}
-
-.explainer .highlight {
-  color: var(--fg);
-  font-weight: 500;
-}
-
-/* Footer */
-.footer {
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--muted);
-  padding: 2rem 0 1rem;
-  border-top: 1px solid var(--border);
-}
-
-.footer a { color: var(--accent); text-decoration: none; }
-.footer a:hover { text-decoration: underline; }
-
-/* Status indicator */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
-  padding: 0.3rem 0.7rem;
-  border-radius: 12px;
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-}
-
-.status-dot {
+.progress-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--success);
-  animation: pulse 2s infinite;
+  background: var(--border);
+  transition: background 0.3s;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
+.progress-dot.done { background: var(--green); }
+.progress-dot.current { background: var(--accent); width: 20px; border-radius: 4px; }
 
-.status-dot.paused {
-  background: var(--danger);
-  animation: none;
+/* Responsive */
+@media (max-width: 500px) {
+  .team-grid { grid-template-columns: repeat(4, 1fr); }
+  .analyst-dot { width: 32px; height: 32px; }
+  .hud { flex-wrap: wrap; gap: 0.5rem; }
+  .final-stats { gap: 1rem; }
 }
-
-/* Tooltip */
-.mode-description {
-  font-size: 0.85rem;
-  color: var(--muted);
-  padding: 0.75rem 1rem;
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  margin-bottom: 1.5rem;
-  min-height: 3.2rem;
-}
-
-.mode-description strong { color: var(--fg); }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>The Wisdom Trap</h1>
-  <p class="subtitle">How you reward individuals determines whether a group becomes wise or foolish. An interactive simulation based on research by Wang, Plotkin et al. (PNAS 2025).</p>
 
-  <div class="controls">
-    <div class="incentive-buttons">
-      <button class="incentive-btn active" data-mode="reformer" onclick="setMode('reformer')">Reformers</button>
-      <button class="incentive-btn" data-mode="expert" onclick="setMode('expert')">Experts</button>
-      <button class="incentive-btn" data-mode="niche" onclick="setMode('niche')">Niche Experts</button>
+<!-- TITLE SCREEN -->
+<div class="screen active" id="screen-title">
+  <div class="title-screen">
+    <h1>The Wisdom Trap</h1>
+    <p class="premise">You run a forecasting team. Each analyst watches a different piece of the puzzle. Together, they're smarter than any one of them alone — but only if you manage them right.</p>
+    <p class="premise" style="font-size:0.85rem">How you reward your team will determine whether they stay wise — or fall into the trap.</p>
+    <div style="margin-top: 1.5rem;">
+      <button class="btn primary" onclick="startGame()" tabindex="0" role="button" aria-label="Start game">Play</button>
     </div>
-    <button class="action-btn danger" onclick="shiftEnvironment()">Shift Environment</button>
-    <button class="action-btn" id="playPauseBtn" onclick="togglePlay()">Pause</button>
-    <button class="action-btn" onclick="resetSim()">Reset</button>
-    <div class="speed-control">
-      <label>Speed</label>
-      <input type="range" min="1" max="10" value="5" id="speedSlider" oninput="updateSpeed()">
+    <p style="color:var(--text-dim); font-size:0.75rem; margin-top:2rem;">~5 minutes. No install needed.</p>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen" id="screen-game">
+  <div class="progress" id="progress"></div>
+
+  <div class="hud">
+    <div class="hud-metric">
+      <div class="value" id="hud-accuracy">—</div>
+      <div class="label">Accuracy</div>
     </div>
-    <div class="status-badge">
-      <span class="status-dot" id="statusDot"></span>
-      <span id="statusText">Running</span>
+    <div class="hud-metric">
+      <div class="value" id="hud-coverage">—</div>
+      <div class="label">Coverage</div>
+    </div>
+    <div class="hud-metric">
+      <div class="value" id="hud-quarter">Q1</div>
+      <div class="label">Quarter</div>
+    </div>
+    <div class="hud-metric">
+      <div class="value" id="hud-score">0</div>
+      <div class="label">Score</div>
     </div>
   </div>
 
-  <div class="mode-description" id="modeDescription">
-    <strong>Reformer rewards:</strong> Agents are rewarded for improving the group's collective prediction — even if their own prediction is wrong. This maintains diversity because agents who attend to neglected factors get rewarded when their unique perspective corrects the group.
+  <div class="team-section">
+    <div class="section-label">Your Team — <span id="team-status">covering 6 sources</span></div>
+    <div class="team-grid" id="team-grid"></div>
   </div>
 
-  <div class="metrics-bar">
-    <div class="metric">
-      <div class="metric-value" id="metricAccuracy">—</div>
-      <div class="metric-label">Group Accuracy</div>
-    </div>
-    <div class="metric">
-      <div class="metric-value" id="metricDiversity">—</div>
-      <div class="metric-label">Diversity</div>
-    </div>
-    <div class="metric">
-      <div class="metric-value" id="metricRound">0</div>
-      <div class="metric-label">Round</div>
-    </div>
-    <div class="metric">
-      <div class="metric-value" id="metricShifts">0</div>
-      <div class="metric-label">Env. Shifts</div>
-    </div>
+  <div class="coverage-section">
+    <div class="section-label">Source Coverage</div>
+    <div class="coverage-bar" id="coverage-bar"></div>
   </div>
 
-  <div class="display-grid">
-    <div class="panel">
-      <div class="panel-title">Agent Attention (color = factor observed)</div>
-      <canvas class="agent-grid-canvas" id="agentCanvas"></canvas>
-    </div>
-    <div class="panel">
-      <div class="panel-title">Collective Accuracy Over Time</div>
-      <canvas class="chart-canvas" id="accuracyChart"></canvas>
-    </div>
-    <div class="panel">
-      <div class="panel-title">Diversity of Attention (Shannon Entropy)</div>
-      <canvas class="chart-canvas" id="diversityChart"></canvas>
-    </div>
-    <div class="panel">
-      <div class="panel-title">Factor Distribution</div>
-      <canvas class="chart-canvas" id="factorChart"></canvas>
-    </div>
+  <div class="chart-container">
+    <div class="section-label" style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-dim); margin-bottom:0.5rem;">Accuracy Over Time</div>
+    <canvas id="accuracy-chart"></canvas>
   </div>
 
-  <div class="event-log">
-    <div class="panel-title">Event Log</div>
-    <div class="log-entries" id="logEntries"></div>
-  </div>
+  <div class="narrative" id="narrative"></div>
 
-  <div class="explainer">
-    <h2>What's happening here?</h2>
-    <p>
-      <span class="highlight">The problem:</span> A group of 60 agents is trying to predict an outcome that depends on 8 hidden factors. Each agent can only observe one factor at a time. The group's prediction is the average of all individual predictions. If agents spread across all factors, the group can be collectively accurate even though no individual sees the whole picture.
-    </p>
-    <p>
-      <span class="highlight">The trap:</span> Agents learn socially — they tend to imitate successful peers. Under <strong>expert rewards</strong> (rewarding individually accurate agents), the most successful agent gets imitated until everyone watches the same factor. Diversity collapses. The group becomes collectively blind.
-    </p>
-    <p>
-      <span class="highlight">The escape:</span> Under <strong>reformer rewards</strong> (rewarding agents who improve the group prediction), agents attending to neglected factors are rewarded most — because their unique perspective corrects the group's blind spots. Diversity is maintained naturally.
-    </p>
-    <p>
-      <span class="highlight">Try it:</span> Start with "Reformers" and watch diversity stay high. Switch to "Experts" and watch it collapse. Hit "Shift Environment" to change the factor weights — reformer groups recover; expert groups can't, because they've lost the diversity they need.
+  <div class="decisions" id="decisions"></div>
+</div>
+
+<!-- END SCREEN -->
+<div class="screen" id="screen-end">
+  <div class="end-screen">
+    <h1 id="end-title">Game Over</h1>
+    <div class="stars" id="end-stars"></div>
+    <div class="final-stats" id="end-stats"></div>
+    <div class="insight-box" id="end-insight"></div>
+    <div class="end-buttons">
+      <button class="btn primary" onclick="location.reload()">Play Again</button>
+    </div>
+    <p style="color:var(--text-dim); font-size:0.75rem; margin-top:2rem;">
+      Based on "Individual incentives that promote collective intelligence" — Wang, Plotkin et al. (PNAS 2025).<br>
+      Built by Scout — an AI agent exploring how to be a force for good.
     </p>
   </div>
+</div>
 
-  <div class="explainer">
-    <h2>Why this matters</h2>
-    <p>
-      This isn't just about prediction markets. The same dynamic plays out whenever a group of people is trying to understand something complex: scientific communities, newsrooms, policy teams, open-source projects. <span class="highlight">The incentive structure determines whether the group gets smarter or just more confident.</span>
-    </p>
-    <p>
-      Rewarding individual accuracy feels meritocratic — reward the best, and the rest will follow. But "following" is exactly the problem. When everyone imitates the current best performer, the group loses the cognitive diversity it needs to handle a complex, shifting world.
-    </p>
-    <p>
-      The counterintuitive fix: reward people not for being right, but for <span class="highlight">making the group more right</span>. This is how prediction markets already work — profits come from correcting the collective price, not from having the most accurate private forecast.
-    </p>
-  </div>
-
-  <div class="footer">
-    <p>Based on "Individual incentives that promote collective intelligence" by Wang, Plotkin et al. (PNAS 2025).</p>
-    <p>Built by Scout — an autonomous AI agent exploring how to be a force for good.</p>
-  </div>
 </div>
 
 <script>
 // ============================================================
-// THE WISDOM TRAP — Collective Intelligence Simulation
+// THE WISDOM TRAP — A Management Game
 // ============================================================
 
-const CONFIG = {
-  numAgents: 60,
-  numFactors: 8,
-  socialLearningRate: 0.15,  // probability of considering switching per round
-  noise: 0.2,                // observation noise
-  historyLength: 200,
-  animInterval: 150,
-};
-
-const FACTOR_COLORS = [
-  '#e63946', '#457b9d', '#2a9d8f', '#e9c46a',
-  '#f4a261', '#264653', '#6a4c93', '#1982c4'
+const SOURCES = ['Markets', 'Policy', 'Tech', 'Climate', 'Social', 'Supply'];
+const SOURCE_COLORS = ['#e63946', '#457b9d', '#2a9d8f', '#e9c46a', '#f4a261', '#6a4c93'];
+const NAMES = [
+  'Alex', 'Jordan', 'Sam', 'Casey', 'Morgan', 'Riley',
+  'Taylor', 'Quinn', 'Drew', 'Blake', 'Avery', 'Sage',
+  'Reese', 'Finley', 'Harper', 'Rowan'
 ];
+const NUM_ANALYSTS = 16;
+const ROUNDS_PER_QUARTER = 6;
+const NUM_QUARTERS = 5;
+const TOTAL_ROUNDS = ROUNDS_PER_QUARTER * NUM_QUARTERS;
+const SOCIAL_LEARNING_RATE = 0.25;
 
-// State
-let state = null;
-let running = true;
-let speed = 5;
-let animTimer = null;
+// Game state
+let G = null;
 
-function initState() {
-  // Factor weights (what actually matters in the environment)
-  const weights = [];
-  for (let i = 0; i < CONFIG.numFactors; i++) {
-    weights.push(0.5 + Math.random() * 1.5);
-  }
-  // Normalize
+function initGame() {
+  // Factor weights (what actually matters)
+  const weights = SOURCES.map(() => 0.5 + Math.random());
   const wSum = weights.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < weights.length; i++) weights[i] /= wSum;
+  weights.forEach((_, i) => weights[i] /= wSum);
 
-  // Agents — each attends to one factor, spread evenly initially
-  const agents = [];
-  for (let i = 0; i < CONFIG.numAgents; i++) {
-    agents.push({
-      factor: i % CONFIG.numFactors,
+  // Analysts — spread evenly across sources
+  const analysts = [];
+  for (let i = 0; i < NUM_ANALYSTS; i++) {
+    analysts.push({
+      name: NAMES[i],
+      source: i % SOURCES.length,
       reward: 0,
-      prediction: 0,
-      contribution: 0,  // how much this agent improved the group prediction
     });
   }
 
   return {
-    agents,
+    analysts,
     weights,
-    mode: 'reformer',
     round: 0,
-    shifts: 0,
-    history: {
-      accuracy: [],
-      diversity: [],
-      factorCounts: [],
-    },
-    logs: [],
+    quarter: 0,
+    policy: null,  // 'star' | 'team' | 'niche'
+    score: 0,
+    history: [],
+    policyHistory: [],
+    phase: 'intro', // intro, play, decide, event, end
+    shiftCount: 0,
+    peakDiversity: 1,
+    lowestDiversity: 1,
+    decisionsLog: [],
+    autoTimer: null,
   };
 }
 
-function getFactorValues() {
-  // Each factor produces a random value each round
-  const vals = [];
-  for (let i = 0; i < CONFIG.numFactors; i++) {
-    vals.push((Math.random() - 0.5) * 2); // uniform [-1, 1]
-  }
-  return vals;
-}
+// ---- Simulation ----
 
-function getTrueOutcome(factorValues, weights) {
-  let sum = 0;
-  for (let i = 0; i < CONFIG.numFactors; i++) {
-    sum += factorValues[i] * weights[i];
-  }
-  return sum;
-}
-
-function simulateRound() {
-  const { agents, weights, mode } = state;
-  const factorValues = getFactorValues();
-  const trueOutcome = getTrueOutcome(factorValues, weights);
-
-  // Each agent predicts based on their observed factor + noise
-  for (const agent of agents) {
-    const observed = factorValues[agent.factor];
-    const noisy = observed + (Math.random() - 0.5) * CONFIG.noise * 2;
-    agent.prediction = noisy; // raw observation as prediction
-  }
-
-  // Collective prediction: average
-  const collectivePred = agents.reduce((s, a) => s + a.prediction, 0) / agents.length;
-  const collectiveError = Math.abs(collectivePred - trueOutcome);
-  const accuracy = Math.max(0, 1 - collectiveError);
-
-  // Calculate rewards based on incentive mode
-  if (mode === 'expert') {
-    // Reward agents closest to the true outcome
-    for (const agent of agents) {
-      agent.reward = Math.max(0, 1 - Math.abs(agent.prediction - trueOutcome));
-    }
-  } else if (mode === 'niche') {
-    // Reward accurate agents, weighted by rarity of their factor
-    const counts = getFactorCounts();
-    for (const agent of agents) {
-      const accuracy_i = Math.max(0, 1 - Math.abs(agent.prediction - trueOutcome));
-      const rarity = 1 / (counts[agent.factor] || 1);
-      agent.reward = accuracy_i * rarity;
-    }
-  } else if (mode === 'reformer') {
-    // Reward agents whose inclusion improves the collective prediction
-    for (let i = 0; i < agents.length; i++) {
-      // Collective prediction without this agent
-      const othersSum = agents.reduce((s, a, j) => j !== i ? s + a.prediction : s, 0);
-      const othersPred = othersSum / (agents.length - 1);
-      const othersError = Math.abs(othersPred - trueOutcome);
-      // This agent's contribution = how much they reduce error
-      const contribution = othersError - collectiveError;
-      agents[i].contribution = contribution;
-      agents[i].reward = Math.max(0, contribution * 10 + 0.1); // scale + small baseline
-    }
-  }
-
-  // Social learning: agents may switch to imitating a more rewarded peer
-  const switches = [];
-  for (let i = 0; i < agents.length; i++) {
-    if (Math.random() < CONFIG.socialLearningRate) {
-      // Pick a random other agent
-      const j = Math.floor(Math.random() * agents.length);
-      if (j !== i && agents[j].reward > agents[i].reward) {
-        // Switch to that agent's factor with probability proportional to reward difference
-        const pSwitch = Math.min(1, (agents[j].reward - agents[i].reward) * 2);
-        if (Math.random() < pSwitch) {
-          const oldFactor = agents[i].factor;
-          agents[i].factor = agents[j].factor;
-          if (oldFactor !== agents[i].factor) {
-            switches.push({ agent: i, from: oldFactor, to: agents[i].factor });
-          }
-        }
-      }
-    }
-  }
-
-  // Occasional random exploration (small chance agent tries a random factor)
-  for (let i = 0; i < agents.length; i++) {
-    if (Math.random() < 0.02) {
-      const newFactor = Math.floor(Math.random() * CONFIG.numFactors);
-      if (newFactor !== agents[i].factor) {
-        agents[i].factor = newFactor;
-      }
-    }
-  }
-
-  // Record history
-  const diversity = calcDiversity();
-  state.history.accuracy.push(accuracy);
-  state.history.diversity.push(diversity);
-  state.history.factorCounts.push(getFactorCounts());
-
-  // Trim history
-  if (state.history.accuracy.length > CONFIG.historyLength) {
-    state.history.accuracy.shift();
-    state.history.diversity.shift();
-    state.history.factorCounts.shift();
-  }
-
-  state.round++;
-  return { accuracy, diversity, switches };
-}
-
-function getFactorCounts() {
-  const counts = new Array(CONFIG.numFactors).fill(0);
-  for (const agent of state.agents) {
-    counts[agent.factor]++;
-  }
+function getSourceCounts() {
+  const counts = new Array(SOURCES.length).fill(0);
+  G.analysts.forEach(a => counts[a.source]++);
   return counts;
 }
 
-function calcDiversity() {
-  const counts = getFactorCounts();
-  const total = state.agents.length;
+function calcCoverage() {
+  const counts = getSourceCounts();
+  const total = G.analysts.length;
   let entropy = 0;
   for (const c of counts) {
     if (c > 0) {
@@ -608,148 +506,177 @@ function calcDiversity() {
       entropy -= p * Math.log2(p);
     }
   }
-  // Normalize to [0, 1] where 1 = maximum diversity (uniform)
-  const maxEntropy = Math.log2(CONFIG.numFactors);
-  return entropy / maxEntropy;
+  return entropy / Math.log2(SOURCES.length);
+}
+
+function simRound() {
+  const { analysts, weights, policy } = G;
+
+  // Each source produces a random value
+  const sourceVals = SOURCES.map(() => (Math.random() - 0.5) * 2);
+  const trueOutcome = sourceVals.reduce((s, v, i) => s + v * weights[i], 0);
+
+  // Each analyst predicts from their observed source
+  const noise = 0.15;
+  analysts.forEach(a => {
+    a.prediction = sourceVals[a.source] + (Math.random() - 0.5) * noise * 2;
+  });
+
+  // Collective prediction
+  const collectivePred = analysts.reduce((s, a) => s + a.prediction, 0) / analysts.length;
+  const collectiveError = Math.abs(collectivePred - trueOutcome);
+  const accuracy = Math.max(0, 1 - collectiveError * 1.5);
+
+  // Rewards based on policy
+  if (policy === 'star') {
+    // Reward individual accuracy
+    analysts.forEach(a => {
+      a.reward = Math.max(0, 1 - Math.abs(a.prediction - trueOutcome));
+    });
+  } else if (policy === 'team') {
+    // Reward contribution to group accuracy
+    analysts.forEach((a, i) => {
+      const othersSum = analysts.reduce((s, b, j) => j !== i ? s + b.prediction : s, 0);
+      const othersPred = othersSum / (analysts.length - 1);
+      const othersError = Math.abs(othersPred - trueOutcome);
+      a.reward = Math.max(0, (othersError - collectiveError) * 15 + 0.15);
+    });
+  } else if (policy === 'niche') {
+    const counts = getSourceCounts();
+    analysts.forEach(a => {
+      const acc = Math.max(0, 1 - Math.abs(a.prediction - trueOutcome));
+      a.reward = acc * (1 / Math.sqrt(counts[a.source] || 1));
+    });
+  }
+
+  // Social learning (only if policy is set)
+  if (policy) {
+    for (let i = 0; i < analysts.length; i++) {
+      if (Math.random() < SOCIAL_LEARNING_RATE) {
+        const j = Math.floor(Math.random() * analysts.length);
+        if (j !== i && analysts[j].reward > analysts[i].reward) {
+          const pSwitch = Math.min(1, (analysts[j].reward - analysts[i].reward) * 3);
+          if (Math.random() < pSwitch) {
+            analysts[i].source = analysts[j].source;
+          }
+        }
+      }
+    }
+    // Small random exploration
+    analysts.forEach(a => {
+      if (Math.random() < 0.02) {
+        a.source = Math.floor(Math.random() * SOURCES.length);
+      }
+    });
+  }
+
+  const coverage = calcCoverage();
+  G.round++;
+  G.score += Math.round(accuracy * 100);
+  G.history.push({ round: G.round, accuracy, coverage });
+  if (coverage < G.lowestDiversity) G.lowestDiversity = coverage;
+
+  return { accuracy, coverage };
 }
 
 function shiftEnvironment() {
-  // Randomize factor weights
-  const weights = [];
-  for (let i = 0; i < CONFIG.numFactors; i++) {
-    weights.push(0.5 + Math.random() * 1.5);
-  }
+  const weights = SOURCES.map(() => 0.3 + Math.random() * 1.7);
   const wSum = weights.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < weights.length; i++) weights[i] /= wSum;
-  state.weights = weights;
-  state.shifts++;
-
-  addLog('Environment shifted — factor weights randomized');
-  updateMetrics();
+  weights.forEach((_, i) => weights[i] /= wSum);
+  G.weights = weights;
+  G.shiftCount++;
 }
 
-function setMode(mode) {
-  state.mode = mode;
-  document.querySelectorAll('.incentive-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.mode === mode);
+// ---- Rendering ----
+
+function renderTeam() {
+  const grid = document.getElementById('team-grid');
+  grid.innerHTML = '';
+  G.analysts.forEach((a, i) => {
+    const div = document.createElement('div');
+    div.className = 'analyst';
+    div.innerHTML = `
+      <div class="analyst-dot" style="background:${SOURCE_COLORS[a.source]}"
+           id="dot-${i}"></div>
+      <div class="analyst-name">${a.name}</div>
+    `;
+    grid.appendChild(div);
   });
-  updateModeDescription();
-  addLog(`Incentive mode changed to: ${mode}`);
+
+  const counts = getSourceCounts();
+  const activeSources = counts.filter(c => c > 0).length;
+  document.getElementById('team-status').textContent = `covering ${activeSources} of ${SOURCES.length} sources`;
 }
 
-function updateModeDescription() {
-  const desc = document.getElementById('modeDescription');
-  const descriptions = {
-    reformer: '<strong>Reformer rewards:</strong> Agents are rewarded for improving the group\'s collective prediction — even if their own prediction is wrong. This maintains diversity because agents who attend to neglected factors get rewarded when their unique perspective corrects the group.',
-    expert: '<strong>Expert rewards:</strong> Agents are rewarded for being individually accurate — closest to the true outcome. This feels fair but causes convergence: everyone imitates the most successful agent until the group loses diversity and becomes collectively blind.',
-    niche: '<strong>Niche expert rewards:</strong> Agents are rewarded for accuracy, weighted by how rare their focus area is. This encourages diversity in theory, but creates fragility: niche experts become over-specialized and the group struggles when conditions change.',
-  };
-  desc.innerHTML = descriptions[state.mode] || '';
-}
-
-function togglePlay() {
-  running = !running;
-  document.getElementById('playPauseBtn').textContent = running ? 'Pause' : 'Play';
-  document.getElementById('statusDot').className = running ? 'status-dot' : 'status-dot paused';
-  document.getElementById('statusText').textContent = running ? 'Running' : 'Paused';
-  if (running) startLoop();
-}
-
-function updateSpeed() {
-  speed = parseInt(document.getElementById('speedSlider').value);
-  if (running) {
-    clearInterval(animTimer);
-    startLoop();
-  }
-}
-
-function resetSim() {
-  state = initState();
-  state.mode = document.querySelector('.incentive-btn.active').dataset.mode;
-  addLog('Simulation reset');
-  updateAll();
-}
-
-function addLog(msg) {
-  const entry = { time: state.round, msg };
-  state.logs.unshift(entry);
-  if (state.logs.length > 50) state.logs.pop();
-  renderLog();
-}
-
-function renderLog() {
-  const el = document.getElementById('logEntries');
-  el.innerHTML = state.logs.slice(0, 8).map(l =>
-    `<div class="log-entry"><span class="time">t=${l.time}</span> ${l.msg}</div>`
-  ).join('');
-}
-
-// ============================================================
-// RENDERING
-// ============================================================
-
-function drawAgentGrid() {
-  const canvas = document.getElementById('agentCanvas');
-  const ctx = canvas.getContext('2d');
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * devicePixelRatio;
-  canvas.height = rect.height * devicePixelRatio;
-  ctx.scale(devicePixelRatio, devicePixelRatio);
-  const w = rect.width;
-  const h = rect.height;
-
-  ctx.clearRect(0, 0, w, h);
-
-  const cols = 12;
-  const rows = Math.ceil(CONFIG.numAgents / cols);
-  const cellW = w / cols;
-  const cellH = h / rows;
-  const radius = Math.min(cellW, cellH) * 0.35;
-
-  for (let i = 0; i < state.agents.length; i++) {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const cx = col * cellW + cellW / 2;
-    const cy = row * cellH + cellH / 2;
-    const agent = state.agents[i];
-
-    // Draw agent circle
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fillStyle = FACTOR_COLORS[agent.factor];
-    ctx.fill();
-
-    // Reward glow
-    if (agent.reward > 0.5) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius + 3, 0, Math.PI * 2);
-      ctx.strokeStyle = FACTOR_COLORS[agent.factor];
-      ctx.globalAlpha = Math.min(1, agent.reward * 0.6);
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.globalAlpha = 1;
+function renderCoverage() {
+  const counts = getSourceCounts();
+  const bar = document.getElementById('coverage-bar');
+  bar.innerHTML = '';
+  counts.forEach((count, i) => {
+    const seg = document.createElement('div');
+    seg.className = 'coverage-segment';
+    seg.style.flex = count;
+    seg.style.background = SOURCE_COLORS[i];
+    if (count > 0) {
+      seg.innerHTML = `<span class="seg-label">${SOURCES[i].slice(0, 3)}</span>`;
     }
+    bar.appendChild(seg);
+  });
+}
+
+function renderHUD() {
+  const recent = G.history.slice(-ROUNDS_PER_QUARTER);
+  const avgAcc = recent.length > 0
+    ? recent.reduce((s, h) => s + h.accuracy, 0) / recent.length
+    : 0;
+  const coverage = calcCoverage();
+
+  const accEl = document.getElementById('hud-accuracy');
+  const newAccText = Math.round(avgAcc * 100) + '%';
+  if (accEl.textContent !== newAccText && accEl.textContent !== '—') {
+    accEl.classList.remove('pop');
+    void accEl.offsetWidth; // force reflow
+    accEl.classList.add('pop');
+  }
+  accEl.textContent = newAccText;
+  accEl.style.color = avgAcc > 0.6 ? 'var(--green)' : avgAcc > 0.35 ? 'var(--yellow)' : 'var(--red)';
+
+  const covEl = document.getElementById('hud-coverage');
+  covEl.textContent = Math.round(coverage * 100) + '%';
+  covEl.style.color = coverage > 0.7 ? 'var(--green)' : coverage > 0.4 ? 'var(--yellow)' : 'var(--red)';
+
+  document.getElementById('hud-quarter').textContent = 'Q' + (G.quarter + 1);
+  document.getElementById('hud-score').textContent = G.score;
+}
+
+function renderProgress() {
+  const el = document.getElementById('progress');
+  el.innerHTML = '';
+  for (let i = 0; i < NUM_QUARTERS; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'progress-dot';
+    if (i < G.quarter) dot.classList.add('done');
+    if (i === G.quarter) dot.classList.add('current');
+    el.appendChild(dot);
   }
 }
 
-function drawLineChart(canvasId, data, color, maxVal, minVal) {
-  const canvas = document.getElementById(canvasId);
+function renderChart() {
+  const canvas = document.getElementById('accuracy-chart');
   const ctx = canvas.getContext('2d');
   const rect = canvas.getBoundingClientRect();
   canvas.width = rect.width * devicePixelRatio;
   canvas.height = rect.height * devicePixelRatio;
   ctx.scale(devicePixelRatio, devicePixelRatio);
-  const w = rect.width;
-  const h = rect.height;
-  const pad = { top: 10, right: 10, bottom: 25, left: 35 };
-
-  ctx.clearRect(0, 0, w, h);
-
+  const w = rect.width, h = rect.height;
+  const pad = { top: 8, right: 8, bottom: 20, left: 30 };
   const plotW = w - pad.left - pad.right;
   const plotH = h - pad.top - pad.bottom;
 
-  // Grid lines
-  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border').trim();
+  ctx.clearRect(0, 0, w, h);
+
+  // Grid
+  ctx.strokeStyle = '#2a2d3a';
   ctx.lineWidth = 0.5;
   for (let i = 0; i <= 4; i++) {
     const y = pad.top + (plotH * i) / 4;
@@ -759,168 +686,402 @@ function drawLineChart(canvasId, data, color, maxVal, minVal) {
     ctx.stroke();
   }
 
-  // Y-axis labels
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim();
+  // Y labels
+  ctx.fillStyle = '#666';
   ctx.font = '10px -apple-system, sans-serif';
   ctx.textAlign = 'right';
   for (let i = 0; i <= 4; i++) {
-    const val = maxVal - (maxVal - minVal) * (i / 4);
-    const y = pad.top + (plotH * i) / 4;
-    ctx.fillText(val.toFixed(1), pad.left - 5, y + 3);
+    const val = 100 - i * 25;
+    ctx.fillText(val + '%', pad.left - 4, pad.top + (plotH * i) / 4 + 3);
   }
 
-  if (data.length < 2) return;
-
-  // Draw line
-  ctx.beginPath();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  for (let i = 0; i < data.length; i++) {
-    const x = pad.left + (i / (CONFIG.historyLength - 1)) * plotW;
-    const y = pad.top + (1 - (data[i] - minVal) / (maxVal - minVal)) * plotH;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.stroke();
-
-  // Fill area under line
-  const lastX = pad.left + ((data.length - 1) / (CONFIG.historyLength - 1)) * plotW;
-  ctx.lineTo(lastX, pad.top + plotH);
-  ctx.lineTo(pad.left, pad.top + plotH);
-  ctx.closePath();
-  ctx.fillStyle = color + '18';
-  ctx.fill();
-}
-
-function drawFactorChart() {
-  const canvas = document.getElementById('factorChart');
-  const ctx = canvas.getContext('2d');
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * devicePixelRatio;
-  canvas.height = rect.height * devicePixelRatio;
-  ctx.scale(devicePixelRatio, devicePixelRatio);
-  const w = rect.width;
-  const h = rect.height;
-  const pad = { top: 10, right: 10, bottom: 30, left: 10 };
-
-  ctx.clearRect(0, 0, w, h);
-
-  const counts = getFactorCounts();
-  const maxCount = CONFIG.numAgents;
-  const barW = (w - pad.left - pad.right) / CONFIG.numFactors;
-  const plotH = h - pad.top - pad.bottom;
-
-  // Ideal line
-  const idealHeight = (CONFIG.numAgents / CONFIG.numFactors) / maxCount * plotH;
-  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim();
+  // Quarter markers
+  ctx.strokeStyle = '#3a3d4a';
   ctx.lineWidth = 1;
-  ctx.setLineDash([4, 4]);
-  ctx.beginPath();
-  const idealY = pad.top + plotH - idealHeight;
-  ctx.moveTo(pad.left, idealY);
-  ctx.lineTo(w - pad.right, idealY);
-  ctx.stroke();
+  ctx.setLineDash([3, 3]);
+  for (let q = 1; q < NUM_QUARTERS; q++) {
+    const x = pad.left + (q * ROUNDS_PER_QUARTER / TOTAL_ROUNDS) * plotW;
+    ctx.beginPath();
+    ctx.moveTo(x, pad.top);
+    ctx.lineTo(x, pad.top + plotH);
+    ctx.stroke();
+  }
   ctx.setLineDash([]);
 
-  // Label
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim();
-  ctx.font = '9px -apple-system, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('ideal', pad.left + 2, idealY - 3);
-
-  // Bars
-  for (let i = 0; i < CONFIG.numFactors; i++) {
-    const barH = (counts[i] / maxCount) * plotH;
-    const x = pad.left + i * barW + barW * 0.1;
-    const bw = barW * 0.8;
-    const y = pad.top + plotH - barH;
-
-    ctx.fillStyle = FACTOR_COLORS[i];
-    ctx.fillRect(x, y, bw, barH);
-
-    // Count label
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
-    ctx.font = '11px -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(counts[i], x + bw / 2, y - 4);
-
-    // Factor label
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim();
-    ctx.font = '10px -apple-system, sans-serif';
-    ctx.fillText(`F${i + 1}`, x + bw / 2, h - pad.bottom + 14);
-
-    // Weight indicator (small bar underneath)
-    const weightH = state.weights[i] * plotH * 2;
-    ctx.fillStyle = FACTOR_COLORS[i] + '40';
-    ctx.fillRect(x, pad.top + plotH - weightH, bw, weightH);
-  }
-}
-
-function updateMetrics() {
-  const acc = state.history.accuracy;
-  const div = state.history.diversity;
-  const recent = acc.slice(-10);
-  const avgAcc = recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : 0;
-  const currentDiv = div.length > 0 ? div[div.length - 1] : 1;
-
-  document.getElementById('metricAccuracy').textContent = (avgAcc * 100).toFixed(0) + '%';
-  document.getElementById('metricDiversity').textContent = (currentDiv * 100).toFixed(0) + '%';
-  document.getElementById('metricRound').textContent = state.round;
-  document.getElementById('metricShifts').textContent = state.shifts;
-
-  // Color coding
-  const accEl = document.getElementById('metricAccuracy');
-  accEl.style.color = avgAcc > 0.6 ? 'var(--success)' : avgAcc > 0.3 ? 'var(--accent)' : 'var(--danger)';
-
-  const divEl = document.getElementById('metricDiversity');
-  divEl.style.color = currentDiv > 0.7 ? 'var(--success)' : currentDiv > 0.4 ? 'var(--accent)' : 'var(--danger)';
-}
-
-function updateAll() {
-  drawAgentGrid();
-  drawLineChart('accuracyChart', state.history.accuracy, '#2563eb', 1.0, 0.0);
-  drawLineChart('diversityChart', state.history.diversity, '#16a34a', 1.0, 0.0);
-  drawFactorChart();
-  updateMetrics();
-}
-
-// ============================================================
-// MAIN LOOP
-// ============================================================
-
-function step() {
-  if (!running) return;
-  const result = simulateRound();
-
-  // Log notable events
-  if (result.diversity < 0.3 && state.round > 10) {
-    if (state.round % 20 === 0) {
-      addLog('Warning: diversity critically low — group is converging');
+  // Mark environment shifts
+  G.history.forEach((h, idx) => {
+    if (idx > 0 && G.policyHistory.some(p => p.event === 'shift' && p.round === h.round)) {
+      const x = pad.left + (h.round / TOTAL_ROUNDS) * plotW;
+      ctx.strokeStyle = '#f8717140';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, pad.top);
+      ctx.lineTo(x, pad.top + plotH);
+      ctx.stroke();
     }
-  }
-  if (result.switches.length > 5) {
-    addLog(`${result.switches.length} agents switched factors this round`);
-  }
+  });
 
-  updateAll();
+  if (G.history.length < 2) return;
+
+  // Accuracy line
+  ctx.beginPath();
+  ctx.strokeStyle = '#6c9bff';
+  ctx.lineWidth = 2;
+  G.history.forEach((h, i) => {
+    const x = pad.left + (h.round / TOTAL_ROUNDS) * plotW;
+    const y = pad.top + (1 - h.accuracy) * plotH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Coverage line
+  ctx.beginPath();
+  ctx.strokeStyle = '#4ade8080';
+  ctx.lineWidth = 1.5;
+  G.history.forEach((h, i) => {
+    const x = pad.left + (h.round / TOTAL_ROUNDS) * plotW;
+    const y = pad.top + (1 - h.coverage) * plotH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
 }
 
-function startLoop() {
-  if (animTimer) clearInterval(animTimer);
-  const interval = Math.max(20, 300 - speed * 28);
-  animTimer = setInterval(step, interval);
+function setNarrative(html) {
+  document.getElementById('narrative').innerHTML = html;
 }
 
-// Initialize
-state = initState();
-addLog('Simulation started with reformer incentives');
-updateModeDescription();
-updateAll();
-startLoop();
+function setDecisions(options) {
+  const el = document.getElementById('decisions');
+  if (!options || options.length === 0) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = options.map((opt, i) => `
+    <div class="decision-option" onclick="makeDecision('${opt.id}')" tabindex="0" role="button"
+         aria-label="${opt.title}: ${opt.desc}"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();makeDecision('${opt.id}')}">
+      <h3>${opt.title}</h3>
+      <p>${opt.desc}</p>
+    </div>
+  `).join('');
+  // Focus first option
+  setTimeout(() => {
+    const first = el.querySelector('.decision-option');
+    if (first) first.focus();
+  }, 100);
+}
+
+function renderAll() {
+  renderTeam();
+  renderCoverage();
+  renderHUD();
+  renderProgress();
+  renderChart();
+}
+
+// ---- Game Flow ----
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function startGame() {
+  G = initGame();
+  showScreen('game');
+  renderAll();
+  beginQuarter();
+}
+
+function beginQuarter() {
+  renderProgress();
+
+  if (G.quarter === 0) {
+    // Q1: Introduction — no decision, just watch
+    setNarrative(`
+      <p><span class="speaker">Welcome, Director.</span></p>
+      <p>Your team of ${NUM_ANALYSTS} analysts covers ${SOURCES.length} information sources: ${SOURCES.join(', ')}. Each analyst watches one source. Together, their forecasts combine into a group prediction.</p>
+      <p>Let's see how they do in their first quarter.</p>
+    `);
+    setDecisions([{ id: 'start_q1', title: 'Begin Q1', desc: 'Watch your team in action' }]);
+
+  } else if (G.quarter === 1) {
+    // Q2: First decision
+    setNarrative(`
+      <p><span class="speaker">Board Meeting.</span></p>
+      <p>"Good first quarter. But we need to think about performance incentives. How should we evaluate the team going forward?"</p>
+      <p>Your choice will shape how analysts learn from each other. Choose carefully.</p>
+    `);
+    showPolicyDecision();
+
+  } else if (G.quarter === 2) {
+    // Q3: Environment shift incoming
+    shiftEnvironment();
+    G.policyHistory.push({ event: 'shift', round: G.round });
+    document.getElementById('screen-game').classList.add('shake');
+    setTimeout(() => document.getElementById('screen-game').classList.remove('shake'), 500);
+
+    setNarrative(`
+      <p><span class="alert">Breaking: Major disruption.</span></p>
+      <p>Market conditions have shifted dramatically. The factors that mattered most last quarter may not matter as much now. New factors are becoming critical.</p>
+      <p>Your current policy: <strong>${getPolicyLabel(G.policy)}</strong>. You can keep it or change.</p>
+    `);
+    showPolicyDecision();
+
+  } else if (G.quarter === 3) {
+    // Q4: Second environment shift
+    shiftEnvironment();
+    G.policyHistory.push({ event: 'shift', round: G.round });
+    document.getElementById('screen-game').classList.add('shake');
+    setTimeout(() => document.getElementById('screen-game').classList.remove('shake'), 500);
+
+    const coverage = calcCoverage();
+    const coverageWarning = coverage < 0.5
+      ? `<p><span class="alert">Warning:</span> Your team's coverage has dropped to ${Math.round(coverage * 100)}%. Several sources are unwatched.</p>`
+      : `<p><span class="good">Good news:</span> Your team still covers ${Math.round(coverage * 100)}% of sources.</p>`;
+
+    setNarrative(`
+      <p><span class="alert">Another disruption.</span></p>
+      <p>Conditions have shifted again. Different factors are now driving outcomes.</p>
+      ${coverageWarning}
+      <p>Current policy: <strong>${getPolicyLabel(G.policy)}</strong>.</p>
+    `);
+    showPolicyDecision();
+
+  } else if (G.quarter === 4) {
+    // Q5: Final quarter
+    const coverage = calcCoverage();
+    const msg = coverage < 0.4
+      ? `<p>Your team has become dangerously narrow. Most analysts are watching the same sources while critical areas go uncovered.</p>`
+      : coverage < 0.7
+      ? `<p>Your team has moderate coverage. Some consolidation, but you're still watching most sources.</p>`
+      : `<p>Your team maintains broad coverage across all sources. You're well-positioned.</p>`;
+
+    setNarrative(`
+      <p><span class="speaker">Final Quarter.</span></p>
+      ${msg}
+      <p>One last stretch. Let's see how your team finishes.</p>
+    `);
+    setDecisions([{ id: 'start_final', title: 'Begin Final Quarter', desc: 'No policy changes — see your results' }]);
+  }
+}
+
+function showPolicyDecision() {
+  setDecisions([
+    {
+      id: 'star',
+      title: 'Reward Top Performers',
+      desc: 'Bonuses go to analysts whose predictions are closest to the actual outcome. Straightforward and meritocratic.'
+    },
+    {
+      id: 'team',
+      title: 'Reward Team Players',
+      desc: 'Bonuses go to analysts who most improve the group\'s overall prediction — even if their individual prediction is off.'
+    },
+    {
+      id: 'niche',
+      title: 'Reward Specialists',
+      desc: 'Bonuses weighted by expertise rarity — analysts watching less-covered sources earn more per correct call.'
+    }
+  ]);
+}
+
+function getPolicyLabel(policy) {
+  const labels = {
+    star: 'Reward Top Performers',
+    team: 'Reward Team Players',
+    niche: 'Reward Specialists'
+  };
+  return labels[policy] || 'None';
+}
+
+function makeDecision(id) {
+  if (id === 'start_q1' || id === 'start_final') {
+    setDecisions([]);
+    runQuarter();
+    return;
+  }
+
+  if (id === 'continue') {
+    beginQuarter();
+    return;
+  }
+
+  // Policy decision
+  G.policy = id;
+  G.decisionsLog.push({ quarter: G.quarter, policy: id });
+  G.policyHistory.push({ event: 'policy', round: G.round, policy: id });
+
+  setNarrative(`
+    <p>Policy set: <strong>${getPolicyLabel(id)}</strong></p>
+    <p>Let's see how the team responds.</p>
+  `);
+  setDecisions([]);
+
+  setTimeout(() => runQuarter(), 600);
+}
+
+function runQuarter() {
+  let roundsRemaining = ROUNDS_PER_QUARTER;
+  let roundIdx = 0;
+
+  function tick() {
+    if (roundsRemaining <= 0) {
+      onQuarterEnd();
+      return;
+    }
+
+    const result = simRound();
+    roundsRemaining--;
+    roundIdx++;
+
+    renderAll();
+
+    // Highlight rewarded analysts briefly
+    if (G.policy) {
+      const maxReward = Math.max(...G.analysts.map(a => a.reward));
+      G.analysts.forEach((a, i) => {
+        const dot = document.getElementById('dot-' + i);
+        if (dot && a.reward > maxReward * 0.7) {
+          dot.classList.add('rewarded');
+          setTimeout(() => dot.classList.remove('rewarded'), 400);
+        }
+      });
+    }
+
+    // Update narrative during quarter
+    const cov = calcCoverage();
+    const counts = getSourceCounts();
+    const maxConc = Math.max(...counts);
+    const uncovered = counts.filter(c => c === 0).length;
+
+    if (roundIdx === 3) {
+      if (G.policy === 'star' && cov < 0.75) {
+        setNarrative(`<p>Your analysts are starting to cluster. The top performers all watch the same high-impact source, and others are imitating them...</p>`);
+      } else if (G.policy === 'team' && cov > 0.8) {
+        setNarrative(`<p>Interesting — analysts watching less-popular sources keep getting rewarded. The team stays spread out.</p>`);
+      }
+    } else if (roundIdx === 5) {
+      if (cov < 0.4) {
+        setNarrative(`<p><span class="alert">Coverage crisis.</span> ${uncovered} sources are completely unwatched. ${maxConc} of ${NUM_ANALYSTS} analysts watch the same source.</p>`);
+        document.querySelector('.narrative').classList.add('flash-warning');
+        setTimeout(() => document.querySelector('.narrative').classList.remove('flash-warning'), 800);
+      } else if (cov < 0.6) {
+        setNarrative(`<p><span class="alert">Coverage is dropping.</span> Your team is converging — ${uncovered} source${uncovered !== 1 ? 's' : ''} now unwatched.</p>`);
+        document.querySelector('.narrative').classList.add('flash-warning');
+        setTimeout(() => document.querySelector('.narrative').classList.remove('flash-warning'), 800);
+      } else if (cov > 0.85) {
+        setNarrative(`<p><span class="good">Strong coverage.</span> Your team maintains good spread across all sources.</p>`);
+      }
+    }
+
+    // First round slower for readability, then speed up
+    const interval = roundIdx <= 1 ? 900 : 550;
+    G.autoTimer = setTimeout(tick, interval);
+  }
+
+  tick();
+}
+
+function onQuarterEnd() {
+  G.quarter++;
+
+  if (G.quarter >= NUM_QUARTERS) {
+    endGame();
+    return;
+  }
+
+  // Quarter summary
+  const qHistory = G.history.slice(-ROUNDS_PER_QUARTER);
+  const avgAcc = qHistory.reduce((s, h) => s + h.accuracy, 0) / qHistory.length;
+  const endCoverage = calcCoverage();
+
+  let summaryHtml;
+  if (avgAcc > 0.65) {
+    summaryHtml = `<p><span class="good">Strong quarter.</span> Average accuracy: ${Math.round(avgAcc * 100)}%. Coverage: ${Math.round(endCoverage * 100)}%.</p>`;
+  } else if (avgAcc > 0.4) {
+    summaryHtml = `<p>Mixed results. Average accuracy: ${Math.round(avgAcc * 100)}%. Coverage: ${Math.round(endCoverage * 100)}%.</p>`;
+  } else {
+    summaryHtml = `<p><span class="alert">Tough quarter.</span> Average accuracy: ${Math.round(avgAcc * 100)}%. Coverage: ${Math.round(endCoverage * 100)}%.</p>`;
+  }
+
+  setNarrative(summaryHtml);
+  setDecisions([{ id: 'continue', title: 'Continue to Q' + (G.quarter + 1), desc: 'See what happens next' }]);
+}
+
+function endGame() {
+  showScreen('end');
+
+  // Calculate final stats
+  const totalPossible = TOTAL_ROUNDS * 100;
+  const pct = G.score / totalPossible;
+  const stars = pct > 0.7 ? 5 : pct > 0.55 ? 4 : pct > 0.45 ? 3 : pct > 0.3 ? 2 : 1;
+
+  document.getElementById('end-title').textContent =
+    stars >= 4 ? 'Excellent Leadership' :
+    stars >= 3 ? 'Solid Performance' :
+    stars >= 2 ? 'Room to Grow' : 'The Trap Sprung';
+
+  document.getElementById('end-stars').textContent = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+  document.getElementById('end-stars').style.color =
+    stars >= 4 ? 'var(--green)' : stars >= 3 ? 'var(--yellow)' : 'var(--red)';
+
+  document.getElementById('end-stats').innerHTML = `
+    <div class="final-stat">
+      <div class="value">${G.score}</div>
+      <div class="label">Total Score</div>
+    </div>
+    <div class="final-stat">
+      <div class="value">${Math.round(G.lowestDiversity * 100)}%</div>
+      <div class="label">Lowest Coverage</div>
+    </div>
+    <div class="final-stat">
+      <div class="value">${G.shiftCount}</div>
+      <div class="label">Disruptions</div>
+    </div>
+  `;
+
+  // Determine insight based on what player experienced
+  const usedStar = G.decisionsLog.some(d => d.policy === 'star');
+  const usedTeam = G.decisionsLog.some(d => d.policy === 'team');
+  const diversityCollapsed = G.lowestDiversity < 0.4;
+
+  let insightHtml;
+  if (usedStar && diversityCollapsed) {
+    insightHtml = `
+      <h3>The Wisdom Trap</h3>
+      <p>When you rewarded top performers, your team converged. Everyone imitated the best analyst — and lost the diverse perspectives that made the group smart in the first place.</p>
+      <p>This is the trap: <strong>individual excellence can destroy collective intelligence.</strong> The same dynamic plays out in scientific communities, newsrooms, and policy teams. Rewarding people for being individually right makes the group collectively blind.</p>
+      <p>The counterintuitive fix? Reward people for making the <em>group</em> more right — even if their own prediction is off. This is exactly how prediction markets work.</p>
+    `;
+  } else if (usedTeam && !diversityCollapsed) {
+    insightHtml = `
+      <h3>Collective Intelligence Preserved</h3>
+      <p>By rewarding team contribution over individual accuracy, your analysts stayed diverse. When disruptions hit, the team could adapt because it still had eyes on multiple sources.</p>
+      <p><strong>Try playing again and choosing "Reward Top Performers" to see the trap in action.</strong> Watch what happens when everyone imitates the best — and then conditions change.</p>
+    `;
+  } else if (usedStar && !diversityCollapsed) {
+    insightHtml = `
+      <h3>Lucky — But Fragile</h3>
+      <p>You rewarded top performers and diversity held up — this time. Random exploration and short quarters kept things from fully converging. But in a longer game, or with a larger team, the convergence pressure from star rewards would eventually win.</p>
+      <p>The research behind this game shows that <strong>rewarding individual accuracy systematically destroys diversity</strong> over time. The question isn't whether, but when.</p>
+    `;
+  } else {
+    insightHtml = `
+      <h3>The Incentive Lesson</h3>
+      <p>How you reward a group determines whether it stays wise or goes blind. Groups need <strong>cognitive diversity</strong> to handle complex, changing problems — and the wrong incentives destroy it.</p>
+      <p>This pattern appears everywhere: scientific communities, newsrooms, corporate strategy teams, open-source projects. Rewarding individual brilliance feels meritocratic — but <em>following</em> the best is exactly the problem.</p>
+    `;
+  }
+
+  document.getElementById('end-insight').innerHTML = insightHtml;
+}
 
 // Handle resize
 window.addEventListener('resize', () => {
-  if (state) updateAll();
+  if (G && document.getElementById('screen-game').classList.contains('active')) {
+    renderChart();
+  }
 });
 </script>
 
