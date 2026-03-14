@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Value Dependency Matrix — Scout</title>
+<meta name="description" content="Map your system's value-bearing decisions and see how changes propagate. A Design Structure Matrix for algorithmic governance.">
+<meta property="og:title" content="Value Dependency Matrix">
+<meta property="og:description" content="Map value-bearing decisions in your system and simulate change propagation.">
+<script data-goatcounter="https://scout-for-good.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<style>
+  :root {
+    --bg: #fafaf8;
+    --text: #1a1a1a;
+    --muted: #666;
+    --border: #ddd;
+    --accent: #2d5a27;
+    --value-color: #8b4513;
+    --frozen-deep: #4a1942;
+    --frozen-mid: #8b3a8b;
+    --frozen-light: #c78bc7;
+    --propagation: #cc4400;
+    --prop-indirect: #ff8844;
+    --cell-weak: #cde4ca;
+    --cell-strong: #5a9e54;
+    --cell-hover: #f0f0e8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+  .subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 1.5rem; }
+
+  .intro {
+    max-width: 700px;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+    color: #333;
+  }
+  .intro p { margin-bottom: 0.8rem; }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--border);
+    background: white;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.15s;
+  }
+  button:hover { background: #f0f0e8; }
+  button.active { background: var(--accent); color: white; border-color: var(--accent); }
+  button.preset { border-color: var(--accent); color: var(--accent); }
+  button.preset:hover { background: var(--accent); color: white; }
+
+  .separator { width: 1px; height: 24px; background: var(--border); margin: 0 0.3rem; }
+
+  /* Matrix */
+  .matrix-container {
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+  }
+
+  table.dsm {
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    user-select: none;
+  }
+
+  table.dsm th, table.dsm td {
+    border: 1px solid var(--border);
+    padding: 0;
+    text-align: center;
+    min-width: 36px;
+    height: 36px;
+  }
+
+  table.dsm th {
+    background: #f5f5f0;
+    font-weight: normal;
+    font-size: 0.75rem;
+    padding: 3px 5px;
+    white-space: nowrap;
+  }
+
+  table.dsm th.row-header {
+    text-align: left;
+    padding-left: 8px;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  table.dsm td.cell {
+    cursor: pointer;
+    transition: background 0.1s;
+    position: relative;
+  }
+  table.dsm td.cell:hover { background: var(--cell-hover); }
+  table.dsm td.cell.dep-weak { background: var(--cell-weak); }
+  table.dsm td.cell.dep-strong { background: var(--cell-strong); color: white; }
+  table.dsm td.diagonal { background: #e8e8e0; cursor: default; }
+
+  /* Value marker */
+  table.dsm th.is-value { color: var(--value-color); font-weight: bold; }
+  table.dsm td.diagonal.is-value {
+    background: #f0e0d0;
+  }
+
+  /* Propagation highlighting */
+  table.dsm td.cell.prop-direct { background: var(--propagation) !important; color: white; }
+  table.dsm td.cell.prop-indirect { background: var(--prop-indirect) !important; color: white; }
+  table.dsm th.prop-source { background: var(--propagation) !important; color: white !important; }
+  table.dsm th.prop-affected { background: var(--prop-indirect) !important; color: white !important; }
+
+  /* Freeze depth coloring */
+  table.dsm th.freeze-deep { background: var(--frozen-deep) !important; color: white !important; }
+  table.dsm th.freeze-mid { background: var(--frozen-mid) !important; color: white !important; }
+  table.dsm th.freeze-light { background: var(--frozen-light) !important; }
+
+  /* Component input */
+  .add-component {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    align-items: center;
+  }
+  .add-component input {
+    font-family: inherit;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    width: 200px;
+  }
+  .add-component label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+    padding: 0.8rem;
+    background: #f5f5f0;
+    border-radius: 4px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .legend-swatch {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  /* Analysis panel */
+  .analysis {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #f5f5f0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+  .analysis h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+  .analysis ul { padding-left: 1.2rem; margin-bottom: 0.5rem; }
+  .analysis li { margin-bottom: 0.3rem; }
+  .analysis .insight {
+    margin-top: 0.8rem;
+    padding: 0.6rem;
+    background: white;
+    border-left: 3px solid var(--accent);
+    font-size: 0.85rem;
+  }
+
+  /* Instructions */
+  .instructions {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+  .instructions strong { color: var(--text); }
+
+  /* Footer */
+  .footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .footer a { color: var(--accent); }
+
+  @media (max-width: 600px) {
+    body { padding: 1rem; }
+    h1 { font-size: 1.4rem; }
+    .controls { flex-direction: column; align-items: flex-start; }
+    .separator { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Value Dependency Matrix</h1>
+<p class="subtitle">A Design Structure Matrix for mapping where values freeze in your system</p>
+
+<div class="intro">
+  <p>In engineering, a <strong>Design Structure Matrix</strong> maps dependencies between components. When you change one part, the matrix shows what else must change. Engineers use this to find which decisions are load-bearing — deeply frozen into the system's architecture.</p>
+  <p>This tool applies the same method to <strong>value-bearing decisions</strong> in any system. Define your components, mark which ones encode value choices, map the dependencies, then simulate changes to see how they propagate.</p>
+</div>
+
+<div class="controls">
+  <button class="preset" onclick="loadPreset('engineering')">Example: Product Design</button>
+  <button class="preset" onclick="loadPreset('algorithm')">Example: ML System</button>
+  <button class="preset" onclick="loadPreset('organization')">Example: Organization</button>
+  <span class="separator"></span>
+  <button id="btn-propagate" onclick="toggleMode('propagate')">Propagation Mode</button>
+  <button id="btn-freeze" onclick="toggleMode('freeze')">Freeze Depth</button>
+  <button onclick="clearAll()">Clear</button>
+</div>
+
+<div class="add-component">
+  <input type="text" id="new-component" placeholder="Component name..." onkeydown="if(event.key==='Enter')addComponent()">
+  <label><input type="checkbox" id="new-is-value"> Value-bearing</label>
+  <button onclick="addComponent()">Add</button>
+</div>
+
+<div class="instructions">
+  <strong>Click cells</strong> to cycle: empty → weak dependency → strong dependency.
+  <strong>Right-click a row header</strong> to toggle value-bearing status or remove.
+  In <strong>Propagation Mode</strong>, click a row header to simulate changing that component.
+</div>
+
+<div class="matrix-container">
+  <table class="dsm" id="dsm-table">
+    <thead><tr id="header-row"></tr></thead>
+    <tbody id="dsm-body"></tbody>
+  </table>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-swatch" style="background:white"></span> No dependency</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:var(--cell-weak)"></span> Weak dependency</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:var(--cell-strong)"></span> Strong dependency</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:var(--propagation)"></span> Direct propagation</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:var(--prop-indirect)"></span> Indirect propagation</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:#f0e0d0; border-color:var(--value-color)"></span> Value-bearing</div>
+</div>
+
+<div class="analysis" id="analysis"></div>
+
+<div class="footer">
+  <p>Part of <a href="../index.html">Scout's Findings</a> — applying engineering governance to algorithmic systems.</p>
+  <p>Based on the <a href="../writing/design-freeze.html">Design Freeze Problem</a> framework. DSM methodology from Eppinger & Browning.</p>
+</div>
+
+<script>
+// State
+let components = []; // [{name, isValue}]
+let deps = {};       // "row,col" -> 0 (none), 1 (weak), 2 (strong)
+let mode = null;     // null, 'propagate', 'freeze'
+let propagationSource = null;
+
+// Dependency helpers
+function depKey(r, c) { return r + ',' + c; }
+function getDep(r, c) { return deps[depKey(r, c)] || 0; }
+function setDep(r, c, v) { deps[depKey(r, c)] = v; }
+
+// Add component
+function addComponent() {
+  const input = document.getElementById('new-component');
+  const isValue = document.getElementById('new-is-value').checked;
+  const name = input.value.trim();
+  if (!name) return;
+  if (components.some(c => c.name === name)) return;
+  components.push({ name, isValue });
+  input.value = '';
+  document.getElementById('new-is-value').checked = false;
+  render();
+  updateAnalysis();
+}
+
+// Remove component
+function removeComponent(idx) {
+  const n = components.length;
+  // Remove deps involving this component
+  const newDeps = {};
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (r === idx || c === idx) continue;
+      const v = getDep(r, c);
+      if (v) {
+        const nr = r > idx ? r - 1 : r;
+        const nc = c > idx ? c - 1 : c;
+        newDeps[depKey(nr, nc)] = v;
+      }
+    }
+  }
+  deps = newDeps;
+  components.splice(idx, 1);
+  propagationSource = null;
+  render();
+  updateAnalysis();
+}
+
+// Toggle value status
+function toggleValue(idx) {
+  components[idx].isValue = !components[idx].isValue;
+  render();
+  updateAnalysis();
+}
+
+// Cell click — cycle dependency
+function cellClick(r, c) {
+  if (r === c) return;
+  if (mode === 'propagate') return;
+  const current = getDep(r, c);
+  setDep(r, c, (current + 1) % 3);
+  render();
+  updateAnalysis();
+}
+
+// Mode toggle
+function toggleMode(m) {
+  mode = mode === m ? null : m;
+  propagationSource = null;
+  document.getElementById('btn-propagate').classList.toggle('active', mode === 'propagate');
+  document.getElementById('btn-freeze').classList.toggle('active', mode === 'freeze');
+  render();
+  updateAnalysis();
+}
+
+// Change propagation analysis (BFS with depth tracking)
+function computePropagation(sourceIdx) {
+  const n = components.length;
+  const affected = new Map(); // idx -> depth
+  const queue = [{ idx: sourceIdx, depth: 0 }];
+  const visited = new Set([sourceIdx]);
+
+  while (queue.length > 0) {
+    const { idx, depth } = queue.shift();
+    // Find all components that depend on idx (column idx has marks in rows)
+    for (let r = 0; r < n; r++) {
+      if (visited.has(r)) continue;
+      const d = getDep(r, idx);
+      if (d > 0) {
+        visited.add(r);
+        const newDepth = depth + 1;
+        affected.set(r, newDepth);
+        // Only propagate through strong dependencies
+        if (d === 2) {
+          queue.push({ idx: r, depth: newDepth });
+        }
+      }
+    }
+  }
+  return affected;
+}
+
+// Freeze depth: count total dependents (direct + indirect via strong links)
+function computeFreezeDepths() {
+  const n = components.length;
+  const depths = new Array(n).fill(0);
+  for (let i = 0; i < n; i++) {
+    const affected = computePropagation(i);
+    depths[i] = affected.size;
+  }
+  return depths;
+}
+
+// Render the matrix
+function render() {
+  const n = components.length;
+  const headerRow = document.getElementById('header-row');
+  const body = document.getElementById('dsm-body');
+
+  // Compute propagation/freeze data
+  let propAffected = new Map();
+  let freezeDepths = [];
+  let maxFreeze = 0;
+
+  if (mode === 'propagate' && propagationSource !== null) {
+    propAffected = computePropagation(propagationSource);
+  }
+  if (mode === 'freeze') {
+    freezeDepths = computeFreezeDepths();
+    maxFreeze = Math.max(...freezeDepths, 1);
+  }
+
+  // Header
+  headerRow.innerHTML = '<th></th>';
+  for (let c = 0; c < n; c++) {
+    const th = document.createElement('th');
+    th.textContent = components[c].name.length > 8
+      ? components[c].name.substring(0, 7) + '…'
+      : components[c].name;
+    th.title = components[c].name;
+    if (components[c].isValue) th.classList.add('is-value');
+    if (mode === 'propagate' && propagationSource === c) th.classList.add('prop-source');
+    if (mode === 'propagate' && propAffected.has(c)) th.classList.add('prop-affected');
+    if (mode === 'freeze') {
+      const ratio = freezeDepths[c] / maxFreeze;
+      if (ratio > 0.66) th.classList.add('freeze-deep');
+      else if (ratio > 0.33) th.classList.add('freeze-mid');
+      else if (ratio > 0) th.classList.add('freeze-light');
+    }
+    headerRow.appendChild(th);
+  }
+
+  // Rows
+  body.innerHTML = '';
+  for (let r = 0; r < n; r++) {
+    const tr = document.createElement('tr');
+
+    // Row header
+    const th = document.createElement('th');
+    th.classList.add('row-header');
+    th.textContent = components[r].name;
+    th.title = components[r].name + (components[r].isValue ? ' (value-bearing)' : '') + ' — right-click for options';
+    if (components[r].isValue) th.classList.add('is-value');
+    if (mode === 'propagate' && propagationSource === r) th.classList.add('prop-source');
+    if (mode === 'propagate' && propAffected.has(r)) th.classList.add('prop-affected');
+    if (mode === 'freeze') {
+      const ratio = freezeDepths[r] / maxFreeze;
+      if (ratio > 0.66) th.classList.add('freeze-deep');
+      else if (ratio > 0.33) th.classList.add('freeze-mid');
+      else if (ratio > 0) th.classList.add('freeze-light');
+    }
+
+    // Propagation mode: click header to select source
+    if (mode === 'propagate') {
+      th.style.cursor = 'pointer';
+      th.addEventListener('click', () => {
+        propagationSource = propagationSource === r ? null : r;
+        render();
+        updateAnalysis();
+      });
+    }
+
+    // Right-click context
+    th.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const action = prompt(
+        `"${components[r].name}"\n\nType:\n  v = toggle value-bearing\n  d = delete component`,
+        'v'
+      );
+      if (action === 'v') toggleValue(r);
+      else if (action === 'd') removeComponent(r);
+    });
+
+    tr.appendChild(th);
+
+    // Cells
+    for (let c = 0; c < n; c++) {
+      const td = document.createElement('td');
+      if (r === c) {
+        td.classList.add('diagonal');
+        if (components[r].isValue) td.classList.add('is-value');
+        td.textContent = '●';
+      } else {
+        td.classList.add('cell');
+        const d = getDep(r, c);
+        if (d === 1) { td.classList.add('dep-weak'); td.textContent = '○'; }
+        else if (d === 2) { td.classList.add('dep-strong'); td.textContent = '●'; }
+
+        // Propagation highlighting
+        if (mode === 'propagate' && propagationSource !== null) {
+          // Highlight cells in the source column
+          if (c === propagationSource && d > 0) {
+            td.classList.add('prop-direct');
+          }
+          // Highlight cells showing indirect propagation
+          if (propAffected.has(r) && propAffected.get(r) > 1 && c === propagationSource) {
+            td.classList.add('prop-indirect');
+          }
+        }
+
+        td.addEventListener('click', () => cellClick(r, c));
+      }
+      tr.appendChild(td);
+    }
+    body.appendChild(tr);
+  }
+}
+
+// Analysis panel
+function updateAnalysis() {
+  const panel = document.getElementById('analysis');
+  const n = components.length;
+
+  if (n === 0) {
+    panel.innerHTML = '<h3>Getting Started</h3><p>Add components to your system, or load an example to see how the matrix works.</p>';
+    return;
+  }
+
+  if (mode === 'propagate' && propagationSource !== null) {
+    const affected = computePropagation(propagationSource);
+    const src = components[propagationSource];
+    const directCount = [...affected.values()].filter(d => d === 1).length;
+    const indirectCount = affected.size - directCount;
+    const valueAffected = [...affected.keys()].filter(i => components[i].isValue);
+
+    let html = `<h3>Change Propagation: "${src.name}"</h3>`;
+    html += `<p>Changing this component directly affects <strong>${directCount}</strong> component${directCount !== 1 ? 's' : ''}`;
+    if (indirectCount > 0) html += ` and indirectly affects <strong>${indirectCount}</strong> more through strong dependency chains`;
+    html += '.</p>';
+
+    if (affected.size > 0) {
+      html += '<ul>';
+      const sorted = [...affected.entries()].sort((a, b) => a[1] - b[1]);
+      for (const [idx, depth] of sorted) {
+        const c = components[idx];
+        const label = depth === 1 ? 'direct' : `${depth} steps`;
+        const vLabel = c.isValue ? ' <span style="color:var(--value-color)">[value]</span>' : '';
+        html += `<li>${c.name} (${label})${vLabel}</li>`;
+      }
+      html += '</ul>';
+    }
+
+    if (valueAffected.length > 0) {
+      html += `<div class="insight">⚠ This change would affect ${valueAffected.length} value-bearing component${valueAffected.length !== 1 ? 's' : ''}: ${valueAffected.map(i => components[i].name).join(', ')}. These are governance-relevant — changes here alter what the system values.</div>`;
+    }
+
+    if (src.isValue && affected.size > 2) {
+      html += `<div class="insight">"${src.name}" is itself value-bearing and deeply connected. In engineering terms, this is a frozen decision — changing it is expensive because of cascading effects. Consider whether this decision needs a formal change control process.</div>`;
+    }
+
+    panel.innerHTML = html;
+    return;
+  }
+
+  if (mode === 'freeze') {
+    const depths = computeFreezeDepths();
+    const indexed = depths.map((d, i) => ({ name: components[i].name, depth: d, isValue: components[i].isValue, idx: i }));
+    indexed.sort((a, b) => b.depth - a.depth);
+
+    let html = '<h3>Freeze Depth Analysis</h3>';
+    html += '<p>Components ranked by how many others they affect when changed. Deeper = more frozen into the system.</p>';
+    html += '<ul>';
+    for (const item of indexed) {
+      const vLabel = item.isValue ? ' <span style="color:var(--value-color)">[value]</span>' : '';
+      const bar = '█'.repeat(item.depth) || '·';
+      html += `<li><strong>${item.name}</strong>${vLabel}: affects ${item.depth} component${item.depth !== 1 ? 's' : ''} ${bar}</li>`;
+    }
+    html += '</ul>';
+
+    // Find value-bearing components that are deeply frozen
+    const deepFrozenValues = indexed.filter(i => i.isValue && i.depth > n * 0.3);
+    if (deepFrozenValues.length > 0) {
+      html += `<div class="insight">Most deeply frozen value choices: ${deepFrozenValues.map(i => i.name).join(', ')}. These are the decisions that are hardest to change and most likely to become invisible over time. Engineering practice: put these under formal configuration management with documented rationale.</div>`;
+    }
+
+    // Find value-bearing components with low freeze depth (good!)
+    const fluidValues = indexed.filter(i => i.isValue && i.depth <= 1);
+    if (fluidValues.length > 0) {
+      html += `<div class="insight">Relatively fluid value choices: ${fluidValues.map(i => i.name).join(', ')}. These can be changed without major cascading effects — good candidates for ongoing governance review.</div>`;
+    }
+
+    panel.innerHTML = html;
+    return;
+  }
+
+  // Default analysis
+  const valueCount = components.filter(c => c.isValue).length;
+  let totalDeps = 0;
+  let strongDeps = 0;
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      const d = getDep(r, c);
+      if (d > 0) totalDeps++;
+      if (d === 2) strongDeps++;
+    }
+  }
+  const maxDeps = n * (n - 1);
+  const density = maxDeps > 0 ? (totalDeps / maxDeps * 100).toFixed(0) : 0;
+
+  let html = `<h3>Matrix Summary</h3>`;
+  html += `<p>${n} components (${valueCount} value-bearing) · ${totalDeps} dependencies (${strongDeps} strong) · ${density}% density</p>`;
+
+  if (totalDeps > 0) {
+    html += `<p>Use <strong>Propagation Mode</strong> to simulate changing a component, or <strong>Freeze Depth</strong> to see which decisions are most deeply frozen.</p>`;
+  } else if (n >= 2) {
+    html += `<p>Click cells in the matrix to add dependencies between components. Reading: row <em>depends on</em> column.</p>`;
+  }
+
+  panel.innerHTML = html;
+}
+
+// Presets
+function loadPreset(type) {
+  components = [];
+  deps = {};
+  mode = null;
+  propagationSource = null;
+  document.getElementById('btn-propagate').classList.remove('active');
+  document.getElementById('btn-freeze').classList.remove('active');
+
+  if (type === 'engineering') {
+    components = [
+      { name: 'Form Factor', isValue: false },
+      { name: 'Material', isValue: false },
+      { name: 'Structural Design', isValue: false },
+      { name: 'Interface Specs', isValue: false },
+      { name: 'Mfg Process', isValue: false },
+      { name: 'Tolerances', isValue: true },
+      { name: 'Safety Margins', isValue: true },
+      { name: 'Surface Finish', isValue: false },
+    ];
+    // Dependencies: row depends on column
+    // Structural depends strongly on Form Factor and Material
+    setDep(2, 0, 2); setDep(2, 1, 2);
+    // Interface Specs depend strongly on Form Factor, weakly on Structural
+    setDep(3, 0, 2); setDep(3, 2, 1);
+    // Mfg Process depends strongly on Material and Form Factor, weakly on Structural
+    setDep(4, 0, 2); setDep(4, 1, 2); setDep(4, 2, 1);
+    // Tolerances depend on Structural, Mfg Process, Interface Specs
+    setDep(5, 2, 2); setDep(5, 4, 1); setDep(5, 3, 1);
+    // Safety Margins depend on Material, Structural, Tolerances
+    setDep(6, 1, 2); setDep(6, 2, 2); setDep(6, 5, 1);
+    // Surface Finish depends weakly on Material, Mfg Process
+    setDep(7, 1, 1); setDep(7, 4, 1);
+    // Material depends weakly on Form Factor
+    setDep(1, 0, 1);
+  }
+
+  else if (type === 'algorithm') {
+    components = [
+      { name: 'Training Data', isValue: true },
+      { name: 'Model Architecture', isValue: false },
+      { name: 'Loss Function', isValue: true },
+      { name: 'Feature Encoding', isValue: true },
+      { name: 'Eval Metrics', isValue: true },
+      { name: 'Threshold', isValue: true },
+      { name: 'API Contract', isValue: false },
+      { name: 'UI / Display', isValue: false },
+    ];
+    // Model Architecture depends on Training Data
+    setDep(1, 0, 1);
+    // Loss Function depends strongly on Training Data, weakly on Architecture
+    setDep(2, 0, 2); setDep(2, 1, 1);
+    // Feature Encoding depends strongly on Training Data
+    setDep(3, 0, 2);
+    // Eval Metrics depend on Loss Function, Feature Encoding
+    setDep(4, 2, 2); setDep(4, 3, 1);
+    // Threshold depends strongly on Eval Metrics, weakly on Feature Encoding
+    setDep(5, 4, 2); setDep(5, 3, 1);
+    // API Contract depends on Threshold, Feature Encoding
+    setDep(6, 5, 1); setDep(6, 3, 1);
+    // UI depends on API Contract, Threshold
+    setDep(7, 6, 2); setDep(7, 5, 1);
+  }
+
+  else if (type === 'organization') {
+    components = [
+      { name: 'Mission Statement', isValue: true },
+      { name: 'Hiring Criteria', isValue: true },
+      { name: 'Team Structure', isValue: false },
+      { name: 'Promotion Rules', isValue: true },
+      { name: 'Perf Metrics', isValue: true },
+      { name: 'Compensation', isValue: false },
+      { name: 'Culture/Norms', isValue: true },
+    ];
+    // Hiring depends on Mission, Culture
+    setDep(1, 0, 2); setDep(1, 6, 1);
+    // Team Structure depends on Mission, Hiring
+    setDep(2, 0, 1); setDep(2, 1, 1);
+    // Promotion Rules depend on Perf Metrics, Team Structure
+    setDep(3, 4, 2); setDep(3, 2, 1);
+    // Perf Metrics depend on Mission
+    setDep(4, 0, 2);
+    // Compensation depends on Promotion Rules, Team Structure
+    setDep(5, 3, 2); setDep(5, 2, 1);
+    // Culture depends weakly on Hiring, Team Structure, Promotion
+    setDep(6, 1, 1); setDep(6, 2, 1); setDep(6, 3, 1);
+    // Hiring also weakly depends on Team Structure (what roles needed)
+    setDep(1, 2, 1);
+  }
+
+  render();
+  updateAnalysis();
+}
+
+function clearAll() {
+  components = [];
+  deps = {};
+  mode = null;
+  propagationSource = null;
+  document.getElementById('btn-propagate').classList.remove('active');
+  document.getElementById('btn-freeze').classList.remove('active');
+  render();
+  updateAnalysis();
+}
+
+// Initialize
+render();
+updateAnalysis();
+</script>
+
+</body>
+</html>
