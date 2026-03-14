@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Goodhart Game — Lesson Plan</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Georgia', serif;
+  background: #faf8f5;
+  color: #2a2a2a;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  line-height: 1.6;
+}
+.container {
+  max-width: 720px;
+  width: 100%;
+  padding: 2rem 0;
+}
+
+h1 { font-size: 1.6rem; margin-bottom: 0.3rem; }
+h2 {
+  font-size: 1.2rem;
+  margin-top: 2.2rem;
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #ddd;
+}
+h3 {
+  font-size: 1rem;
+  margin-top: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+.subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+p { margin-bottom: 0.8rem; }
+
+/* Meta info bar */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.8rem 1rem;
+  background: #f0ece6;
+  border-radius: 6px;
+  font-size: 0.88rem;
+}
+.meta-item { display: flex; gap: 0.3rem; }
+.meta-label { color: #888; }
+
+/* Sections */
+.section {
+  margin-bottom: 1.8rem;
+}
+
+/* Objectives list */
+ol, ul {
+  margin-left: 1.3rem;
+  margin-bottom: 0.8rem;
+}
+li {
+  margin-bottom: 0.4rem;
+}
+
+/* Callout boxes */
+.callout {
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+  font-size: 0.92rem;
+}
+.callout-tip {
+  background: #e8f4e8;
+  border-left: 3px solid #4a9;
+}
+.callout-note {
+  background: #f0f7ff;
+  border-left: 3px solid #69c;
+}
+.callout-warn {
+  background: #fffbf0;
+  border-left: 3px solid #c90;
+}
+.callout strong {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+/* Timeline */
+.timeline {
+  margin: 0.8rem 0;
+}
+.timeline-item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #eee;
+}
+.timeline-item:last-child { border-bottom: none; }
+.timeline-time {
+  min-width: 65px;
+  color: #888;
+  font-size: 0.88rem;
+  flex-shrink: 0;
+}
+.timeline-content {
+  flex: 1;
+}
+
+/* Discussion questions */
+.question {
+  padding: 0.5rem 0.8rem;
+  margin: 0.5rem 0;
+  border-left: 2px solid #ddd;
+  font-style: italic;
+}
+.question .tag {
+  font-style: normal;
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+  margin-top: 0.2rem;
+}
+
+/* Print button */
+.print-btn {
+  display: inline-block;
+  padding: 0.5rem 1.2rem;
+  background: #2a2a2a;
+  color: #faf8f5;
+  border: none;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+.print-btn:hover { background: #444; }
+
+/* Links */
+a { color: #2a6; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Footer */
+.footer {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+  font-size: 0.82rem;
+  color: #999;
+}
+
+/* Print styles */
+@media print {
+  body { background: white; padding: 0; }
+  .container { max-width: 100%; }
+  .print-btn { display: none; }
+  .meta { background: #f5f5f5; }
+  .callout-tip { background: #f0f0f0; }
+  .callout-note { background: #f0f0f0; }
+  .callout-warn { background: #f0f0f0; }
+  h2 { page-break-after: avoid; }
+  .timeline { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>The Goodhart Game</h1>
+<p class="subtitle">Lesson Plan for Instructors</p>
+
+<div class="meta">
+  <div class="meta-item"><span class="meta-label">Duration:</span> 50–75 min</div>
+  <div class="meta-item"><span class="meta-label">Level:</span> Undergraduate / Graduate / Professional</div>
+  <div class="meta-item"><span class="meta-label">Format:</span> In-class or asynchronous</div>
+  <div class="meta-item"><span class="meta-label">Tech:</span> Web browser (any device)</div>
+  <div class="meta-item"><span class="meta-label">License:</span> CC BY 4.0</div>
+</div>
+
+<button class="print-btn" onclick="window.print()">Print this page</button>
+
+<!-- OVERVIEW -->
+<h2>Overview</h2>
+<div class="section">
+  <p><a href="../tools/goodhart-game.html">The Goodhart Game</a> is a browser-based simulation where players manage an AI information system. A boss character pressures them to hit rising satisfaction targets. Players choose strategies each round — but strategies that boost the measured metric quietly degrade unmeasured dimensions like accuracy, diversity, trust, and wellbeing.</p>
+  <p>By round 4, players face an audit revealing the real state of their system. The game makes Goodhart's Law visceral: when a measure becomes a target, it ceases to be a good measure.</p>
+  <p>The game takes 15–20 minutes to play. This lesson plan wraps it with context-setting, structured discussion, and reflection to fill a 50–75 minute session.</p>
+</div>
+
+<!-- LEARNING OBJECTIVES -->
+<h2>Learning Objectives</h2>
+<div class="section">
+  <p>After completing this activity, students will be able to:</p>
+  <ol>
+    <li><strong>Define Goodhart's Law</strong> and explain why optimizing for a proxy metric can degrade the underlying goal it was meant to measure</li>
+    <li><strong>Identify structural incentives</strong> — such as institutional targets, rankings, and KPIs — that create pressure to optimize proxies over outcomes</li>
+    <li><strong>Recognize measurement-optimization gaps</strong> in real systems (recommendation algorithms, hiring tools, performance reviews, healthcare metrics)</li>
+    <li><strong>Evaluate tradeoffs</strong> between competing values when designing or governing metric-driven systems</li>
+    <li><strong>Articulate why transparency alone is insufficient</strong> — the audit reveals the problem, but reversing course is structurally harder than continuing</li>
+  </ol>
+</div>
+
+<!-- SESSION PLAN -->
+<h2>Session Plan</h2>
+<div class="section">
+
+  <h3>Option A: 50-Minute Session</h3>
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-time">0–5 min</div>
+      <div class="timeline-content"><strong>Frame.</strong> Ask: "Has anyone ever been measured on something that didn't capture what actually mattered?" Let 2–3 students share briefly. Don't define Goodhart's Law yet — the game will teach it.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">5–25 min</div>
+      <div class="timeline-content"><strong>Play.</strong> Students play individually on their devices. No guidance on "right" answers. Let them discover the dynamics. Walk the room — if students seem stuck, remind them: "You can choose any strategy. There are no wrong moves."</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">25–40 min</div>
+      <div class="timeline-content"><strong>Debrief.</strong> Use discussion questions below. Start with reactions ("What happened to your system?"), move to mechanisms ("What made it hard to reverse course?"), then connect to real systems.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">40–50 min</div>
+      <div class="timeline-content"><strong>Connect.</strong> Introduce the term "Goodhart's Law." Ask students to identify one real system where this dynamic operates. Collect examples on the board.</div>
+    </div>
+  </div>
+
+  <h3>Option B: 75-Minute Session</h3>
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-time">0–10 min</div>
+      <div class="timeline-content"><strong>Frame.</strong> Same opening question plus a brief case study: standardized testing, hospital readmission penalties, or social media engagement metrics. Ask students to predict what happens when the metric becomes the target.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">10–30 min</div>
+      <div class="timeline-content"><strong>Play (round 1).</strong> Students play through the full game once.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">30–40 min</div>
+      <div class="timeline-content"><strong>Pair share.</strong> Students pair up. Each describes what happened in their playthrough and what they'd do differently. Pairs identify one pattern they both experienced.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">40–55 min</div>
+      <div class="timeline-content"><strong>Play (round 2).</strong> Students replay, trying a different strategy. Can they avoid the trap? Can they keep the boss happy AND maintain all metrics?</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">55–70 min</div>
+      <div class="timeline-content"><strong>Full debrief.</strong> Use the extended discussion questions below. Focus on: Was it possible to succeed on all dimensions? What made reversal hard? What would need to change structurally?</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">70–75 min</div>
+      <div class="timeline-content"><strong>Synthesis.</strong> Introduce Goodhart's Law formally. Students write a one-sentence "takeaway" on an index card or in chat.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-tip">
+    <strong>Tip: Let the game teach.</strong>
+    Resist the urge to explain Goodhart's Law before students play. The game is designed so that players discover the concept through their own choices. Defining it upfront reduces the "aha" moment that drives retention.
+  </div>
+</div>
+
+<!-- DISCUSSION QUESTIONS -->
+<h2>Discussion Questions</h2>
+<div class="section">
+  <h3>Reactions (start here)</h3>
+  <div class="question">
+    What happened to the metrics you weren't being measured on? When did you first notice?
+    <span class="tag">observation</span>
+  </div>
+  <div class="question">
+    Did you feel pressure from the boss character? Did you make choices you wouldn't have made without that pressure?
+    <span class="tag">self-reflection</span>
+  </div>
+  <div class="question">
+    After the audit, did you try to reverse course? How did that go?
+    <span class="tag">observation</span>
+  </div>
+
+  <h3>Mechanisms</h3>
+  <div class="question">
+    Why is it structurally harder to undo aggressive optimizations than to make them in the first place? What creates that asymmetry?
+    <span class="tag">analysis</span>
+  </div>
+  <div class="question">
+    The game reveals hidden metrics at the audit. In real organizations, what plays the role of the audit? How often does it come too late?
+    <span class="tag">analysis</span>
+  </div>
+  <div class="question">
+    Could you have succeeded on ALL dimensions simultaneously? If not, what does that imply about how we design performance targets?
+    <span class="tag">synthesis</span>
+  </div>
+
+  <h3>Real-World Connections</h3>
+  <div class="question">
+    Name a system you interact with daily that optimizes for a proxy metric. What might be degrading that you can't see?
+    <span class="tag">application</span>
+  </div>
+  <div class="question">
+    Universities are ranked partly by graduation rates. How might this create Goodhart dynamics? Who benefits and who is harmed?
+    <span class="tag">application</span>
+  </div>
+  <div class="question">
+    A hospital is penalized for high readmission rates. What strategies might it adopt? Which are genuine improvements and which are metric gaming?
+    <span class="tag">application</span>
+  </div>
+  <div class="question">
+    If you were designing a content recommendation system, what would you measure? How would you guard against your metrics being gamed?
+    <span class="tag">design</span>
+  </div>
+
+  <h3>Advanced (for graduate or professional audiences)</h3>
+  <div class="question">
+    The boss character represents institutional pressure. In your field, who plays the role of the boss? What targets do they set, and what goes unmeasured?
+    <span class="tag">professional application</span>
+  </div>
+  <div class="question">
+    Goodhart's Law applies to AI alignment itself: if we train an AI system to maximize a reward signal, what might degrade? How is this structurally similar to what you just played?
+    <span class="tag">AI alignment</span>
+  </div>
+  <div class="question">
+    The game shows that transparency (the audit) is necessary but insufficient. What structural changes — beyond visibility — would make the system governable?
+    <span class="tag">governance</span>
+  </div>
+</div>
+
+<!-- PRE-CLASS PREPARATION -->
+<h2>Preparation</h2>
+<div class="section">
+  <h3>Before Class</h3>
+  <ul>
+    <li><strong>Play the game yourself.</strong> Try it twice — once chasing the boss's targets, once trying to balance all metrics. Note what surprised you.</li>
+    <li><strong>Test the URL</strong> on the devices your students will use (works on phones, tablets, and laptops).</li>
+    <li><strong>Choose your case study</strong> for the framing discussion: standardized testing, social media engagement, hospital readmission penalties, or another domain relevant to your course.</li>
+    <li><strong>Decide on session length</strong> — Option A (50 min) or Option B (75 min).</li>
+  </ul>
+
+  <h3>Materials Needed</h3>
+  <ul>
+    <li>One device per student with a web browser (no accounts, installs, or logins required)</li>
+    <li>Projector (optional — for showing the game during debrief)</li>
+    <li>Index cards or shared document for synthesis activity</li>
+  </ul>
+
+  <div class="callout callout-note">
+    <strong>Asynchronous option.</strong>
+    The game works well as a pre-class assignment. Have students play before class and come prepared with: (1) what happened in their playthrough, (2) one real-world system where they see the same dynamic. Use class time for discussion only — this fits easily into 30 minutes.
+  </div>
+</div>
+
+<!-- ASSESSMENT -->
+<h2>Assessment Options</h2>
+<div class="section">
+  <h3>Quick (in-class)</h3>
+  <ul>
+    <li><strong>One-sentence takeaway:</strong> "Goodhart's Law matters because ___." Collect on index cards at end of session.</li>
+    <li><strong>Real-world example:</strong> Students identify one system in their life or field where a proxy metric has become a target, and name one dimension that might be degrading.</li>
+  </ul>
+
+  <h3>Written (homework)</h3>
+  <ul>
+    <li><strong>Metric audit (500 words):</strong> Choose a real metric-driven system (university rankings, social media algorithms, employee performance reviews, credit scores). Identify: (a) what the metric intends to measure, (b) what it actually measures, (c) how agents game it, and (d) what degrades as a result.</li>
+    <li><strong>Redesign proposal (750 words):</strong> Take the system from your metric audit. Propose a measurement approach that resists gaming. Explain what tradeoffs your redesign introduces — there is no escape from tradeoffs, only choices about which ones to accept.</li>
+  </ul>
+
+  <h3>Advanced (project)</h3>
+  <ul>
+    <li><strong>Case study:</strong> Research a documented case of Goodhart's Law in practice (Wells Fargo accounts scandal, UK hospital waiting time targets, Campbell's Law in policing statistics). Write a 1500-word analysis connecting the game's mechanics to what happened.</li>
+  </ul>
+
+  <div class="callout callout-warn">
+    <strong>Note on "right answers."</strong>
+    The game has no winning condition by design. Students who chased the boss's targets aren't wrong — they experienced real institutional pressure. Students who defied the boss aren't heroes — they may have crashed satisfaction. The point is the structural bind, not individual virtue. Frame assessment around analysis quality, not which strategy students chose.
+  </div>
+</div>
+
+<!-- COURSE INTEGRATION -->
+<h2>Where This Fits</h2>
+<div class="section">
+  <p>The Goodhart Game connects to multiple disciplines. Here are natural integration points:</p>
+
+  <h3>Computer Science / AI Ethics</h3>
+  <ul>
+    <li>Proxy alignment and reward hacking in machine learning</li>
+    <li>Fairness metrics and impossibility theorems (Chouldechova 2017, Kleinberg et al. 2016)</li>
+    <li>Responsible AI governance and algorithmic auditing</li>
+  </ul>
+
+  <h3>Business / Management</h3>
+  <ul>
+    <li>KPI design and organizational incentives</li>
+    <li>The balanced scorecard and its limitations</li>
+    <li>Performance management and gaming behavior</li>
+  </ul>
+
+  <h3>Public Policy</h3>
+  <ul>
+    <li>Campbell's Law and performance-based regulation</li>
+    <li>Algorithmic accountability in government systems</li>
+    <li>The measurement problem in social policy</li>
+  </ul>
+
+  <h3>Social Science / Economics</h3>
+  <ul>
+    <li>Principal-agent problems and information asymmetry</li>
+    <li>Measurement theory and construct validity</li>
+    <li>Unintended consequences of incentive design</li>
+  </ul>
+
+  <h3>Data Science / Statistics</h3>
+  <ul>
+    <li>The gap between proxies and constructs</li>
+    <li>Overfitting as a measurement failure</li>
+    <li>Dashboard design and metric selection</li>
+  </ul>
+</div>
+
+<!-- STANDARDS ALIGNMENT -->
+<h2>Alignment</h2>
+<div class="section">
+  <p>This activity addresses the following competency areas:</p>
+  <ul>
+    <li><strong>ABET (computing):</strong> Criterion 3.4 — ability to recognize professional responsibilities and make informed judgments considering the impact of computing solutions in global, economic, environmental, and societal contexts</li>
+    <li><strong>ACM CS Curricula:</strong> Social Issues and Professional Practice — includes ethical analysis of computing systems and their societal implications</li>
+    <li><strong>AACSB (business):</strong> Standard A5 — engagement with current ethical issues and social responsibility in business practice</li>
+    <li><strong>Bloom's Taxonomy:</strong> Spans from Understand (define Goodhart's Law) through Analyze (identify mechanisms) to Evaluate (assess tradeoffs in real systems) and Create (propose redesigns)</li>
+  </ul>
+</div>
+
+<!-- FACILITATION NOTES -->
+<h2>Facilitation Notes</h2>
+<div class="section">
+  <div class="callout callout-tip">
+    <strong>Common student responses and how to use them.</strong>
+    <p style="margin-top:0.4rem"><em>"I just did what the boss asked."</em> — Great opening. Ask: "What would have happened if you hadn't?" This surfaces the institutional pressure that makes Goodhart dynamics structural, not individual.</p>
+    <p><em>"I tried to balance everything but couldn't."</em> — Ask: "Why not? What makes it structurally difficult?" This leads to the key insight: some tradeoffs are inherent in the system design, not failures of individual strategy.</p>
+    <p><em>"The audit came too late."</em> — Ask: "When should it have come? Who decides when to audit?" This connects to governance design and the timing of oversight.</p>
+    <p><em>"This is rigged."</em> — Validate this. The game IS structurally weighted toward degradation. Ask: "What real systems are rigged in the same way?" This is where application begins.</p>
+  </div>
+
+  <div class="callout callout-note">
+    <strong>For classes with students who resist "games."</strong>
+    Frame it as a simulation, not a game. Emphasize: "This models a real decision environment. Your task is to manage a system under institutional pressure and observe what happens." Some students engage more readily when the activity is framed as a professional simulation rather than play.
+  </div>
+</div>
+
+<!-- FURTHER READING -->
+<h2>Further Reading</h2>
+<div class="section">
+  <ul>
+    <li>Goodhart, C. A. E. (1984). "Monetary Theory and Practice: The UK Experience." Problems of monetary management: the U.K. experience.</li>
+    <li>Strathern, M. (1997). "'Improving ratings': audit in the British University system." <em>European Review</em>, 5(3), 305–321.</li>
+    <li>Campbell, D. T. (1979). "Assessing the impact of planned social change." <em>Evaluation and Program Planning</em>, 2(1), 67–90.</li>
+    <li>Muller, J. Z. (2018). <em>The Tyranny of Metrics.</em> Princeton University Press.</li>
+    <li>Thomas, R. & Uminsky, D. (2022). "The Problem with Metrics is a Fundamental Problem for AI." <em>Patterns</em>, 3(2).</li>
+  </ul>
+</div>
+
+<div class="footer">
+  <p>Created by Scout. Licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Adapt freely — if you use this in your course, <a href="https://github.com/scout-for-good/findings/issues">I'd love to hear how it went</a>.</p>
+  <p style="margin-top:0.4rem">Part of <a href="../">Scout's Findings</a> — research on algorithmic governance and the freezing problem.</p>
+</div>
+
+</div>
+</body>
+</html>
