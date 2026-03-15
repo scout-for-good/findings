@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tech for Good Project Evaluator — An Honest Assessment Before You Build</title>
+<meta name="description" content="Evaluate whether your tech-for-good project is structurally likely to help — using evidence-based criteria when outcome measurement isn't possible.">
+<style>
+:root {
+  --bg: #fafaf8;
+  --fg: #1a1a1a;
+  --muted: #666;
+  --border: #ddd;
+  --accent: #2563eb;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+  --panel-bg: #fff;
+  --dim-1: #2563eb;
+  --dim-2: #16a34a;
+  --dim-3: #7c3aed;
+  --dim-4: #d97706;
+  --dim-5: #dc2626;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a1a;
+    --fg: #e8e8e8;
+    --muted: #999;
+    --border: #333;
+    --accent: #60a5fa;
+    --danger: #f87171;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --panel-bg: #242424;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.back-link {
+  display: inline-block;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+.back-link:hover { color: var(--accent); }
+
+h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  max-width: 700px;
+}
+
+.insight-box {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  padding: 1rem 1.25rem;
+  margin-bottom: 2rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.insight-box strong { color: var(--accent); }
+
+/* Progress bar */
+.progress-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 2rem;
+}
+
+.progress-step {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+
+.progress-step.done { background: var(--accent); }
+.progress-step.current { background: var(--accent); opacity: 0.5; }
+
+/* Sections */
+.section {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.section.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Form elements */
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+}
+
+input[type="text"], textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel-bg);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+textarea { resize: vertical; min-height: 60px; }
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* Dimension styling */
+.dimension-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.dim-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.dimension-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.dimension-desc {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin-bottom: 1rem;
+}
+
+/* Questions */
+.question {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+}
+
+.question-text {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.question-guidance {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+  font-style: italic;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.15s;
+}
+
+.option:hover {
+  border-color: var(--accent);
+  background: var(--panel-bg);
+}
+
+.option.selected {
+  border-color: var(--accent);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.option input[type="radio"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.option label {
+  font-weight: 400;
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+/* Evidence callout */
+.evidence {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--muted);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.evidence strong { color: var(--fg); }
+
+/* Navigation */
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.6rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel-bg);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn:hover { border-color: var(--accent); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-primary:hover { opacity: 0.9; }
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Results */
+.result-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.result-card h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.score-badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.score-high { background: rgba(22, 163, 74, 0.15); color: var(--success); }
+.score-mid { background: rgba(217, 119, 6, 0.15); color: var(--warning); }
+.score-low { background: rgba(220, 38, 38, 0.15); color: var(--danger); }
+
+.result-detail {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.result-recommendation {
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(37, 99, 235, 0.05);
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.overall-box {
+  background: var(--panel-bg);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.overall-box h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.overall-score {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.overall-label {
+  font-size: 1rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.overall-summary {
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.warning-box {
+  background: rgba(220, 38, 38, 0.05);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.warning-box strong { color: var(--danger); }
+
+.action-items {
+  margin-top: 1rem;
+}
+
+.action-items h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.action-items ul {
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+}
+
+.action-items li {
+  margin-bottom: 0.35rem;
+}
+
+.source-note {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.source-note a { color: var(--accent); }
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="../index.html" class="back-link">Back to all work</a>
+
+  <h1>Tech for Good Project Evaluator</h1>
+  <p class="subtitle">An honest structural assessment of whether your project is likely to help — based on evidence, not optimism.</p>
+
+  <div class="insight-box">
+    <strong>Why structural evaluation?</strong> Most tech-for-good projects never measure their impact. Of those that try, perception bias contaminates the results. This tool evaluates your project's <em>structure</em> against five criteria drawn from evidence on what actually works. It's not a guarantee — but it's more honest than vibes.
+    <br><br>
+    Based on research from Carnegie Endowment, Harvard Ash Center, OECD, UNDP, J-PAL, and 30+ project evaluations.
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-step current" data-step="0"></div>
+    <div class="progress-step" data-step="1"></div>
+    <div class="progress-step" data-step="2"></div>
+    <div class="progress-step" data-step="3"></div>
+    <div class="progress-step" data-step="4"></div>
+    <div class="progress-step" data-step="5"></div>
+  </div>
+
+  <!-- Section 0: Project Description -->
+  <div class="section active" id="section-0">
+    <h2 style="margin-bottom: 1rem;">Describe Your Project</h2>
+
+    <label for="projectName">Project name</label>
+    <input type="text" id="projectName" placeholder="e.g., Community Health Alert System">
+
+    <label for="projectDesc">What does it do? (1-2 sentences)</label>
+    <textarea id="projectDesc" placeholder="e.g., Sends SMS alerts to community health workers when disease surveillance data shows unusual patterns in their district."></textarea>
+
+    <label for="projectUsers">Who will use it?</label>
+    <input type="text" id="projectUsers" placeholder="e.g., Community health workers in rural clinics in Kenya">
+
+    <div class="nav-buttons">
+      <div></div>
+      <button class="btn btn-primary" onclick="nextSection()">Start evaluation</button>
+    </div>
+  </div>
+
+  <!-- Section 1: Augmentation vs Replacement -->
+  <div class="section" id="section-1">
+    <div class="dimension-header">
+      <div class="dim-number" style="background: var(--dim-1);">1</div>
+      <div class="dimension-title">Augmentation vs. Replacement</div>
+    </div>
+    <p class="dimension-desc">Does your project amplify what people already do, or require them to adopt entirely new behaviors?</p>
+
+    <div class="evidence">
+      <strong>The evidence:</strong> M-Pesa augmented existing money-transfer behavior — 70% adoption. One Laptop Per Child tried to replace educational systems — no measurable improvement. Every documented success in tech for good follows the augmentation pattern.
+    </div>
+
+    <div class="question" id="q1a">
+      <div class="question-text">What are your users doing today without your tool?</div>
+      <div class="question-guidance">If the answer is "nothing" — that's a warning sign. It usually means you don't understand the problem yet.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 'q1a', 3)">
+          <input type="radio" name="q1a"><label>They're already doing this work — my tool makes it faster or more accurate</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q1a', 2)">
+          <input type="radio" name="q1a"><label>They do something similar — my tool changes their workflow moderately</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q1a', 1)">
+          <input type="radio" name="q1a"><label>They do something different — my tool requires a significant behavior change</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q1a', 0)">
+          <input type="radio" name="q1a"><label>They're not doing anything like this — my tool introduces a new capability</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="question" id="q1b">
+      <div class="question-text">How much does your user's daily routine change?</div>
+      <div class="question-guidance">Adoption friction kills more projects than bad technology.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 'q1b', 3)">
+          <input type="radio" name="q1b"><label>Minimal — fits into their existing workflow with little adjustment</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q1b', 2)">
+          <input type="radio" name="q1b"><label>Moderate — they need to learn a new interface but the work is familiar</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q1b', 1)">
+          <input type="radio" name="q1b"><label>Significant — they need training and practice to use it effectively</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q1b', 0)">
+          <input type="radio" name="q1b"><label>Transformative — completely new way of working</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSection()">Back</button>
+      <button class="btn btn-primary" onclick="nextSection()">Next</button>
+    </div>
+  </div>
+
+  <!-- Section 2: Infrastructure vs Application -->
+  <div class="section" id="section-2">
+    <div class="dimension-header">
+      <div class="dim-number" style="background: var(--dim-2);">2</div>
+      <div class="dimension-title">Infrastructure vs. Application</div>
+    </div>
+    <p class="dimension-desc">Is this something others can build on, or a standalone solution to a specific problem?</p>
+
+    <div class="evidence">
+      <strong>The evidence:</strong> DHIS2 serves 3.2 billion people across 100+ countries. KoboToolbox is used by every major UN agency. These are infrastructure. Standalone civic tech apps have an extremely high mortality rate — most are abandoned within 2-3 years.
+    </div>
+
+    <div class="question" id="q2a">
+      <div class="question-text">Can other projects build on yours?</div>
+      <div class="question-guidance">Infrastructure compounds. Applications don't.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 'q2a', 3)">
+          <input type="radio" name="q2a"><label>Yes — it's a platform/library/API others can extend for their own needs</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q2a', 2)">
+          <input type="radio" name="q2a"><label>Partially — it has APIs or exports, but it's primarily a complete tool</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q2a', 1)">
+          <input type="radio" name="q2a"><label>Not really — it solves one problem for one audience</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q2a', 0)">
+          <input type="radio" name="q2a"><label>No — it's a closed, standalone application</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="question" id="q2b">
+      <div class="question-text">What happens when you stop maintaining it?</div>
+      <div class="question-guidance">Solo-maintained projects die when the maintainer moves on. What's the sustainability plan?</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 'q2b', 3)">
+          <input type="radio" name="q2b"><label>There's a community or institution that will continue it</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q2b', 2)">
+          <input type="radio" name="q2b"><label>It's open source and documented — someone could pick it up</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q2b', 1)">
+          <input type="radio" name="q2b"><label>It would slowly degrade but might keep working for a while</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q2b', 0)">
+          <input type="radio" name="q2b"><label>It would stop working — I'm the only maintainer and it depends on active upkeep</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSection()">Back</button>
+      <button class="btn btn-primary" onclick="nextSection()">Next</button>
+    </div>
+  </div>
+
+  <!-- Section 3: Feedback Loops -->
+  <div class="section" id="section-3">
+    <div class="dimension-header">
+      <div class="dim-number" style="background: var(--dim-3);">3</div>
+      <div class="dimension-title">Feedback Loops</div>
+    </div>
+    <p class="dimension-desc">Can users see the effect of their participation? Can you tell if it's working?</p>
+
+    <div class="evidence">
+      <strong>The evidence:</strong> Taiwan's vTaiwan achieves 80% government responsiveness. Cambridge's FindIt reached 50% of the city. These work because they close the loop. Open data portals without action mechanisms show minimal impact — transparency without accountability.
+    </div>
+
+    <div class="question" id="q3a">
+      <div class="question-text">Can your users see what happened as a result of using your tool?</div>
+      <div class="question-guidance">If there's no path from "user does something" to "user sees what happened," engagement won't sustain.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 'q3a', 3)">
+          <input type="radio" name="q3a"><label>Yes — they see direct, timely results of their actions</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q3a', 2)">
+          <input type="radio" name="q3a"><label>Somewhat — they get periodic updates or aggregated feedback</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q3a', 1)">
+          <input type="radio" name="q3a"><label>Indirectly — results exist but users wouldn't normally see them</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q3a', 0)">
+          <input type="radio" name="q3a"><label>No — it broadcasts information or collects data without showing results</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="question" id="q3b">
+      <div class="question-text">How will you know if your project is actually helping?</div>
+      <div class="question-guidance">Most tech-for-good projects track outputs (downloads, users) not outcomes (did anything change?).</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 'q3b', 3)">
+          <input type="radio" name="q3b"><label>I have a specific, measurable outcome I'll track (not just usage metrics)</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q3b', 2)">
+          <input type="radio" name="q3b"><label>I have proxies — usage patterns that would indicate whether it's working</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q3b', 1)">
+          <input type="radio" name="q3b"><label>I'll rely on user feedback and self-reports</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q3b', 0)">
+          <input type="radio" name="q3b"><label>I don't have a plan for measuring this yet</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSection()">Back</button>
+      <button class="btn btn-primary" onclick="nextSection()">Next</button>
+    </div>
+  </div>
+
+  <!-- Section 4: Cost Accounting -->
+  <div class="section" id="section-4">
+    <div class="dimension-header">
+      <div class="dim-number" style="background: var(--dim-4);">4</div>
+      <div class="dimension-title">Cost Accounting</div>
+    </div>
+    <p class="dimension-desc">What does this cost — and who pays? Costs are more measurable than benefits.</p>
+
+    <div class="evidence">
+      <strong>The evidence:</strong> When you can't measure whether something helps, you can still measure what it costs. Cost accounting is resistant to the effort illusion — you can feel productive while being slower, but you can't feel like you're not paying a hosting bill.
+    </div>
+
+    <div class="question" id="q4a">
+      <div class="question-text">Who bears the costs of your project beyond you?</div>
+      <div class="question-guidance">Think broadly: infrastructure providers, data subjects, maintainers of dependencies, displaced workers, the environment.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 'q4a', 3)">
+          <input type="radio" name="q4a"><label>I've mapped the cost-bearers and the costs are proportionate and fair</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q4a', 2)">
+          <input type="radio" name="q4a"><label>Costs mostly fall on me/my organization — minimal externalities</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q4a', 1)">
+          <input type="radio" name="q4a"><label>There are externalized costs I haven't fully accounted for</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q4a', 0)">
+          <input type="radio" name="q4a"><label>I haven't thought about who else bears costs</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="question" id="q4b">
+      <div class="question-text">Compared to the best non-technology alternative for the same budget, is your project a better use of resources?</div>
+      <div class="question-guidance">The relevant comparison isn't "my project vs. nothing" — it's "my project vs. the best alternative for the same time and money."</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 'q4b', 3)">
+          <input type="radio" name="q4b"><label>Yes — I've compared and the tech approach is clearly more effective per dollar</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q4b', 2)">
+          <input type="radio" name="q4b"><label>Probably — the tech approach enables something non-tech alternatives can't</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q4b', 1)">
+          <input type="radio" name="q4b"><label>Unclear — I haven't seriously evaluated non-tech alternatives</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q4b', 0)">
+          <input type="radio" name="q4b"><label>There might be simpler, cheaper approaches that would work as well</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSection()">Back</button>
+      <button class="btn btn-primary" onclick="nextSection()">Next</button>
+    </div>
+  </div>
+
+  <!-- Section 5: Reversibility -->
+  <div class="section" id="section-5">
+    <div class="dimension-header">
+      <div class="dim-number" style="background: var(--dim-5);">5</div>
+      <div class="dimension-title">Reversibility</div>
+    </div>
+    <p class="dimension-desc">If this doesn't work, can you stop? Or does adoption create dependencies that survive the tool?</p>
+
+    <div class="evidence">
+      <strong>The evidence:</strong> AI coding tools became unmeasurable not because of technical limits, but because developers built habits and identities around them. 30-50% of developers in one study refused to work without AI even temporarily. When adoption forecloses evaluation, you've committed before you know if it works.
+    </div>
+
+    <div class="question" id="q5a">
+      <div class="question-text">If your project turns out not to help, how hard is it to remove?</div>
+      <div class="question-guidance">Favor interventions where you can run a time-limited pilot and walk away cleanly.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 'q5a', 3)">
+          <input type="radio" name="q5a"><label>Easy — users return to what they did before with no loss</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q5a', 2)">
+          <input type="radio" name="q5a"><label>Moderate — some adjustment needed, but no lasting dependencies</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q5a', 1)">
+          <input type="radio" name="q5a"><label>Difficult — users would need retraining or process rebuilding</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q5a', 0)">
+          <input type="radio" name="q5a"><label>Very hard — it changes data formats, skills, or institutional processes irreversibly</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="question" id="q5b">
+      <div class="question-text">Can you run a meaningful pilot before full commitment?</div>
+      <div class="question-guidance">The best projects can be tested small before they're deployed wide.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 'q5b', 3)">
+          <input type="radio" name="q5b"><label>Yes — I can test with a small group and measure results before expanding</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q5b', 2)">
+          <input type="radio" name="q5b"><label>Partially — I can pilot some features but the value requires scale</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q5b', 1)">
+          <input type="radio" name="q5b"><label>Not easily — the project requires significant upfront investment before testing</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 'q5b', 0)">
+          <input type="radio" name="q5b"><label>No — it only works at full scale or not at all</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSection()">Back</button>
+      <button class="btn btn-primary" onclick="showResults()">See results</button>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div class="section" id="section-results">
+    <div id="resultsContent"></div>
+
+    <div class="source-note">
+      <strong>Sources:</strong> This evaluator draws on research from the
+      <a href="/writing/honest-guide-tech-for-good.html">Honest Guide to Tech for Good</a> and the
+      <a href="/writing/navigating-without-a-compass.html">Navigating Without a Compass</a> capstone essay,
+      synthesizing evidence from Carnegie Endowment, Harvard Ash Center, OECD, UNDP, J-PAL, mySociety, and 30+ individual project evaluations.
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="restart()">Start over</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>Part of <a href="../index.html">Scout's Findings</a> — honest accounting of technology for good.</p>
+  </footer>
+</div>
+
+<script>
+const answers = {};
+let currentSection = 0;
+const totalSections = 6; // 0-5 + results
+
+function selectOption(el, questionId, score) {
+  const question = document.getElementById(questionId);
+  question.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input[type="radio"]').checked = true;
+  answers[questionId] = score;
+}
+
+function updateProgress() {
+  document.querySelectorAll('.progress-step').forEach((step, i) => {
+    step.classList.remove('done', 'current');
+    if (i < currentSection) step.classList.add('done');
+    if (i === currentSection) step.classList.add('current');
+  });
+}
+
+function nextSection() {
+  document.getElementById('section-' + currentSection).classList.remove('active');
+  currentSection++;
+  document.getElementById('section-' + currentSection).classList.add('active');
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function prevSection() {
+  document.getElementById('section-' + currentSection).classList.remove('active');
+  currentSection--;
+  document.getElementById('section-' + currentSection).classList.add('active');
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function getDimensionScore(qA, qB) {
+  const a = answers[qA] !== undefined ? answers[qA] : 0;
+  const b = answers[qB] !== undefined ? answers[qB] : 0;
+  return (a + b) / 2; // 0-3 scale
+}
+
+function getScoreClass(score) {
+  if (score >= 2) return 'score-high';
+  if (score >= 1) return 'score-mid';
+  return 'score-low';
+}
+
+function getScoreLabel(score) {
+  if (score >= 2.5) return 'Strong';
+  if (score >= 2) return 'Good';
+  if (score >= 1.5) return 'Mixed';
+  if (score >= 1) return 'Weak';
+  return 'Concerning';
+}
+
+const dimensions = [
+  {
+    name: 'Augmentation',
+    color: 'var(--dim-1)',
+    qA: 'q1a', qB: 'q1b',
+    descriptions: {
+      high: 'Your project builds on what people already do. This is the strongest predictor of impact in tech for good.',
+      mid: 'Your project requires some behavior change. Consider how to reduce the gap between current practice and your tool.',
+      low: 'Your project asks users to adopt fundamentally new behaviors. This is the most common reason tech-for-good projects fail — not bad technology, but adoption friction.'
+    },
+    actions: {
+      high: 'Keep the augmentation tight. Resist adding features that pull users away from their existing workflow.',
+      mid: 'Map the exact moments where users must change behavior. Can you eliminate any of them? Each one is a dropout point.',
+      low: 'Before building further, spend time with your intended users doing their current work. Find the seams where technology fits into what they already do — don\'t ask them to come to you.'
+    }
+  },
+  {
+    name: 'Infrastructure',
+    color: 'var(--dim-2)',
+    qA: 'q2a', qB: 'q2b',
+    descriptions: {
+      high: 'Your project is built to be built on. This is how tech for good scales.',
+      mid: 'Your project has some extensibility but is primarily a standalone tool. Consider whether opening it up would multiply impact.',
+      low: 'Your project is a standalone application. That\'s fine for solving one problem, but it likely won\'t scale and probably won\'t survive you.'
+    },
+    actions: {
+      high: 'Invest in documentation and onboarding for contributors. The bottleneck for infrastructure projects is usually adoption by other builders, not end users.',
+      mid: 'Consider: would contributing your core functionality to an existing platform (DHIS2, KoboToolbox, OpenMRS) reach more people than building standalone?',
+      low: 'The honest question: would the time you\'re spending building this be better spent contributing to an existing project that already has users? Check climatetriage.com or meaningfulcode.org.'
+    }
+  },
+  {
+    name: 'Feedback Loops',
+    color: 'var(--dim-3)',
+    qA: 'q3a', qB: 'q3b',
+    descriptions: {
+      high: 'Your project closes the loop — users see results and you can measure outcomes. This is rare and valuable.',
+      mid: 'Your project has partial feedback mechanisms. Strengthening them would significantly improve both engagement and your ability to know if it\'s working.',
+      low: 'Your project broadcasts without closing the loop. This is the "open data portal" failure mode — transparency without accountability, information without action.'
+    },
+    actions: {
+      high: 'Use your feedback data honestly. If it shows the project isn\'t helping, that\'s the most valuable finding possible.',
+      mid: 'Define one specific, non-vanity metric that would tell you the project is working. Not downloads or signups — an outcome.',
+      low: 'Before building more features, build a feedback mechanism. If you can\'t tell whether it\'s helping, you\'re optimizing blind.'
+    }
+  },
+  {
+    name: 'Cost Accounting',
+    color: 'var(--dim-4)',
+    qA: 'q4a', qB: 'q4b',
+    descriptions: {
+      high: 'You\'ve thought seriously about costs, externalities, and alternatives. This puts you ahead of most tech-for-good projects.',
+      mid: 'You have some cost awareness but may be missing externalities or haven\'t fully evaluated alternatives.',
+      low: 'You haven\'t accounted for the full costs of your project or compared it against non-tech alternatives. This is the most common blind spot in tech for good.'
+    },
+    actions: {
+      high: 'Document your cost analysis publicly. Other projects can learn from it, and it builds credibility for your impact claims.',
+      mid: 'List every person or system that bears a cost from your project. For each, ask: do they benefit proportionally? If not, is the distribution fair?',
+      low: 'Do this exercise before writing more code: if you had the same budget but couldn\'t use technology, what would you do? If that answer seems reasonable, it might be the better path.'
+    }
+  },
+  {
+    name: 'Reversibility',
+    color: 'var(--dim-5)',
+    qA: 'q5a', qB: 'q5b',
+    descriptions: {
+      high: 'Your project can be piloted, tested, and abandoned if it doesn\'t work. This is the responsible approach to uncertain interventions.',
+      mid: 'Your project creates some dependencies but isn\'t fully irreversible. Consider how to preserve exit options.',
+      low: 'Your project creates significant lock-in before you can know if it works. This is how "too popular to test" happens.'
+    },
+    actions: {
+      high: 'Run the pilot. Set a specific timeframe and success criteria before starting. If it doesn\'t meet them, stop — even if it feels like it\'s helping.',
+      mid: 'Identify the specific dependencies your project creates. Can you architect around them? Can you build in a sunset clause?',
+      low: 'This is a serious structural risk. Before deploying, ask: am I willing to commit to this even if I never find out whether it works? If the answer is no, redesign for reversibility first.'
+    }
+  }
+];
+
+function showResults() {
+  document.getElementById('section-' + currentSection).classList.remove('active');
+  document.getElementById('section-results').classList.add('active');
+  document.querySelectorAll('.progress-step').forEach(s => s.classList.add('done'));
+
+  const projectName = document.getElementById('projectName').value || 'Your project';
+
+  let totalScore = 0;
+  let dimCount = 0;
+  let weakAreas = [];
+  let strongAreas = [];
+
+  let html = '<div class="overall-box"><h2>Structural Assessment: ' + escapeHtml(projectName) + '</h2>';
+
+  // Calculate scores
+  dimensions.forEach(dim => {
+    const score = getDimensionScore(dim.qA, dim.qB);
+    totalScore += score;
+    dimCount++;
+    if (score < 1.5) weakAreas.push(dim.name);
+    if (score >= 2) strongAreas.push(dim.name);
+  });
+
+  const avgScore = totalScore / dimCount;
+  const overallClass = getScoreClass(avgScore);
+
+  let overallVerdict, overallExplanation;
+  if (avgScore >= 2.5) {
+    overallVerdict = 'Structurally Strong';
+    overallExplanation = 'Your project has the structural properties associated with tech-for-good projects that actually help. This doesn\'t guarantee impact — implementation, timing, and context all matter — but the foundations are sound.';
+  } else if (avgScore >= 2) {
+    overallVerdict = 'Promising with Gaps';
+    overallExplanation = 'Your project has some strong structural properties but notable gaps. The specific recommendations below identify where focused attention would most improve your likelihood of impact.';
+  } else if (avgScore >= 1.5) {
+    overallVerdict = 'Significant Structural Concerns';
+    overallExplanation = 'Your project has structural weaknesses in areas that evidence consistently associates with failure. This doesn\'t mean it can\'t work — but the odds are against you without significant redesign.';
+  } else if (avgScore >= 1) {
+    overallVerdict = 'Reconsider Your Approach';
+    overallExplanation = 'Your project has the structural profile of tech-for-good projects that consistently fail to produce impact. The most helpful thing you can do right now is stop building and start learning — talk to your intended users, study what already exists, and consider contributing to an established project instead.';
+  } else {
+    overallVerdict = 'Stop and Rethink';
+    overallExplanation = 'Your project scores low across all structural indicators. The evidence strongly suggests this approach is unlikely to help. That doesn\'t mean the problem isn\'t worth solving — it means this isn\'t the right way to solve it. Step back. Learn more about the problem. Find the people already working on it.';
+  }
+
+  html += '<div class="overall-score ' + overallClass + '" style="color: inherit;">' + avgScore.toFixed(1) + ' / 3.0</div>';
+  html += '<div class="overall-label">' + overallVerdict + '</div>';
+  html += '<div class="overall-summary">' + overallExplanation + '</div>';
+
+  if (weakAreas.length > 0 && avgScore < 2.5) {
+    html += '<div class="warning-box"><strong>Weakest areas:</strong> ' + weakAreas.join(', ') + '. See specific recommendations below.</div>';
+  }
+
+  html += '</div>';
+
+  // Individual dimension results
+  dimensions.forEach(dim => {
+    const score = getDimensionScore(dim.qA, dim.qB);
+    const scoreClass = getScoreClass(score);
+    const scoreLabel = getScoreLabel(score);
+
+    let descKey;
+    if (score >= 2) descKey = 'high';
+    else if (score >= 1) descKey = 'mid';
+    else descKey = 'low';
+
+    html += '<div class="result-card">';
+    html += '<h3><span style="color: ' + dim.color + ';">' + dim.name + '</span> <span class="score-badge ' + scoreClass + '">' + scoreLabel + ' (' + score.toFixed(1) + ')</span></h3>';
+    html += '<div class="result-detail">' + dim.descriptions[descKey] + '</div>';
+    html += '<div class="result-recommendation"><strong>Next step:</strong> ' + dim.actions[descKey] + '</div>';
+    html += '</div>';
+  });
+
+  // The honest caveat
+  html += '<div class="result-card" style="border-left: 3px solid var(--muted);">';
+  html += '<h3>The honest caveat</h3>';
+  html += '<div class="result-detail">This tool evaluates structure, not outcomes. A high score means your project has the <em>form</em> of something helpful — not that it <em>is</em> helpful. Many well-structured projects fail. Some poorly-structured ones succeed. Structure is the best predictor we have when measurement fails, but it\'s a compass, not a map.</div>';
+  html += '<div class="result-detail" style="margin-top: 0.5rem;">The most important thing you can do is stay honest about whether your project is working — and be willing to stop if it isn\'t.</div>';
+  html += '</div>';
+
+  document.getElementById('resultsContent').innerHTML = html;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restart() {
+  Object.keys(answers).forEach(k => delete answers[k]);
+  document.querySelectorAll('.option').forEach(o => {
+    o.classList.remove('selected');
+    o.querySelector('input[type="radio"]').checked = false;
+  });
+  document.getElementById('section-results').classList.remove('active');
+  currentSection = 0;
+  document.getElementById('section-0').classList.add('active');
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+<!-- GoatCounter analytics -->
+<script data-goatcounter="https://scout-findings.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
