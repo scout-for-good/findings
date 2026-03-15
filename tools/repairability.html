@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repairability Design Evaluator — Score Your Product Before You Ship It</title>
+<meta name="description" content="Free design-phase repairability calculator based on EU and French scoring criteria. Get a predicted repairability score with specific improvement suggestions while you can still change the design.">
+<style>
+:root {
+  --bg: #fafaf8;
+  --fg: #1a1a1a;
+  --muted: #666;
+  --border: #ddd;
+  --accent: #2563eb;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+  --panel-bg: #fff;
+  --score-low: #dc2626;
+  --score-mid: #d97706;
+  --score-high: #16a34a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a1a;
+    --fg: #e8e8e8;
+    --muted: #999;
+    --border: #333;
+    --accent: #60a5fa;
+    --danger: #f87171;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --panel-bg: #242424;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+header p {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.intro {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  font-size: 0.92rem;
+}
+
+.intro strong { color: var(--accent); }
+
+.criterion {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.criterion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.criterion-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.criterion-weight {
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+}
+
+.criterion-desc {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.sub-criterion {
+  margin-bottom: 1rem;
+}
+
+.sub-criterion label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+.sub-criterion select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 0.88rem;
+}
+
+.sub-criterion select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.criterion-score {
+  text-align: right;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.criterion-score span {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* Results Panel */
+.results {
+  position: sticky;
+  bottom: 0;
+  background: var(--panel-bg);
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.score-display {
+  text-align: center;
+}
+
+.score-number {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.score-bar-container {
+  padding: 0 1rem;
+}
+
+.score-bar {
+  height: 12px;
+  background: var(--bg);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 0.3rem;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s ease, background-color 0.4s ease;
+}
+
+.score-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.eu-grade {
+  text-align: center;
+}
+
+.eu-grade-letter {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.eu-grade-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Improvements */
+.improvements {
+  margin-top: 1.5rem;
+}
+
+.improvements h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.improvement-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.improvement-item:last-child { border-bottom: none; }
+
+.improvement-impact {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: #dcfce7;
+  color: #166534;
+}
+
+@media (prefers-color-scheme: dark) {
+  .improvement-impact {
+    background: #14532d;
+    color: #86efac;
+  }
+}
+
+.improvement-text { flex: 1; }
+
+.methodology {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.methodology summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 0.5rem;
+}
+
+.methodology p { margin-bottom: 0.5rem; }
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+footer a { color: var(--accent); }
+
+@media (max-width: 600px) {
+  .results-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .score-bar-container {
+    grid-column: 1 / -1;
+    padding: 0;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Repairability Design Evaluator</h1>
+    <p>Score your product's repairability <em>during design</em> — while you can still change it.</p>
+  </header>
+
+  <div class="intro">
+    <p>This tool estimates your product's repairability score based on criteria from the
+    <strong>French Repairability Index</strong> and the <strong>EU Ecodesign for Sustainable Products Regulation (ESPR)</strong>.
+    Answer questions about your current design to get a predicted score and specific suggestions for improvement.</p>
+    <p style="margin-top:0.5rem">Designed for product designers and mechanical engineers working on consumer electronics,
+    appliances, and other repairable goods. Not a substitute for formal compliance assessment.</p>
+  </div>
+
+  <!-- Criterion 1: Documentation -->
+  <div class="criterion" data-criterion="documentation">
+    <div class="criterion-header">
+      <h2>1. Documentation</h2>
+      <span class="criterion-weight">20% of score</span>
+    </div>
+    <p class="criterion-desc">Will repair documentation be available to owners and independent repair shops?</p>
+
+    <div class="sub-criterion">
+      <label>Repair manual availability</label>
+      <select data-sub="doc_availability" onchange="recalculate()">
+        <option value="0">No repair documentation planned</option>
+        <option value="1">Available only to authorized service centers</option>
+        <option value="2">Available on request (email/form)</option>
+        <option value="3">Freely available online, basic instructions</option>
+        <option value="4">Freely available online, detailed with diagrams and part numbers</option>
+      </select>
+    </div>
+
+    <div class="sub-criterion">
+      <label>Documentation commitment period</label>
+      <select data-sub="doc_duration" onchange="recalculate()">
+        <option value="0">No commitment</option>
+        <option value="1">Available during warranty period only</option>
+        <option value="2">Available for 5 years after last unit sold</option>
+        <option value="3">Available for 7+ years after last unit sold</option>
+        <option value="4">Published under open license (perpetual)</option>
+      </select>
+    </div>
+
+    <div class="sub-criterion">
+      <label>Exploded view / disassembly diagram</label>
+      <select data-sub="doc_diagrams" onchange="recalculate()">
+        <option value="0">None planned</option>
+        <option value="1">Internal use only</option>
+        <option value="2">Available on request</option>
+        <option value="3">Freely available, static diagrams</option>
+        <option value="4">Freely available, interactive / step-by-step</option>
+      </select>
+    </div>
+
+    <div class="criterion-score">Criterion score: <span id="score-documentation">0.0</span> / 10</div>
+  </div>
+
+  <!-- Criterion 2: Disassembly -->
+  <div class="criterion" data-criterion="disassembly">
+    <div class="criterion-header">
+      <h2>2. Disassembly & Reassembly</h2>
+      <span class="criterion-weight">20% of score</span>
+    </div>
+    <p class="criterion-desc">How easy is it to take apart and put back together for common repairs?</p>
+
+    <div class="sub-criterion">
+      <label>Steps to access the most failure-prone component</label>
+      <select data-sub="dis_steps" onchange="recalculate()">
+        <option value="0">15+ steps or not user-accessible</option>
+        <option value="1">10–14 steps</option>
+        <option value="2">6–9 steps</option>
+        <option value="3">3–5 steps</option>
+        <option value="4">1–2 steps (e.g., snap-off cover, single screw)</option>
+      </select>
+    </div>
+
+    <div class="sub-criterion">
+      <label>Primary fastener type</label>
+      <select data-sub="dis_fasteners" onchange="recalculate()">
+        <option value="0">Permanent (welded, ultrasonically bonded, riveted)</option>
+        <option value="1">Strong adhesive (requires heat gun / solvent)</option>
+        <option value="2">Weak adhesive (pull tabs) or proprietary screws</option>
+        <option value="3">Standard screws (Phillips, Torx, hex)</option>
+        <option value="4">Tool-free (clips, magnets, thumb screws)</option>
+      </select>
+    </div>
+
+    <div class="sub-criterion">
+      <label>Tools required</label>
+      <select data-sub="dis_tools" onchange="recalculate()">
+        <option value="0">Proprietary / manufacturer-specific tools required</option>
+        <option value="1">Specialized tools (heat gun, suction cups, spudger set)</option>
+        <option value="2">Common workshop tools (screwdriver set, pliers)</option>
+        <option value="3">Basic household tools (single screwdriver, coin)</option>
+        <option value="4">No tools required</option>
+      </select>
+    </div>
+
+    <div class="sub-criterion">
+      <label>Risk of damage during disassembly</label>
+      <select data-sub="dis_damage" onchange="recalculate()">
+        <option value="0">High risk — fragile clips, hidden catches, flex cables across seams</option>
+        <option value="1">Moderate risk — some care required, breakable tabs</option>
+        <option value="2">Low risk — clear paths, robust connectors</option>
+        <option value="3">Minimal risk — designed for repeated opening</option>
+      </select>
+    </div>
+
+    <div class="criterion-score">Criterion score: <span id="score-disassembly">0.0</span> / 10</div>
+  </div>
+
+  <!-- Criterion 3: Spare Parts -->
+  <div class="criterion" data-criterion="parts">
+    <div class="criterion-header">
+      <h2>3. Spare Parts Availability</h2>
+      <span class="criterion-weight">20% of score</span>
+    </div>
+    <p class="criterion-desc">Can owners and repair shops actually get the parts they need?</p>
+
+    <div class="sub-criterion">
+      <label>Spare parts availability commitment</label>
+      <select data-sub="parts_duration" onchange="recalculate()">
+        <option value="0">No spare parts planned</option>
+        <option value="1">Available during warranty period only</option>
+        <option value="2">Available for 5 years after last unit sold</option>
+        <option value="3">Available for 7+ years after last unit sold</option>
+        <option value="4">Available for 10+ years or parts are commodity/standard</option>
+      </select>
+    </div>
+
+    <div class="sub-criterion">
+      <label>Who can order spare parts?</label>
+      <select data-sub="parts_access" onchange="recalculate()">
+        <option value="0">Not available for purchase</option>
+        <option value="1">Authorized repair centers only</option>
+        <option value="2">Professional repairers (registered)</option>
+        <option value="3">Anyone, through manufacturer's store</option>
+        <option value="4">Anyone, through multiple channels (manufacturer + third-party)</option>
+      </select>
+    </div>
+
+    <div class="sub-criterion">
+      <label>Delivery time for common parts</label>
+      <select data-sub="parts_delivery" onchange="recalculate()">
+        <option value="0">Unknown or 15+ business days</option>
+        <option value="1">10–15 business days</option>
+        <option value="2">5–10 business days</option>
+        <option value="3">2–5 business days</option>
+        <option value="4">Next-day or in-stock at retail</option>
+      </select>
+    </div>
+
+    <div class="criterion-score">Criterion score: <span id="score-parts">0.0</span> / 10</div>
+  </div>
+
+  <!-- Criterion 4: Parts Pricing -->
+  <div class="criterion" data-criterion="pricing">
+    <div class="criterion-header">
+      <h2>4. Spare Parts Pricing</h2>
+      <span class="criterion-weight">20% of score</span>
+    </div>
+    <p class="criterion-desc">Is repair economically viable compared to replacement?</p>
+
+    <div class="sub-criterion">
+      <label>Cost of most common repair (part + labor if needed) vs. new product price</label>
+      <select data-sub="price_ratio" onchange="recalculate()">
+        <option value="0">More than 60% of new product price</option>
+        <option value="1">40–60% of new product price</option>
+        <option value="2">25–40% of new product price</option>
+        <option value="3">10–25% of new product price</option>
+        <option value="4">Under 10% of new product price</option>
+      </select>
+    </div>
+
+    <div class="sub-criterion">
+      <label>Are part prices publicly listed?</label>
+      <select data-sub="price_transparency" onchange="recalculate()">
+        <option value="0">Prices not available — quote required</option>
+        <option value="1">Prices available on request</option>
+        <option value="2">Prices listed on manufacturer website</option>
+        <option value="3">Prices listed and comparable across sellers</option>
+      </select>
+    </div>
+
+    <div class="sub-criterion">
+      <label>Software or pairing locks on replacement parts?</label>
+      <select data-sub="price_pairing" onchange="recalculate()">
+        <option value="0">Parts require manufacturer pairing/activation to function</option>
+        <option value="1">Some parts require pairing, workaround exists</option>
+        <option value="2">No pairing — standard parts work without software authorization</option>
+      </select>
+    </div>
+
+    <div class="criterion-score">Criterion score: <span id="score-pricing">0.0</span> / 10</div>
+  </div>
+
+  <!-- Criterion 5: Design for Repair -->
+  <div class="criterion" data-criterion="design">
+    <div class="criterion-header">
+      <h2>5. Design Architecture</h2>
+      <span class="criterion-weight">20% of score</span>
+    </div>
+    <p class="criterion-desc">Is the product's architecture designed to support repair and longevity?</p>
+
+    <div class="sub-criterion">
+      <label>Modularity of failure-prone components</label>
+      <select data-sub="design_modular" onchange="recalculate()">
+        <option value="0">Failure-prone parts are integrated (e.g., battery soldered to board)</option>
+        <option value="1">Some modularity but shared assemblies (e.g., screen + digitizer fused)</option>
+        <option value="2">Key components are separate modules with connectors</option>
+        <option value="3">Fully modular — all failure-prone parts individually replaceable</option>
+      </select>
+    </div>
+
+    <div class="sub-criterion">
+      <label>Software update support</label>
+      <select data-sub="design_software" onchange="recalculate()">
+        <option value="0">No software updates or not applicable</option>
+        <option value="1">Security updates for 2 years</option>
+        <option value="2">Security updates for 5 years</option>
+        <option value="3">Security updates for 7+ years</option>
+        <option value="4">Open-source firmware / community-maintainable</option>
+      </select>
+    </div>
+
+    <div class="sub-criterion">
+      <label>Diagnostic access</label>
+      <select data-sub="design_diagnostics" onchange="recalculate()">
+        <option value="0">No user-accessible diagnostics</option>
+        <option value="1">Basic error codes only</option>
+        <option value="2">Detailed diagnostics via manufacturer app/tool</option>
+        <option value="3">Open diagnostic interface (standard protocols, documented)</option>
+      </select>
+    </div>
+
+    <div class="sub-criterion">
+      <label>Factory reset / data clearing capability</label>
+      <select data-sub="design_reset" onchange="recalculate()">
+        <option value="0">No reset capability or not applicable</option>
+        <option value="1">Software reset only (may not clear all data)</option>
+        <option value="2">Full factory reset available to user</option>
+      </select>
+    </div>
+
+    <div class="criterion-score">Criterion score: <span id="score-design">0.0</span> / 10</div>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+    <div class="results-grid">
+      <div class="score-display">
+        <div class="score-number" id="total-score">0.0</div>
+        <div class="score-label">out of 10</div>
+      </div>
+      <div class="score-bar-container">
+        <div class="score-bar">
+          <div class="score-bar-fill" id="score-bar-fill" style="width:0%; background: var(--score-low)"></div>
+        </div>
+        <div class="score-bar-labels">
+          <span>Not repairable</span>
+          <span>Easily repairable</span>
+        </div>
+      </div>
+      <div class="eu-grade">
+        <div class="eu-grade-letter" id="eu-grade">E</div>
+        <div class="eu-grade-label">EU Grade</div>
+      </div>
+    </div>
+
+    <div class="improvements" id="improvements">
+      <h3>Top improvements you can make</h3>
+      <div id="improvement-list"></div>
+    </div>
+  </div>
+
+  <details class="methodology">
+    <summary>Methodology & Sources</summary>
+    <p>This tool synthesizes publicly available scoring criteria from two regulatory frameworks:</p>
+    <p><strong>French Repairability Index</strong> (Indice de réparabilité, 2021): Five equally-weighted criteria scored out of 20 each, totaling 100, then divided by 10. Mandatory on smartphones, laptops, TVs, washing machines, lawnmowers, and more. Administered by France's Ministry of Ecological Transition.</p>
+    <p><strong>EU Ecodesign for Sustainable Products Regulation (ESPR)</strong>: A-E grading based on six weighted parameters covering disassembly depth, fastener types, tool requirements, spare parts, repair instructions, and software updates. In effect for smartphones and tablets since June 2025, expanding to more categories.</p>
+    <p><strong>EN 45554:2020</strong>: European standard providing general methods for assessing repairability, reusability, and upgradability. This tool's parameter structure draws on its framework of disassemblability parameters (P1-P4) and process parameters (P5-P11).</p>
+    <p>Scores are <strong>estimates for design-phase decision-making</strong>, not formal compliance assessments. For regulatory compliance, use the official tools provided by your national authority. The French Ministry provides official calculation spreadsheets; the EU JRC maintains the ESPR product bureau documentation.</p>
+    <p>This tool is free and open-source. No data is collected or transmitted.</p>
+  </details>
+
+  <footer>
+    <p>Built by <a href="../index.html">Scout</a>. Free to use. No data collected.</p>
+  </footer>
+</div>
+
+<script>
+// Scoring configuration: each criterion has sub-criteria with max values
+const CRITERIA = {
+  documentation: {
+    weight: 0.2,
+    subs: {
+      doc_availability: { max: 4, weight: 0.4 },
+      doc_duration: { max: 4, weight: 0.35 },
+      doc_diagrams: { max: 4, weight: 0.25 }
+    }
+  },
+  disassembly: {
+    weight: 0.2,
+    subs: {
+      dis_steps: { max: 4, weight: 0.3 },
+      dis_fasteners: { max: 4, weight: 0.25 },
+      dis_tools: { max: 4, weight: 0.25 },
+      dis_damage: { max: 3, weight: 0.2 }
+    }
+  },
+  parts: {
+    weight: 0.2,
+    subs: {
+      parts_duration: { max: 4, weight: 0.4 },
+      parts_access: { max: 4, weight: 0.35 },
+      parts_delivery: { max: 4, weight: 0.25 }
+    }
+  },
+  pricing: {
+    weight: 0.2,
+    subs: {
+      price_ratio: { max: 4, weight: 0.45 },
+      price_transparency: { max: 3, weight: 0.25 },
+      price_pairing: { max: 2, weight: 0.3 }
+    }
+  },
+  design: {
+    weight: 0.2,
+    subs: {
+      design_modular: { max: 3, weight: 0.35 },
+      design_software: { max: 4, weight: 0.3 },
+      design_diagnostics: { max: 3, weight: 0.2 },
+      design_reset: { max: 2, weight: 0.15 }
+    }
+  }
+};
+
+// Improvement suggestions: keyed by sub-criterion, from current value to better value
+const IMPROVEMENTS = {
+  dis_fasteners: [
+    { from: [0], to: 3, text: "Replace permanent bonds (welds, ultrasonic) with standard screws", impact: "high" },
+    { from: [1], to: 3, text: "Replace strong adhesive with screws — eliminates need for heat tools", impact: "high" },
+    { from: [2], to: 3, text: "Switch from proprietary screws to standard Torx or Phillips", impact: "med" },
+    { from: [3], to: 4, text: "Consider tool-free fasteners (clips, magnets) for user-accessed areas", impact: "low" }
+  ],
+  dis_steps: [
+    { from: [0,1], to: 3, text: "Redesign access path to failure-prone parts — target under 5 steps", impact: "high" },
+    { from: [2], to: 3, text: "Reduce disassembly steps to 3-5 by combining or eliminating intermediate layers", impact: "med" }
+  ],
+  dis_tools: [
+    { from: [0], to: 2, text: "Eliminate proprietary tool requirements — use standard fasteners", impact: "high" },
+    { from: [1], to: 2, text: "Redesign to need only common workshop tools (screwdrivers, pliers)", impact: "med" }
+  ],
+  dis_damage: [
+    { from: [0], to: 2, text: "Route cables away from seams, replace fragile clips with robust ones", impact: "high" },
+    { from: [1], to: 2, text: "Add guides or markings to reduce accidental damage during opening", impact: "med" }
+  ],
+  design_modular: [
+    { from: [0], to: 2, text: "Separate failure-prone components into replaceable modules with connectors", impact: "high" },
+    { from: [1], to: 2, text: "Decouple fused assemblies (e.g., separate screen from digitizer)", impact: "high" }
+  ],
+  parts_duration: [
+    { from: [0,1], to: 2, text: "Commit to 5+ years of spare parts availability after last unit sold", impact: "high" },
+    { from: [2], to: 3, text: "Extend spare parts commitment to 7+ years — aligns with EU ESPR direction", impact: "med" }
+  ],
+  parts_access: [
+    { from: [0,1], to: 3, text: "Make spare parts orderable by anyone through your website", impact: "high" },
+    { from: [2], to: 3, text: "Open parts ordering to all consumers, not just registered repairers", impact: "med" }
+  ],
+  price_pairing: [
+    { from: [0], to: 2, text: "Remove software pairing / serialization locks on replacement parts", impact: "high" },
+    { from: [1], to: 2, text: "Eliminate remaining pairing requirements — let standard parts work", impact: "med" }
+  ],
+  price_ratio: [
+    { from: [0,1], to: 2, text: "Reduce most-common-repair cost to under 40% of product price", impact: "high" },
+    { from: [2], to: 3, text: "Target repair cost under 25% of product price for the most common failure", impact: "med" }
+  ],
+  doc_availability: [
+    { from: [0,1], to: 3, text: "Publish repair documentation freely online — it's required in France and increasingly in the EU", impact: "high" },
+    { from: [2], to: 3, text: "Make documentation freely available without requiring a request", impact: "med" }
+  ],
+  doc_duration: [
+    { from: [0,1], to: 2, text: "Commit to keeping repair docs available for at least 5 years after end of sale", impact: "med" }
+  ],
+  doc_diagrams: [
+    { from: [0,1], to: 3, text: "Create and publish disassembly diagrams with part identification", impact: "med" }
+  ],
+  design_software: [
+    { from: [0,1], to: 2, text: "Extend security update commitment to at least 5 years", impact: "med" }
+  ],
+  design_diagnostics: [
+    { from: [0], to: 2, text: "Add user-accessible diagnostics to help identify failed components before ordering parts", impact: "med" }
+  ],
+  price_transparency: [
+    { from: [0], to: 2, text: "Publish spare part prices on your website — price opacity discourages repair", impact: "med" }
+  ]
+};
+
+function getSelectValue(subId) {
+  const el = document.querySelector(`[data-sub="${subId}"]`);
+  return el ? parseInt(el.value) : 0;
+}
+
+function calculateCriterionScore(criterionKey) {
+  const criterion = CRITERIA[criterionKey];
+  let score = 0;
+  for (const [subKey, sub] of Object.entries(criterion.subs)) {
+    const val = getSelectValue(subKey);
+    const normalized = val / sub.max; // 0 to 1
+    score += normalized * sub.weight; // weighted contribution
+  }
+  return score * 10; // scale to 0-10
+}
+
+function getEUGrade(score) {
+  if (score >= 8) return { letter: 'A', color: '#16a34a' };
+  if (score >= 6) return { letter: 'B', color: '#65a30d' };
+  if (score >= 4.5) return { letter: 'C', color: '#d97706' };
+  if (score >= 3) return { letter: 'D', color: '#ea580c' };
+  return { letter: 'E', color: '#dc2626' };
+}
+
+function getScoreColor(score) {
+  if (score >= 7) return 'var(--score-high)';
+  if (score >= 4) return 'var(--score-mid)';
+  return 'var(--score-low)';
+}
+
+function getImprovements() {
+  const items = [];
+  for (const [subKey, suggestions] of Object.entries(IMPROVEMENTS)) {
+    const currentVal = getSelectValue(subKey);
+    for (const suggestion of suggestions) {
+      if (suggestion.from.includes(currentVal)) {
+        // Calculate point impact
+        let criterionKey = null;
+        for (const [ck, c] of Object.entries(CRITERIA)) {
+          if (c.subs[subKey]) { criterionKey = ck; break; }
+        }
+        if (!criterionKey) continue;
+        const sub = CRITERIA[criterionKey].subs[subKey];
+        const criterionWeight = CRITERIA[criterionKey].weight;
+        const currentNorm = currentVal / sub.max;
+        const newNorm = suggestion.to / sub.max;
+        const delta = (newNorm - currentNorm) * sub.weight * 10 * criterionWeight;
+
+        items.push({
+          text: suggestion.text,
+          impact: suggestion.impact,
+          delta: delta,
+          criterionKey: criterionKey
+        });
+      }
+    }
+  }
+  // Sort by delta descending
+  items.sort((a, b) => b.delta - a.delta);
+  return items.slice(0, 5); // top 5
+}
+
+function recalculate() {
+  let total = 0;
+  for (const [key, criterion] of Object.entries(CRITERIA)) {
+    const score = calculateCriterionScore(key);
+    document.getElementById(`score-${key}`).textContent = score.toFixed(1);
+    total += score * criterion.weight;
+  }
+
+  // Update total
+  document.getElementById('total-score').textContent = total.toFixed(1);
+  document.getElementById('total-score').style.color = getScoreColor(total);
+
+  // Update bar
+  const fill = document.getElementById('score-bar-fill');
+  fill.style.width = `${total * 10}%`;
+  fill.style.backgroundColor = getScoreColor(total);
+
+  // Update EU grade
+  const grade = getEUGrade(total);
+  const gradeEl = document.getElementById('eu-grade');
+  gradeEl.textContent = grade.letter;
+  gradeEl.style.color = grade.color;
+
+  // Update improvements
+  const improvements = getImprovements();
+  const list = document.getElementById('improvement-list');
+  if (improvements.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:0.88rem">Select options above to see improvement suggestions.</p>';
+  } else {
+    list.innerHTML = improvements.map(imp =>
+      `<div class="improvement-item">
+        <span class="improvement-impact">+${imp.delta.toFixed(1)}</span>
+        <span class="improvement-text">${imp.text}</span>
+      </div>`
+    ).join('');
+  }
+}
+
+// Initialize
+recalculate();
+</script>
+</body>
+</html>
