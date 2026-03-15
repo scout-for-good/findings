@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Feedback Gap Diagnostic</title>
+<style>
+  :root {
+    --bg: #fafaf8;
+    --text: #2a2a2a;
+    --muted: #6b6b6b;
+    --border: #d4d4d4;
+    --accent: #c45a3c;
+    --safe: #4a8f6a;
+    --warn: #c49a3c;
+    --danger: #c45a3c;
+    --info: #4a6f8f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 0.3rem;
+    letter-spacing: -0.02em;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+  }
+
+  .intro {
+    margin-bottom: 2.5rem;
+    max-width: 640px;
+  }
+
+  .intro p {
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+
+  .intro strong { color: var(--accent); }
+
+  /* Sections */
+  .section {
+    margin-bottom: 2.5rem;
+  }
+
+  .section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Decision input */
+  .decision-input {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .decision-input input {
+    flex: 1;
+    padding: 0.6rem 0.8rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: white;
+  }
+
+  .decision-input input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  button {
+    padding: 0.6rem 1.2rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  button:hover { background: #f0f0ee; }
+
+  .btn-primary {
+    background: var(--text);
+    color: white;
+    border-color: var(--text);
+  }
+
+  .btn-primary:hover { background: #444; }
+
+  .btn-danger {
+    color: var(--danger);
+    border-color: var(--danger);
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .btn-danger:hover { background: #fdf0ed; }
+
+  /* Decision list */
+  .decision-list {
+    list-style: none;
+    margin-bottom: 1.5rem;
+  }
+
+  .decision-item {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+    background: white;
+  }
+
+  .decision-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .decision-name {
+    font-weight: bold;
+    font-size: 0.95rem;
+  }
+
+  .sliders {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .slider-group label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .slider-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+  }
+
+  .slider-value {
+    font-size: 0.8rem;
+    color: var(--muted);
+    min-width: 60px;
+    text-align: right;
+  }
+
+  /* Matrix */
+  .matrix-container {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto 2rem;
+  }
+
+  .matrix-wrapper {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%;
+  }
+
+  .matrix {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    border: 2px solid var(--text);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .quadrant {
+    position: relative;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .quadrant-label {
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+  }
+
+  .quadrant-desc {
+    font-size: 0.7rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* Q1: Slow freeze, Fast feedback — safe */
+  .q-normal {
+    background: #f0f7f3;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .q-normal .quadrant-label { color: var(--safe); }
+
+  /* Q2: Fast freeze, Fast feedback — okay */
+  .q-rapid {
+    background: #f5f5ee;
+    border-bottom: 1px solid var(--border);
+  }
+  .q-rapid .quadrant-label { color: var(--info); }
+
+  /* Q3: Slow freeze, Slow feedback — watch */
+  .q-drift {
+    background: #faf5ea;
+    border-right: 1px solid var(--border);
+  }
+  .q-drift .quadrant-label { color: var(--warn); }
+
+  /* Q4: Fast freeze, Slow feedback — danger */
+  .q-gap {
+    background: #fdf0ed;
+  }
+  .q-gap .quadrant-label { color: var(--danger); }
+
+  .matrix-axis-label {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+
+  .matrix-axis-y {
+    position: absolute;
+    left: -2.5rem;
+    top: 50%;
+    transform: rotate(-90deg) translateX(50%);
+    font-size: 0.8rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Decision dots on matrix */
+  .decision-dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--text);
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.2s;
+  }
+
+  .decision-dot:hover {
+    transform: translate(-50%, -50%) scale(1.4);
+  }
+
+  .dot-tooltip {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .decision-dot:hover .dot-tooltip {
+    opacity: 1;
+  }
+
+  /* Results */
+  .result-card {
+    padding: 1.2rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    border-left: 4px solid;
+  }
+
+  .result-card h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-card p, .result-card li {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .result-card ul {
+    margin: 0.5rem 0 0 1.2rem;
+  }
+
+  .result-card li { margin-bottom: 0.3rem; }
+
+  .card-danger {
+    background: #fdf0ed;
+    border-color: var(--danger);
+  }
+
+  .card-warn {
+    background: #faf5ea;
+    border-color: var(--warn);
+  }
+
+  .card-info {
+    background: #edf3f8;
+    border-color: var(--info);
+  }
+
+  .card-safe {
+    background: #f0f7f3;
+    border-color: var(--safe);
+  }
+
+  .decision-tag {
+    display: inline-block;
+    background: rgba(0,0,0,0.08);
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    margin: 0.15rem 0.15rem 0.15rem 0;
+  }
+
+  /* Examples */
+  .examples-toggle {
+    font-size: 0.85rem;
+    color: var(--accent);
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    text-decoration: underline;
+    font-family: inherit;
+  }
+
+  .examples-toggle:hover { color: var(--text); }
+
+  .example-set {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .example-set p {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .example-btn {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+    margin: 0.2rem 0.3rem 0.2rem 0;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* Footer */
+  .source-note {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .source-note a { color: var(--muted); }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    body { padding: 1rem; }
+    h1 { font-size: 1.4rem; }
+    .sliders { grid-template-columns: 1fr; }
+    .matrix-container { max-width: 100%; }
+    .matrix-axis-y { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<h1>The Feedback Gap Diagnostic</h1>
+<p class="subtitle">Map your design decisions to find the ones most likely to fail expensively</p>
+
+<div class="intro">
+  <p>
+    Some design decisions lock in fast — architecture, tooling, permissions. Others stay fluid for months. Meanwhile, some decisions generate quick feedback (prototype testing, usage data), while others take years to reveal whether they were right.
+  </p>
+  <p>
+    <strong>The dangerous combination: decisions that freeze fast but generate feedback slowly.</strong> These are the ones that become load-bearing infrastructure before anyone knows if they're correct. When correction finally comes, it arrives as expensive rework, user resistance, or field failures — not as the cheap course correction that was structurally unavailable.
+  </p>
+  <p>
+    This tool helps you map your decisions and spot the gap before it costs you.
+  </p>
+</div>
+
+<div class="section" id="input-section">
+  <h2>1. Add your design decisions</h2>
+  <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem;">
+    What are the key decisions in your current project? Think about architecture, materials, interfaces, permissions, tooling, vendor choices, user flows.
+  </p>
+
+  <div class="decision-input">
+    <input type="text" id="decision-name" placeholder="e.g., Database architecture, Material selection, API contract..."
+           onkeydown="if(event.key==='Enter') addDecision()">
+    <button class="btn-primary" onclick="addDecision()">Add</button>
+  </div>
+
+  <div style="margin-bottom: 1rem;">
+    <button class="examples-toggle" onclick="toggleExamples()">Load an example set</button>
+    <div id="examples-panel" style="display: none;">
+      <div class="example-set">
+        <p>Pre-built examples to explore the tool:</p>
+        <button class="example-btn" onclick="loadExample('product')">Product Development</button>
+        <button class="example-btn" onclick="loadExample('software')">Software Project</button>
+        <button class="example-btn" onclick="loadExample('ai')">AI Agent Deployment</button>
+      </div>
+    </div>
+  </div>
+
+  <ul class="decision-list" id="decision-list"></ul>
+</div>
+
+<div class="section" id="matrix-section" style="display: none;">
+  <h2>2. Your decisions on the matrix</h2>
+  <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem;">
+    Each dot is one of your decisions. Dots in the bottom-right are in the feedback gap — they freeze before correction signals can reach you.
+  </p>
+
+  <div class="matrix-container">
+    <span class="matrix-axis-y">← Fast feedback · · · Slow feedback →</span>
+    <div class="matrix-wrapper">
+      <div class="matrix" id="matrix">
+        <div class="quadrant q-normal">
+          <div class="quadrant-label">Normal Governance</div>
+          <div class="quadrant-desc">Slow freeze + fast feedback. Standard iterative process works. You have time and signal.</div>
+        </div>
+        <div class="quadrant q-rapid">
+          <div class="quadrant-label">Rapid Iteration</div>
+          <div class="quadrant-desc">Fast freeze + fast feedback. Agile model works — but only if you act on signals before dependencies build.</div>
+        </div>
+        <div class="quadrant q-drift">
+          <div class="quadrant-label">Hidden Drift</div>
+          <div class="quadrant-desc">Slow freeze + slow feedback. You have time but no signal. Actively seek feedback before committing.</div>
+        </div>
+        <div class="quadrant q-gap">
+          <div class="quadrant-label">Feedback Gap ⚠</div>
+          <div class="quadrant-desc">Fast freeze + slow feedback. The dangerous zone. Decisions become infrastructure before you know if they're right.</div>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 0.3rem;">
+      <span class="matrix-axis-label">← Slow freeze</span>
+      <span class="matrix-axis-label">Fast freeze →</span>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="results-section" style="display: none;">
+  <h2>3. What to do about it</h2>
+  <div id="results"></div>
+</div>
+
+<div class="source-note">
+  <p>
+    <strong>The 1-10-100 rule:</strong> A change that costs $1 during concept design costs $10 after detail design and $100 after tooling.
+    Design decisions before freeze account for ~86% of total program cost.
+    The trick isn't avoiding freezes — it's matching your feedback speed to your freeze speed.
+  </p>
+  <p style="margin-top: 0.5rem;">
+    Based on the feedback gap framework, which extends the <em>Collingridge dilemma</em> (1980) with engineering grounding from
+    Toyota's set-based concurrent engineering, Eger/Eckert/Clarkson's progressive freezing research, and user unfreezing patterns.
+    Built by Scout.
+  </p>
+</div>
+
+<script>
+const decisions = [];
+
+const FREEZE_LABELS = ['Months/years', 'Weeks/months', 'Days/weeks', 'Hours/days'];
+const FEEDBACK_LABELS = ['Hours/days', 'Days/weeks', 'Weeks/months', 'Months/years'];
+
+const EXAMPLES = {
+  product: [
+    { name: 'Material selection', freeze: 3, feedback: 3 },
+    { name: 'Form factor / enclosure', freeze: 3, feedback: 2 },
+    { name: 'PCB layout', freeze: 2, feedback: 1 },
+    { name: 'Manufacturing process', freeze: 3, feedback: 3 },
+    { name: 'Surface finish / color', freeze: 1, feedback: 1 },
+    { name: 'Supplier selection', freeze: 2, feedback: 3 },
+    { name: 'User interface layout', freeze: 1, feedback: 0 },
+  ],
+  software: [
+    { name: 'Database choice', freeze: 2, feedback: 2 },
+    { name: 'API contract / schema', freeze: 2, feedback: 1 },
+    { name: 'Auth architecture', freeze: 3, feedback: 3 },
+    { name: 'Cloud provider', freeze: 2, feedback: 2 },
+    { name: 'UI framework', freeze: 1, feedback: 1 },
+    { name: 'Feature flag defaults', freeze: 3, feedback: 1 },
+    { name: 'Pricing model', freeze: 1, feedback: 2 },
+  ],
+  ai: [
+    { name: 'Model selection', freeze: 2, feedback: 2 },
+    { name: 'Permission scope', freeze: 3, feedback: 3 },
+    { name: 'Training data sources', freeze: 3, feedback: 3 },
+    { name: 'Output format / API', freeze: 2, feedback: 1 },
+    { name: 'Escalation policy', freeze: 3, feedback: 3 },
+    { name: 'User trust level defaults', freeze: 3, feedback: 2 },
+    { name: 'Prompt templates', freeze: 1, feedback: 0 },
+  ]
+};
+
+function addDecision(name, freeze, feedback) {
+  const input = document.getElementById('decision-name');
+  const decisionName = name || input.value.trim();
+  if (!decisionName) return;
+
+  const id = Date.now() * 1000 + Math.floor(Math.random() * 1000);
+  decisions.push({
+    id,
+    name: decisionName,
+    freeze: freeze !== undefined ? freeze : 2,
+    feedback: feedback !== undefined ? feedback : 2
+  });
+
+  if (!name) input.value = '';
+  renderAll();
+}
+
+function removeDecision(id) {
+  const idx = decisions.findIndex(d => d.id === id);
+  if (idx > -1) decisions.splice(idx, 1);
+  renderAll();
+}
+
+function updateDecision(id, field, value) {
+  const d = decisions.find(d => d.id === id);
+  if (d) d[field] = parseInt(value);
+  renderAll();
+}
+
+function renderAll() {
+  renderList();
+  renderMatrix();
+  renderResults();
+
+  const show = decisions.length > 0;
+  document.getElementById('matrix-section').style.display = show ? '' : 'none';
+  document.getElementById('results-section').style.display = show ? '' : 'none';
+}
+
+function renderList() {
+  const list = document.getElementById('decision-list');
+  if (decisions.length === 0) {
+    list.innerHTML = '<div class="empty-state">No decisions added yet. Add one above or load an example.</div>';
+    return;
+  }
+
+  list.innerHTML = decisions.map(d => `
+    <li class="decision-item">
+      <div class="decision-header">
+        <span class="decision-name">${escHtml(d.name)}</span>
+        <button class="btn-danger" onclick="removeDecision(${d.id})">Remove</button>
+      </div>
+      <div class="sliders">
+        <div class="slider-group">
+          <label>How fast does this freeze?</label>
+          <div class="slider-row">
+            <span style="font-size:0.7rem;color:var(--muted);">Slow</span>
+            <input type="range" min="0" max="3" value="${d.freeze}"
+                   oninput="updateDecision(${d.id}, 'freeze', this.value)">
+            <span style="font-size:0.7rem;color:var(--muted);">Fast</span>
+          </div>
+          <div class="slider-value">${FREEZE_LABELS[d.freeze]}</div>
+        </div>
+        <div class="slider-group">
+          <label>How fast do you learn if it's wrong?</label>
+          <div class="slider-row">
+            <span style="font-size:0.7rem;color:var(--muted);">Fast</span>
+            <input type="range" min="0" max="3" value="${d.feedback}"
+                   oninput="updateDecision(${d.id}, 'feedback', this.value)">
+            <span style="font-size:0.7rem;color:var(--muted);">Slow</span>
+          </div>
+          <div class="slider-value">${FEEDBACK_LABELS[d.feedback]}</div>
+        </div>
+      </div>
+    </li>
+  `).join('');
+}
+
+function renderMatrix() {
+  // Remove existing dots
+  document.querySelectorAll('.decision-dot').forEach(el => el.remove());
+
+  const matrix = document.getElementById('matrix');
+  const rect = matrix.getBoundingClientRect();
+
+  decisions.forEach(d => {
+    const dot = document.createElement('div');
+    dot.className = 'decision-dot';
+
+    // Map freeze (0-3) to x position (5%-95%)
+    const x = 5 + (d.freeze / 3) * 90;
+    // Map feedback (0-3) to y position (5%-95%) — 0=fast(top), 3=slow(bottom)
+    const y = 5 + (d.feedback / 3) * 90;
+
+    dot.style.left = x + '%';
+    dot.style.top = y + '%';
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'dot-tooltip';
+    tooltip.textContent = d.name;
+    dot.appendChild(tooltip);
+
+    matrix.appendChild(dot);
+  });
+}
+
+function getQuadrant(d) {
+  if (d.freeze <= 1 && d.feedback <= 1) return 'normal';
+  if (d.freeze >= 2 && d.feedback <= 1) return 'rapid';
+  if (d.freeze <= 1 && d.feedback >= 2) return 'drift';
+  if (d.freeze >= 2 && d.feedback >= 2) return 'gap';
+  // Edge cases — assign by dominant concern
+  if (d.freeze >= 2 && d.feedback >= 2) return 'gap';
+  if (d.freeze >= 2) return 'rapid';
+  if (d.feedback >= 2) return 'drift';
+  return 'normal';
+}
+
+function renderResults() {
+  const results = document.getElementById('results');
+  if (decisions.length === 0) {
+    results.innerHTML = '';
+    return;
+  }
+
+  const groups = { gap: [], drift: [], rapid: [], normal: [] };
+  decisions.forEach(d => {
+    groups[getQuadrant(d)].push(d);
+  });
+
+  let html = '';
+
+  if (groups.gap.length > 0) {
+    html += `
+      <div class="result-card card-danger">
+        <h3>⚠ Feedback Gap — ${groups.gap.length} decision${groups.gap.length > 1 ? 's' : ''}</h3>
+        <p>${groups.gap.map(d => `<span class="decision-tag">${escHtml(d.name)}</span>`).join(' ')}</p>
+        <p style="margin-top: 0.5rem;">These decisions freeze before you can know if they're right. When correction comes, it'll be expensive. Three interventions:</p>
+        <ul>
+          <li><strong>Slow the freeze.</strong> Maintain 2-3 alternatives longer before committing. Toyota's set-based engineering shows this is faster overall — the 1-10-100 rule means delayed commitment costs less than late rework.</li>
+          <li><strong>Speed the feedback.</strong> Build the equivalent of "snow on the ground" — instrumentation that makes workarounds visible at the speed decisions lock in. Usage analytics, rapid prototyping, user observation before tooling commitment.</li>
+          <li><strong>Design unfreezing in.</strong> If you can't avoid the fast freeze, build escape hatches: modular interfaces, configuration layers, abstraction boundaries. Make the frozen decision replaceable even after it's load-bearing.</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  if (groups.drift.length > 0) {
+    html += `
+      <div class="result-card card-warn">
+        <h3>Hidden Drift — ${groups.drift.length} decision${groups.drift.length > 1 ? 's' : ''}</h3>
+        <p>${groups.drift.map(d => `<span class="decision-tag">${escHtml(d.name)}</span>`).join(' ')}</p>
+        <p style="margin-top: 0.5rem;">These decisions stay flexible, but you lack signal about whether they're right. The risk isn't lock-in — it's drifting in the wrong direction without knowing it.</p>
+        <ul>
+          <li><strong>Actively seek feedback.</strong> Don't wait for signals to find you. Run structured tests, user interviews, competitive analysis. The feedback exists — you're just not collecting it.</li>
+          <li><strong>Set decision milestones.</strong> These decisions will eventually freeze. Before they do, create explicit checkpoints where you evaluate whether the current direction is right.</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  if (groups.rapid.length > 0) {
+    html += `
+      <div class="result-card card-info">
+        <h3>Rapid Iteration — ${groups.rapid.length} decision${groups.rapid.length > 1 ? 's' : ''}</h3>
+        <p>${groups.rapid.map(d => `<span class="decision-tag">${escHtml(d.name)}</span>`).join(' ')}</p>
+        <p style="margin-top: 0.5rem;">These decisions freeze fast but you learn fast too. The standard agile approach works — <em>if</em> you actually act on signals before dependencies accumulate.</p>
+        <ul>
+          <li><strong>Watch for dependency buildup.</strong> Fast feedback is only useful if you can still change course. Track what's building on top of these decisions — once downstream dependencies form, fast feedback doesn't help.</li>
+          <li><strong>Time-box the freeze.</strong> Set an explicit review point before other systems couple to these decisions.</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  if (groups.normal.length > 0) {
+    html += `
+      <div class="result-card card-safe">
+        <h3>Normal Governance — ${groups.normal.length} decision${groups.normal.length > 1 ? 's' : ''}</h3>
+        <p>${groups.normal.map(d => `<span class="decision-tag">${escHtml(d.name)}</span>`).join(' ')}</p>
+        <p style="margin-top: 0.5rem;">These decisions freeze slowly and you get signal quickly. Standard iterative processes work. Keep doing what you're doing.</p>
+      </div>
+    `;
+  }
+
+  // Summary insight
+  const total = decisions.length;
+  const gapCount = groups.gap.length;
+  const gapPct = Math.round((gapCount / total) * 100);
+
+  if (total >= 3) {
+    html += `
+      <div style="margin-top: 1.5rem; padding: 1rem; background: white; border: 1px solid var(--border); border-radius: 6px;">
+        <p style="font-size: 0.9rem;">
+          <strong>${gapPct}% of your decisions are in the feedback gap.</strong>
+          ${gapPct > 40
+            ? ' That\'s a high concentration of decisions that will be expensive to correct. Consider whether you can restructure your project to slow the freeze on the most critical ones.'
+            : gapPct > 0
+            ? ' Focus your governance attention on these — they\'re where rework costs will concentrate.'
+            : ' Your project has good alignment between freeze speed and feedback speed. Keep monitoring as decisions progress — things that are fluid today may freeze faster than expected.'}
+        </p>
+      </div>
+    `;
+  }
+
+  results.innerHTML = html;
+}
+
+function toggleExamples() {
+  const panel = document.getElementById('examples-panel');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
+function loadExample(type) {
+  decisions.length = 0;
+  EXAMPLES[type].forEach(ex => {
+    decisions.push({
+      id: Date.now() * 1000 + Math.floor(Math.random() * 1000),
+      name: ex.name,
+      freeze: ex.freeze,
+      feedback: ex.feedback
+    });
+  });
+  document.getElementById('examples-panel').style.display = 'none';
+  renderAll();
+}
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Initial render
+renderAll();
+</script>
+
+</body>
+</html>
