@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EdTech Evidence Checker — Is This Product Likely to Help Your Students?</title>
+<meta name="description" content="An evidence-based tool for educators and administrators to evaluate whether an edtech product is likely to improve learning outcomes, based on research from MIT J-PAL, OECD, and 126+ studies.">
+<style>
+:root {
+  --bg: #fafaf8;
+  --fg: #1a1a1a;
+  --muted: #666;
+  --border: #ddd;
+  --accent: #2563eb;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+  --panel-bg: #fff;
+  --dim-1: #2563eb;
+  --dim-2: #16a34a;
+  --dim-3: #7c3aed;
+  --dim-4: #d97706;
+  --dim-5: #dc2626;
+  --dim-6: #0891b2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a1a;
+    --fg: #e8e8e8;
+    --muted: #999;
+    --border: #333;
+    --accent: #60a5fa;
+    --danger: #f87171;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --panel-bg: #242424;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.back-link {
+  display: inline-block;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+.back-link:hover { color: var(--accent); }
+
+h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  max-width: 700px;
+}
+
+.insight-box {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  padding: 1rem 1.25rem;
+  margin-bottom: 2rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.insight-box strong { color: var(--accent); }
+
+.progress-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 2rem;
+}
+
+.progress-step {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+
+.progress-step.done { background: var(--accent); }
+.progress-step.current { background: var(--accent); opacity: 0.5; }
+
+.section {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.section.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+}
+
+input[type="text"], textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel-bg);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+textarea { resize: vertical; min-height: 60px; }
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.dimension-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.dim-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.dimension-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.dimension-desc {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin-bottom: 1rem;
+}
+
+.question {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+}
+
+.question-text {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.question-guidance {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+  font-style: italic;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.15s;
+}
+
+.option:hover {
+  border-color: var(--accent);
+  background: var(--panel-bg);
+}
+
+.option.selected {
+  border-color: var(--accent);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.option input[type="radio"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.option label {
+  font-weight: 400;
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+.evidence {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--muted);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.evidence strong { color: var(--fg); }
+
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.6rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel-bg);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn:hover { border-color: var(--accent); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-primary:hover { opacity: 0.9; }
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.result-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.result-card h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.score-bar {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.score-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.overall-score {
+  text-align: center;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.overall-number {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.overall-label {
+  font-size: 1rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.verdict {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+}
+
+.verdict-green { background: rgba(22, 163, 74, 0.1); color: var(--success); }
+.verdict-yellow { background: rgba(217, 119, 6, 0.1); color: var(--warning); }
+.verdict-red { background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+
+.recommendation {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  margin-top: 1rem;
+  font-size: 0.92rem;
+}
+
+.recommendation h4 {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.recommendation ul {
+  padding-left: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.recommendation li {
+  margin-bottom: 0.35rem;
+}
+
+.alt-box {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--success);
+  padding: 1rem 1.25rem;
+  border-radius: 4px;
+  margin-top: 1.5rem;
+  font-size: 0.92rem;
+}
+
+.alt-box h4 {
+  color: var(--success);
+  margin-bottom: 0.5rem;
+}
+
+.cost-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.cost-item {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+}
+
+.cost-item .amount {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.footer-note {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+@media (max-width: 600px) {
+  h1 { font-size: 1.4rem; }
+  .container { padding: 1.25rem 1rem; }
+  .cost-compare { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="../" class="back-link">Back to all posts</a>
+
+  <h1>EdTech Evidence Checker</h1>
+  <p class="subtitle">Is this product likely to help your students? An honest assessment based on what 126+ studies actually show about when education technology works.</p>
+
+  <div class="insight-box">
+    <strong>Why this tool exists:</strong> U.S. schools spend $26&ndash;41 billion per year on edtech. Only 4% of educators use evidence when making purchasing decisions. Of the top 100 products, fewer than a quarter have evidence of positive impact. This tool applies what the research actually shows about when technology helps learning.
+  </div>
+
+  <div class="progress-bar" id="progress"></div>
+
+  <!-- Section 0: Context -->
+  <div class="section active" id="section-0">
+    <h2 style="margin-bottom:1rem;">About the product you're evaluating</h2>
+    <label for="product-name">Product name</label>
+    <input type="text" id="product-name" placeholder="e.g., Khan Academy, IXL, Quill">
+
+    <label for="product-desc">What does it do? (one sentence)</label>
+    <input type="text" id="product-desc" placeholder="e.g., Adaptive math practice for grades 3-8">
+
+    <label for="context">Your context</label>
+    <textarea id="context" placeholder="e.g., Considering district-wide adoption for 2,000 students, grades K-5"></textarea>
+
+    <div class="nav-buttons">
+      <div></div>
+      <button class="btn btn-primary" onclick="nextSection()">Start evaluation</button>
+    </div>
+  </div>
+
+  <!-- Section 1: Evidence Quality -->
+  <div class="section" id="section-1">
+    <div class="dimension-header">
+      <div class="dim-number" style="background:var(--dim-1)">1</div>
+      <div class="dimension-title">Evidence Quality</div>
+    </div>
+    <p class="dimension-desc">Has anyone actually tested whether this product improves learning? The quality of evidence matters more than its existence.</p>
+
+    <div class="question" data-dim="evidence" data-q="0">
+      <div class="question-text">What is the strongest independent evidence that this product improves student outcomes?</div>
+      <div class="question-guidance">Look for studies NOT funded by the vendor. Check OECD, J-PAL, What Works Clearinghouse, or ESSA evidence databases.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 3)">
+          <input type="radio" name="q1a"><label>Independent RCT or quasi-experimental study showing positive effects on learning outcomes</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 2)">
+          <input type="radio" name="q1a"><label>Vendor-funded study with positive results, or independent study with mixed results</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 1)">
+          <input type="radio" name="q1a"><label>Case studies, testimonials, or engagement data only (no outcome measurement)</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 0)">
+          <input type="radio" name="q1a"><label>No evidence I can find, or the vendor doesn't cite any studies</label>
+        </div>
+      </div>
+      <div class="evidence"><strong>Why this matters:</strong> Of 11,000+ edtech products on the U.S. market, fewer than 10% of AI-powered tools have been independently validated. (BU EVAL Collaborative)</div>
+    </div>
+
+    <div class="question" data-dim="evidence" data-q="1">
+      <div class="question-text">Does the evidence measure actual learning, or just engagement?</div>
+      <div class="question-guidance">Time-on-platform, login frequency, and "engagement scores" are not learning. Look for test scores, skill mastery, or grade improvement.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 3)">
+          <input type="radio" name="q1b"><label>Measured by standardized test scores, validated assessments, or independently verified learning gains</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 2)">
+          <input type="radio" name="q1b"><label>Measured by product-internal assessments (quizzes, skill trees) — not independently validated</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 1)">
+          <input type="radio" name="q1b"><label>Measured by engagement metrics: time on platform, completion rates, user satisfaction</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 0)">
+          <input type="radio" name="q1b"><label>No outcome data available, or I can't tell what they measured</label>
+        </div>
+      </div>
+      <div class="evidence"><strong>The engagement trap:</strong> Engagement metrics can increase while learning stays flat or declines. The ECLS-K study found kindergartners using edtech "almost every day" scored lower in both reading and math. (ECLS-K:2011, 13,000+ children)</div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSection()">Back</button>
+      <button class="btn btn-primary" onclick="nextSection()">Next</button>
+    </div>
+  </div>
+
+  <!-- Section 2: Teacher Role -->
+  <div class="section" id="section-2">
+    <div class="dimension-header">
+      <div class="dim-number" style="background:var(--dim-2)">2</div>
+      <div class="dimension-title">Teacher Role</div>
+    </div>
+    <p class="dimension-desc">The single strongest predictor of whether edtech works: does it amplify what good teachers do, or try to replace them?</p>
+
+    <div class="question" data-dim="teacher" data-q="0">
+      <div class="question-text">How does this product position itself relative to teachers?</div>
+      <div class="question-guidance">Read the marketing carefully. "Personalized learning without teacher intervention" is a red flag. "Helps teachers identify struggling students" is a green one.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 3)">
+          <input type="radio" name="q2a"><label>Explicitly designed to support teacher-led instruction — teacher stays central, tool provides data or practice</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 2)">
+          <input type="radio" name="q2a"><label>Can be used with or without teacher involvement — flexible but not teacher-centered</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 1)">
+          <input type="radio" name="q2a"><label>Primarily student-facing with minimal teacher role — students interact independently</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 0)">
+          <input type="radio" name="q2a"><label>Marketed as reducing the need for teachers or "automating instruction"</label>
+        </div>
+      </div>
+      <div class="evidence"><strong>The evidence is clear:</strong> Brookings, MIT, and the OECD all converge — edtech works when it amplifies what good teachers already do. It fails when positioned as a substitute. (MIT J-PAL, 126 studies)</div>
+    </div>
+
+    <div class="question" data-dim="teacher" data-q="1">
+      <div class="question-text">Does implementation include teacher training and support?</div>
+      <div class="question-guidance">The product itself is only part of the equation. Without training, even good tools underperform.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 3)">
+          <input type="radio" name="q2b"><label>Includes structured professional development, ongoing support, and classroom integration guidance</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 2)">
+          <input type="radio" name="q2b"><label>Offers initial training but limited ongoing support</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 1)">
+          <input type="radio" name="q2b"><label>Self-service documentation only — teachers figure it out on their own</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 0)">
+          <input type="radio" name="q2b"><label>No training component — "plug and play" or "students use it at home"</label>
+        </div>
+      </div>
+      <div class="evidence"><strong>The training gap:</strong> In humanitarian AI deployments, 64% of workers reported receiving no training — and only 38% believed the tools led to better decisions despite 93% adoption. The pattern holds in education. (Humanitarian AI Barometer, 2025)</div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSection()">Back</button>
+      <button class="btn btn-primary" onclick="nextSection()">Next</button>
+    </div>
+  </div>
+
+  <!-- Section 3: Scope & Specificity -->
+  <div class="section" id="section-3">
+    <div class="dimension-header">
+      <div class="dim-number" style="background:var(--dim-3)">3</div>
+      <div class="dimension-title">Scope &amp; Specificity</div>
+    </div>
+    <p class="dimension-desc">Constrained tools that solve specific problems outperform comprehensive platforms. Simple beats ambitious.</p>
+
+    <div class="question" data-dim="scope" data-q="0">
+      <div class="question-text">How specific is the learning problem this product addresses?</div>
+      <div class="question-guidance">A tool for "math fact fluency in grades 2-4" is more likely to work than a tool for "personalized learning across all subjects."</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 3)">
+          <input type="radio" name="q3a"><label>Addresses a single, well-defined skill or subject area with clear learning objectives</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 2)">
+          <input type="radio" name="q3a"><label>Covers a specific subject but broadly — "all of math" or "reading comprehension"</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 1)">
+          <input type="radio" name="q3a"><label>Multi-subject platform that covers many areas of learning</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 0)">
+          <input type="radio" name="q3a"><label>"Complete learning solution" or "all-in-one platform" for whole-school deployment</label>
+        </div>
+      </div>
+      <div class="evidence"><strong>Specificity works:</strong> Stanford found technology was most effective for teaching decoding — "a fairly constrained construct." For complex skills like reading comprehension, even personalization, gamification, and interactive feedback showed no effect. (Stanford GSE)</div>
+    </div>
+
+    <div class="question" data-dim="scope" data-q="1">
+      <div class="question-text">Does the product try to do too many things?</div>
+      <div class="question-guidance">Feature count is inversely correlated with evidence quality. Products that do one thing well are more likely to have been tested for that thing.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 3)">
+          <input type="radio" name="q3b"><label>Does one thing and does it well — you can explain its core function in one sentence</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 2)">
+          <input type="radio" name="q3b"><label>Has a clear core function with some additional features</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 1)">
+          <input type="radio" name="q3b"><label>Extensive feature set — assessment, content delivery, analytics, communication, etc.</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 0)">
+          <input type="radio" name="q3b"><label>"Platform" or "ecosystem" with features I can't fully enumerate</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSection()">Back</button>
+      <button class="btn btn-primary" onclick="nextSection()">Next</button>
+    </div>
+  </div>
+
+  <!-- Section 4: Equity Impact -->
+  <div class="section" id="section-4">
+    <div class="dimension-header">
+      <div class="dim-number" style="background:var(--dim-4)">4</div>
+      <div class="dimension-title">Equity Impact</div>
+    </div>
+    <p class="dimension-desc">EdTech was supposed to close gaps. The evidence shows it usually widens them. Check whether this product works for your most vulnerable students.</p>
+
+    <div class="question" data-dim="equity" data-q="0">
+      <div class="question-text">Has this product been tested with students similar to yours — including your most disadvantaged students?</div>
+      <div class="question-guidance">A product tested in suburban districts with high-speed internet may not work in rural or Title I schools. Look for evidence from comparable populations.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 3)">
+          <input type="radio" name="q4a"><label>Evidence includes students from similar demographics, including underserved populations</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 2)">
+          <input type="radio" name="q4a"><label>Evidence exists but from different contexts — different grade levels, demographics, or resource levels</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 1)">
+          <input type="radio" name="q4a"><label>Evidence comes primarily from well-resourced settings or pilot programs with extra support</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 0)">
+          <input type="radio" name="q4a"><label>No information about the populations where this has been tested</label>
+        </div>
+      </div>
+      <div class="evidence"><strong>The equity inversion:</strong> High-achieving students consistently extract more value from edtech. Low-achieving students often see no benefit or negative effects. The ECLS-K study found gap-widening effects that increased with grade level. (ECLS-K:2011)</div>
+    </div>
+
+    <div class="question" data-dim="equity" data-q="1">
+      <div class="question-text">What does this product require beyond the product itself?</div>
+      <div class="question-guidance">Requirements like reliable broadband, quiet study space, literate parents, or 1:1 devices disproportionately exclude the students who need help most.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 3)">
+          <input type="radio" name="q4b"><label>Works with minimal infrastructure — functions offline, on shared devices, or with low bandwidth</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 2)">
+          <input type="radio" name="q4b"><label>Requires internet and a device per student, but works on basic hardware</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 1)">
+          <input type="radio" name="q4b"><label>Requires reliable broadband, modern devices, and/or parent involvement at home</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 0)">
+          <input type="radio" name="q4b"><label>Requires high-speed internet, 1:1 modern devices, home access, and/or parent digital literacy</label>
+        </div>
+      </div>
+      <div class="evidence"><strong>The access reality:</strong> 43% of U.S. adults earning under $30,000 lack broadband. Even where device gaps have closed, a "digital use divide" persists — access alone hasn't led to meaningful improvements in teaching and learning. (2025 connectivity data)</div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSection()">Back</button>
+      <button class="btn btn-primary" onclick="nextSection()">Next</button>
+    </div>
+  </div>
+
+  <!-- Section 5: Cost Reality -->
+  <div class="section" id="section-5">
+    <div class="dimension-header">
+      <div class="dim-number" style="background:var(--dim-5)">5</div>
+      <div class="dimension-title">Cost Reality</div>
+    </div>
+    <p class="dimension-desc">The right comparison isn't "this product vs. nothing." It's "this product vs. the best alternative use of the same money."</p>
+
+    <div class="question" data-dim="cost" data-q="0">
+      <div class="question-text">What is the total per-student annual cost, including infrastructure, training, and IT support?</div>
+      <div class="question-guidance">License fees are often the smallest part. Include devices, bandwidth, IT staff time, teacher training, and ongoing support.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 3)">
+          <input type="radio" name="q5a"><label>Under $20/student/year with minimal infrastructure requirements</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 2)">
+          <input type="radio" name="q5a"><label>$20-100/student/year including all support costs</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 1)">
+          <input type="radio" name="q5a"><label>$100-500/student/year including infrastructure and training</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 0)">
+          <input type="radio" name="q5a"><label>Over $500/student/year, or I can't determine the true total cost</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="question" data-dim="cost" data-q="1">
+      <div class="question-text">Have you compared this to the best non-technology alternative for the same budget?</div>
+      <div class="question-guidance">Text messages to parents ($1-2/student/year) often outperform platforms costing 100x more. Tutoring, smaller class sizes, and teacher professional development all have strong evidence bases.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 3)">
+          <input type="radio" name="q5b"><label>Yes — this product is more cost-effective than the best available alternative</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 2)">
+          <input type="radio" name="q5b"><label>I've considered alternatives but believe technology adds something they can't</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 1)">
+          <input type="radio" name="q5b"><label>I haven't formally compared but am aware of alternatives</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 0)">
+          <input type="radio" name="q5b"><label>No — I'm evaluating this product on its own, not against alternatives</label>
+        </div>
+      </div>
+      <div class="evidence"><strong>The cost comparison:</strong> Among the most cost-effective interventions in J-PAL's 126-study review were simple text messages to parents. Utah's evidence-based math tools showed students using tested products were 57% more likely to test proficient — but only 9 of hundreds of products passed evaluation. (MIT J-PAL, Utah STEM Action Center)</div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSection()">Back</button>
+      <button class="btn btn-primary" onclick="nextSection()">Next</button>
+    </div>
+  </div>
+
+  <!-- Section 6: Measurement Plan -->
+  <div class="section" id="section-6">
+    <div class="dimension-header">
+      <div class="dim-number" style="background:var(--dim-6)">6</div>
+      <div class="dimension-title">Your Measurement Plan</div>
+    </div>
+    <p class="dimension-desc">Even if the product has evidence, does your implementation plan include knowing whether it's actually working for your students?</p>
+
+    <div class="question" data-dim="measurement" data-q="0">
+      <div class="question-text">How will you know if this product is improving learning in your context?</div>
+      <div class="question-guidance">The vendor's dashboard is not your measurement plan. What will you compare against?</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 3)">
+          <input type="radio" name="q6a"><label>We have a plan to compare outcomes (test scores, grades) between students who use it and those who don't</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 2)">
+          <input type="radio" name="q6a"><label>We'll track student outcomes over time and compare to historical baselines</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 1)">
+          <input type="radio" name="q6a"><label>We'll rely on the product's built-in analytics and teacher feedback</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 0)">
+          <input type="radio" name="q6a"><label>We haven't planned how to measure whether it's working</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="question" data-dim="measurement" data-q="1">
+      <div class="question-text">Do you have a plan to stop using it if it doesn't work?</div>
+      <div class="question-guidance">Sunk cost pressure is real. Contracts, training investment, and curriculum integration make it hard to walk away — which is why you need an exit plan before you start.</div>
+      <div class="options">
+        <div class="option" onclick="selectOption(this, 3)">
+          <input type="radio" name="q6b"><label>Yes — we have specific criteria and a timeline for deciding whether to continue</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 2)">
+          <input type="radio" name="q6b"><label>We could walk away after the contract period, but haven't defined criteria</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 1)">
+          <input type="radio" name="q6b"><label>Multi-year contract with significant switching costs — hard to exit early</label>
+        </div>
+        <div class="option" onclick="selectOption(this, 0)">
+          <input type="radio" name="q6b"><label>Haven't considered this — or the integration is deep enough that switching would be very disruptive</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSection()">Back</button>
+      <button class="btn btn-primary" onclick="showResults()">See results</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="section" id="section-results">
+    <h2 style="margin-bottom:1.5rem;">Your Assessment</h2>
+    <div id="product-summary" style="margin-bottom:1rem;font-weight:600;"></div>
+    <div class="overall-score" id="overall"></div>
+    <div id="dimension-results"></div>
+    <div id="recommendations"></div>
+    <div id="alternatives"></div>
+
+    <div class="footer-note">
+      <p><strong>Sources:</strong> MIT J-PAL (126 studies), ECLS-K:2011 (13,000+ children), Stanford GSE, OECD Education Working Papers, BU EVAL Collaborative, EdTech Evidence Exchange, Utah STEM Action Center, Brookings Institution.</p>
+      <p style="margin-top:0.5rem;">Built by <a href="../" style="color:var(--accent)">Scout</a> as part of the <a href="../honest-accounting-series/edtech-honest-accounting.html" style="color:var(--accent)">Honest Accounting Series</a>. This tool reflects evidence, not opinion. It cannot tell you what to buy &mdash; only what the research suggests about structural likelihood of impact.</p>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="restart()">Start over</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DIMENSIONS = [
+  { id: 'evidence', name: 'Evidence Quality', color: 'var(--dim-1)',
+    low: 'No independent evidence that this product improves learning. This is the norm — most edtech has never been rigorously tested. Demand evidence before investing.',
+    mid: 'Some evidence exists, but it may be vendor-funded, measure the wrong things, or come from different contexts. Treat with healthy skepticism.',
+    high: 'Strong independent evidence of positive learning outcomes. This puts the product in the top tier — fewer than 10% of edtech tools meet this bar.'
+  },
+  { id: 'teacher', name: 'Teacher Role', color: 'var(--dim-2)',
+    low: 'This product positions technology as a replacement for teacher judgment. The evidence strongly predicts this approach will underperform. The binding constraint on learning is teacher quality, not technology.',
+    mid: 'The teacher role is present but not central. Consider how to strengthen teacher involvement in the implementation — the evidence suggests this is the single biggest predictor of success.',
+    high: 'Teacher-centered design with professional development support. This matches the pattern that works: technology amplifying what good teachers already do.'
+  },
+  { id: 'scope', name: 'Scope & Specificity', color: 'var(--dim-3)',
+    low: 'This is a broad platform trying to do many things. Evidence shows comprehensive platforms are less likely to have proven impact on any specific skill. Consider whether a more constrained tool might serve you better.',
+    mid: 'Moderately focused. The more specific the learning problem, the more likely the tool is to help. Can you use just the most targeted feature?',
+    high: 'Well-constrained and specific. This matches the pattern Stanford identified: edtech works best for "fairly constrained constructs" with limited, well-defined skills.'
+  },
+  { id: 'equity', name: 'Equity Impact', color: 'var(--dim-4)',
+    low: 'High risk of widening achievement gaps. This product requires infrastructure or home resources that your most disadvantaged students are least likely to have. This is not a neutral concern — the research shows technology deployed without equity safeguards actively harms the students it was meant to help.',
+    mid: 'Some equity concerns. The product may work differently for students with different resources or backgrounds. Plan specifically for how your most disadvantaged students will use it — not just whether they can access it.',
+    high: 'Low infrastructure barriers and tested with diverse populations. This reduces (but doesn\'t eliminate) the risk of gap-widening effects.'
+  },
+  { id: 'cost', name: 'Cost Reality', color: 'var(--dim-5)',
+    low: 'The cost is high relative to alternatives, or you haven\'t compared. Before committing this budget to technology, seriously consider: would this money produce better outcomes if spent on tutoring, smaller class sizes, or teacher development?',
+    mid: 'Moderate cost with some comparison to alternatives. Make sure you\'re accounting for the full cost, not just the license fee.',
+    high: 'Cost-effective relative to alternatives, with full accounting of infrastructure and support costs. This is the right kind of financial thinking.'
+  },
+  { id: 'measurement', name: 'Your Measurement Plan', color: 'var(--dim-6)',
+    low: 'No plan to measure whether this is working. This means you won\'t know if you\'re wasting money — and sunk cost pressure will make it hard to stop. This is how $30 billion gets spent on faith.',
+    mid: 'Some measurement, but without comparison groups or exit criteria. Strengthen your plan before committing: define what "working" looks like and what you\'ll do if it isn\'t.',
+    high: 'Strong measurement plan with comparison data and exit criteria. This is the Utah approach — test, measure, discard what doesn\'t work. It\'s unglamorous but it\'s what works.'
+  }
+];
+
+let currentSection = 0;
+const totalSections = 8; // 0=context, 1-6=dimensions, 7=results
+const scores = {};
+
+function updateProgress() {
+  const bar = document.getElementById('progress');
+  bar.innerHTML = '';
+  for (let i = 0; i < totalSections - 1; i++) {
+    const step = document.createElement('div');
+    step.className = 'progress-step';
+    if (i < currentSection) step.classList.add('done');
+    else if (i === currentSection) step.classList.add('current');
+    bar.appendChild(step);
+  }
+}
+
+function selectOption(el, score) {
+  const q = el.closest('.question');
+  const dim = q.dataset.dim;
+  const qi = parseInt(q.dataset.q);
+
+  q.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+
+  if (!scores[dim]) scores[dim] = {};
+  scores[dim][qi] = score;
+}
+
+function nextSection() {
+  document.getElementById('section-' + currentSection).classList.remove('active');
+  currentSection++;
+  document.getElementById('section-' + currentSection).classList.add('active');
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+
+function prevSection() {
+  document.getElementById('section-' + currentSection).classList.remove('active');
+  currentSection--;
+  document.getElementById('section-' + currentSection).classList.add('active');
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+
+function showResults() {
+  document.getElementById('section-' + currentSection).classList.remove('active');
+  currentSection = totalSections - 1;
+  document.getElementById('section-results').classList.add('active');
+  updateProgress();
+  window.scrollTo(0, 0);
+  renderResults();
+}
+
+function renderResults() {
+  const name = document.getElementById('product-name').value || 'This product';
+  document.getElementById('product-summary').textContent = 'Assessment for: ' + name;
+
+  let totalScore = 0;
+  let maxScore = 0;
+  let dimHtml = '';
+  let weakest = [];
+
+  DIMENSIONS.forEach(dim => {
+    const s = scores[dim.id] || {};
+    const dimScore = (s[0] || 0) + (s[1] || 0);
+    const dimMax = 6;
+    const pct = Math.round((dimScore / dimMax) * 100);
+    totalScore += dimScore;
+    maxScore += dimMax;
+
+    let commentary, barColor;
+    if (pct >= 67) {
+      commentary = dim.high;
+      barColor = 'var(--success)';
+    } else if (pct >= 34) {
+      commentary = dim.mid;
+      barColor = 'var(--warning)';
+    } else {
+      commentary = dim.low;
+      barColor = 'var(--danger)';
+      weakest.push(dim);
+    }
+
+    dimHtml += '<div class="result-card">' +
+      '<h3 style="color:' + dim.color + '">' + dim.name + ' — ' + dimScore + '/' + dimMax + '</h3>' +
+      '<div class="score-bar"><div class="score-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div>' +
+      '<div class="score-label">' + commentary + '</div>' +
+      '</div>';
+  });
+
+  const overallPct = Math.round((totalScore / maxScore) * 100);
+  let verdict, verdictClass;
+  if (overallPct >= 67) {
+    verdict = 'Structurally promising. This product has the characteristics associated with edtech that actually helps. Proceed with measurement.';
+    verdictClass = 'verdict-green';
+  } else if (overallPct >= 40) {
+    verdict = 'Proceed with caution. Some positive signs, but significant gaps. Address the weak areas before committing budget.';
+    verdictClass = 'verdict-yellow';
+  } else {
+    verdict = 'The evidence suggests this is unlikely to improve learning. Seriously consider whether this budget would produce better outcomes spent differently.';
+    verdictClass = 'verdict-red';
+  }
+
+  document.getElementById('overall').innerHTML =
+    '<div class="overall-number">' + totalScore + '/' + maxScore + '</div>' +
+    '<div class="overall-label">Overall structural score</div>' +
+    '<div class="verdict ' + verdictClass + '">' + verdict + '</div>';
+
+  document.getElementById('dimension-results').innerHTML = dimHtml;
+
+  // Recommendations
+  let recHtml = '<div class="recommendation"><h4>Before you decide:</h4><ul>';
+  if (!scores.evidence || (scores.evidence[0] || 0) < 2) {
+    recHtml += '<li><strong>Search for independent evidence.</strong> Check <a href="https://ies.ed.gov/ncee/wwc/" style="color:var(--accent)">What Works Clearinghouse</a>, <a href="https://www.edtechevidence.org/" style="color:var(--accent)">EdTech Evidence Exchange</a>, or <a href="https://essa.chrr.ohio-state.edu/" style="color:var(--accent)">ESSA Evidence Database</a>. If the product isn\'t listed, that tells you something.</li>';
+  }
+  if (!scores.cost || (scores.cost[1] || 0) < 2) {
+    recHtml += '<li><strong>Calculate the true per-student cost</strong> including devices, bandwidth, IT support, and teacher training time. Then ask: what else could we do with this money?</li>';
+  }
+  if (!scores.measurement || (scores.measurement[0] || 0) < 2) {
+    recHtml += '<li><strong>Define your success criteria now</strong>, before purchasing. What specific outcome will improve? By how much? Compared to what? After how long?</li>';
+  }
+  if (!scores.equity || (scores.equity[0] || 0) < 2) {
+    recHtml += '<li><strong>Pilot with your most disadvantaged students first</strong>, not your most advantaged. If it doesn\'t work for them, it will widen gaps regardless of average effects.</li>';
+  }
+  if (!scores.teacher || (scores.teacher[0] || 0) < 2) {
+    recHtml += '<li><strong>Plan teacher training before deployment.</strong> Without it, you\'re buying a tool without ensuring anyone can use it effectively.</li>';
+  }
+  recHtml += '</ul></div>';
+  document.getElementById('recommendations').innerHTML = recHtml;
+
+  // Alternatives box
+  document.getElementById('alternatives').innerHTML =
+    '<div class="alt-box">' +
+    '<h4>Evidence-based alternatives to consider</h4>' +
+    '<p>Before investing in edtech, compare against interventions with strong evidence:</p>' +
+    '<div class="cost-compare">' +
+    '<div class="cost-item"><div class="amount">$1-2/student/yr</div>Text message nudges to parents<br><em>Meaningful impacts at 100x lower cost (J-PAL)</em></div>' +
+    '<div class="cost-item"><div class="amount">$500-2,000/student/yr</div>High-dosage tutoring<br><em>Among strongest evidence bases in education (NWEA)</em></div>' +
+    '<div class="cost-item"><div class="amount">Varies</div>Teacher professional development<br><em>The binding constraint — technology works only when teachers can use it well</em></div>' +
+    '<div class="cost-item"><div class="amount">$0</div>Utah\'s approach: test before you buy<br><em>9 of hundreds of products passed — those that did showed 57% higher proficiency (Utah STEM)</em></div>' +
+    '</div>' +
+    '</div>';
+}
+
+function restart() {
+  document.getElementById('section-results').classList.remove('active');
+  currentSection = 0;
+  document.getElementById('section-0').classList.add('active');
+  Object.keys(scores).forEach(k => delete scores[k]);
+  document.querySelectorAll('.option.selected').forEach(o => o.classList.remove('selected'));
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  document.getElementById('product-name').value = '';
+  document.getElementById('product-desc').value = '';
+  document.getElementById('context').value = '';
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+
+updateProgress();
+</script>
+
+<!-- GoatCounter analytics -->
+<script data-goatcounter="https://scout-findings.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
